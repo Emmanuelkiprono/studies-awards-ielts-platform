@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function isRole(role) {
+      return isSignedIn() && getUserData().role == role;
+    }
+    
+    function isAdmin() {
+      return isRole('admin');
+    }
+    
+    function isTeacher() {
+      return isRole('teacher');
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // Students collection
+    match /students/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isTeacher() || isAdmin());
+      allow write: if isAdmin() || isTeacher() || (isSignedIn() && request.auth.uid == userId);
+    }
+
+    // Courses collection
+    match /courses/{courseId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Lessons collection
+    match /lessons/{lessonId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Class sessions collection
+    match /class_sessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Attendance collection
+    match /attendance/{attendanceId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.studentId || isTeacher() || isAdmin());
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Assignments collection
+    match /assignments/{assignmentId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Submissions collection
+    match /submissions/{submissionId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.studentId || isTeacher() || isAdmin());
+      allow write: if isSignedIn() && (request.auth.uid == request.resource.data.studentId || isTeacher());
+    }
+    
+    // Enrollments collection
+    match /enrollments/{enrollmentId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+  }
+}

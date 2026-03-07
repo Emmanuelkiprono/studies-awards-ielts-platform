@@ -1,0 +1,9 @@
+{
+  "name": "Studies & Awards IELTS Platform",
+  "description": "A production-ready IELTS training and exam booking platform with student and teacher dashboards, featuring glassmorphism UI and Firebase integration.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}
