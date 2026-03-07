@@ -19,7 +19,7 @@ import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
 import { collection, getDocs, query, where, addDoc, doc, getDoc } from 'firebase/firestore';
 import { NotificationService } from '../services/notificationService';
-import { Assignment, Submission } from '../types';
+import { Assignment, Submission, Module } from '../types';
 import { FileUpload } from '../components/FileUpload';
 
 const typeIcons: Record<string, React.ElementType> = {
@@ -55,6 +55,9 @@ export const AssignmentsPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [courseTeacherId, setCourseTeacherId] = useState<string | null>(null);
 
+  const [courseName, setCourseName] = useState<string | null>(null);
+  const [modulesById, setModulesById] = useState<Record<string, Module>>({});
+
   // Detail sheet state
   const [detailTarget, setDetailTarget] = useState<Assignment | null>(null);
 
@@ -62,14 +65,24 @@ export const AssignmentsPage: React.FC = () => {
     if (!studentData?.courseId || !user) { setLoading(false); return; }
     const load = async () => {
       try {
-        const [aSnap, sSnap, courseSnap] = await Promise.all([
+        const [aSnap, sSnap, courseSnap, modulesSnap] = await Promise.all([
           getDocs(query(collection(db, 'assignments'), where('courseId', '==', studentData.courseId))),
           getDocs(query(collection(db, 'submissions'), where('studentId', '==', user.uid))),
           getDoc(doc(db, 'courses', studentData.courseId)),
+          getDocs(collection(db, 'courses', studentData.courseId, 'modules')),
         ]);
         setAssignments(aSnap.docs.map(d => ({ id: d.id, ...d.data() } as Assignment)));
         setSubmissions(sSnap.docs.map(d => ({ id: d.id, ...d.data() } as Submission)));
-        if (courseSnap.exists()) setCourseTeacherId(courseSnap.data().teacherId ?? null);
+        if (courseSnap.exists()) {
+          const data = courseSnap.data() as { teacherId?: string; name?: string };
+          setCourseTeacherId(data.teacherId ?? null);
+          setCourseName(data.name ?? null);
+        }
+
+        const modules = modulesSnap.docs.map(d => ({ id: d.id, ...d.data() } as Module));
+        const map: Record<string, Module> = {};
+        modules.forEach(m => { map[m.id] = m; });
+        setModulesById(map);
       } catch (err) {
         console.error('Error loading assignments:', err);
       } finally {
@@ -200,7 +213,7 @@ export const AssignmentsPage: React.FC = () => {
             return (
               <GlassCard
                 key={item.id}
-                onClick={() => sub ? setDetailTarget(item) : setSubmitTarget(item)}
+                onClick={() => setDetailTarget(item)}
                 className={cn(
                   'p-4 flex items-center justify-between cursor-pointer transition-all group',
                   !sub && 'hover:border-[#6324eb]/40'
@@ -213,6 +226,15 @@ export const AssignmentsPage: React.FC = () => {
                   <div>
                     <p className="text-[var(--ui-heading)] font-semibold">{item.title}</p>
                     <p className="text-[var(--ui-muted)] text-xs">Due: {item.dueDate} · {item.type}</p>
+                    <p className="text-[var(--ui-muted)] text-[11px] mt-0.5">
+                      {courseName ?? 'Course'}
+                      {item.moduleId && modulesById[item.moduleId] && (
+                        <> · {modulesById[item.moduleId].name}</>
+                      )}
+                    </p>
+                    <p className="text-[var(--ui-muted)] text-xs mt-1 line-clamp-2">
+                      {item.description}
+                    </p>
                   </div>
                 </div>
                 {sub ? (
@@ -277,7 +299,7 @@ export const AssignmentsPage: React.FC = () => {
       {/* Detail Sheet (submitted / graded) */}
       <AnimatePresence>
         {detailTarget && (() => {
-          const sub = getSubmission(detailTarget.id)!;
+          const sub = getSubmission(detailTarget.id);
           const Icon = typeIcons[detailTarget.type] ?? FileText;
           return (
             <>
@@ -285,60 +307,117 @@ export const AssignmentsPage: React.FC = () => {
               <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 200 }} className="fixed inset-x-0 bottom-0 z-[70] flex flex-col px-4 pb-4">
                 <div className="bg-[var(--ui-bg)] border border-[var(--ui-border)] rounded-3xl p-6 shadow-2xl max-w-2xl mx-auto w-full">
                   <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto mb-6" />
-                  <div className="flex justify-between items-start mb-5">
+                  <div className="flex justify-between items-start mb-5 gap-4">
                     <div className="flex items-center gap-3">
                       <div className={cn('size-12 rounded-xl flex items-center justify-center border border-white/5', typeColors[detailTarget.type] ?? typeColors.writing)}>
                         <Icon size={22} />
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-[var(--ui-heading)]">{detailTarget.title}</h3>
-                        <p className="text-xs text-[var(--ui-muted)]">Due: {detailTarget.dueDate} · {detailTarget.type}</p>
+                        <p className="text-xs text-[var(--ui-muted)]">
+                          Due: {detailTarget.dueDate} · {detailTarget.type}
+                        </p>
+                        <p className="text-[11px] text-[var(--ui-muted)] mt-0.5">
+                          {courseName ?? 'Course'}
+                          {detailTarget.moduleId && modulesById[detailTarget.moduleId] && (
+                            <> · {modulesById[detailTarget.moduleId].name}</>
+                          )}
+                        </p>
                       </div>
                     </div>
-                    <button onClick={() => setDetailTarget(null)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-[var(--ui-muted)]">
-                      <X size={18} />
-                    </button>
+                    <div className="flex flex-col items-end gap-2">
+                      {sub && (
+                        <StatusBadge
+                          status={sub.status === 'graded'
+                            ? (sub.bandScore ? `Graded · ${sub.bandScore}` : 'Graded')
+                            : 'Submitted'}
+                          variant={sub.status === 'graded' ? 'success' : 'accent'}
+                        />
+                      )}
+                      <button onClick={() => setDetailTarget(null)} className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-[var(--ui-muted)]">
+                        <X size={18} />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
-                    {sub.status === 'graded' && sub.bandScore && (
-                      <div className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-                        <TrendingUp className="text-emerald-400 shrink-0" size={24} />
-                        <div>
-                          <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Band Score</p>
-                          <p className="text-3xl font-black text-emerald-300 leading-none">{sub.bandScore}</p>
-                        </div>
+                    {detailTarget.description && (
+                      <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-sm text-[var(--ui-body)] leading-relaxed max-h-40 overflow-y-auto no-scrollbar">
+                        {detailTarget.description}
                       </div>
                     )}
 
-                    {sub.notes && (
-                      <div className="space-y-1.5">
-                        <p className="text-[10px] font-black text-[var(--ui-muted)] uppercase tracking-wider">Your Submission</p>
-                        <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-sm text-[var(--ui-body)] leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto no-scrollbar">
-                          {sub.notes}
-                        </div>
-                      </div>
-                    )}
-
-                    {sub.fileUrl && (
-                      <a href={sub.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-[#6324eb]/10 border border-[#6324eb]/20 hover:bg-[#6324eb]/20 transition-colors">
+                    {detailTarget.attachmentUrl && (
+                      <a
+                        href={detailTarget.attachmentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 rounded-xl bg-[#6324eb]/10 border border-[#6324eb]/20 hover:bg-[#6324eb]/20 transition-colors"
+                      >
                         <ExternalLink size={16} className="text-[#6324eb] shrink-0" />
-                        <span className="text-sm text-[#6324eb] font-bold truncate">{sub.fileName || 'View Attached File'}</span>
+                        <span className="text-sm text-[#6324eb] font-bold truncate">
+                          {detailTarget.attachmentName || 'View Assignment Resource'}
+                        </span>
                       </a>
                     )}
 
-                    {sub.feedback && (
-                      <div className="p-4 rounded-xl bg-[#6324eb]/10 border border-[#6324eb]/20">
-                        <p className="text-[#6324eb] text-xs font-bold uppercase mb-2 flex items-center gap-1">
-                          <MessageSquare size={12} /> Teacher Feedback
-                        </p>
-                        <p className="text-[var(--ui-body)] text-sm leading-relaxed">{sub.feedback}</p>
-                      </div>
-                    )}
+                    {sub ? (
+                      <>
+                        {sub.status === 'graded' && sub.bandScore && (
+                          <div className="flex items-center gap-4 p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
+                            <TrendingUp className="text-emerald-400 shrink-0" size={24} />
+                            <div>
+                              <p className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Band Score</p>
+                              <p className="text-3xl font-black text-emerald-300 leading-none">{sub.bandScore}</p>
+                            </div>
+                          </div>
+                        )}
 
-                    {sub.status === 'pending' && (
-                      <div className="text-center py-3 px-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-xs font-bold uppercase tracking-wider">
-                        Submitted — Awaiting Review
+                        {sub.notes && (
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] font-black text-[var(--ui-muted)] uppercase tracking-wider">Your Submission</p>
+                            <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-sm text-[var(--ui-body)] leading-relaxed whitespace-pre-wrap max-h-32 overflow-y-auto no-scrollbar">
+                              {sub.notes}
+                            </div>
+                          </div>
+                        )}
+
+                        {sub.fileUrl && (
+                          <a href={sub.fileUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 rounded-xl bg-[#6324eb]/10 border border-[#6324eb]/20 hover:bg-[#6324eb]/20 transition-colors">
+                            <ExternalLink size={16} className="text-[#6324eb] shrink-0" />
+                            <span className="text-sm text-[#6324eb] font-bold truncate">{sub.fileName || 'View Attached File'}</span>
+                          </a>
+                        )}
+
+                        {sub.feedback && (
+                          <div className="p-4 rounded-xl bg-[#6324eb]/10 border border-[#6324eb]/20">
+                            <p className="text-[#6324eb] text-xs font-bold uppercase mb-2 flex items-center gap-1">
+                              <MessageSquare size={12} /> Teacher Feedback
+                            </p>
+                            <p className="text-[var(--ui-body)] text-sm leading-relaxed">{sub.feedback}</p>
+                          </div>
+                        )}
+
+                        {sub.status === 'pending' && (
+                          <div className="text-center py-3 px-4 bg-blue-500/10 border border-blue-500/20 rounded-xl text-blue-400 text-xs font-bold uppercase tracking-wider">
+                            Submitted — Awaiting Review
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="text-xs text-[var(--ui-muted)] bg-white/5 border border-white/10 rounded-xl px-4 py-3">
+                          You haven't submitted this assignment yet. When you're ready, start your submission below.
+                        </div>
+                        <PrimaryButton
+                          className="w-full py-3"
+                          onClick={() => {
+                            setSubmitTarget(detailTarget);
+                            setDetailTarget(null);
+                          }}
+                        >
+                          <CheckCircle2 size={16} /> Start Submission
+                        </PrimaryButton>
                       </div>
                     )}
                   </div>

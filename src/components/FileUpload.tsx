@@ -26,6 +26,71 @@ interface FileUploadProps {
   compact?: boolean;
 }
 
+const MAX_IMAGE_DIMENSION = 1600; // px
+
+const isImageMimeType = (type: string) => /^image\//.test(type);
+
+const resizeImageFile = (file: File, maxWidth: number, maxHeight: number, quality = 0.8): Promise<File> => {
+  return new Promise((resolve, reject) => {
+    try {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          let { width, height } = img;
+
+          if (width <= maxWidth && height <= maxHeight) {
+            resolve(file);
+            URL.revokeObjectURL(img.src);
+            return;
+          }
+
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          const targetWidth = Math.round(width * ratio);
+          const targetHeight = Math.round(height * ratio);
+
+          const canvas = document.createElement('canvas');
+          canvas.width = targetWidth;
+          canvas.height = targetHeight;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            URL.revokeObjectURL(img.src);
+            resolve(file);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+          const outputType = file.type && isImageMimeType(file.type) ? file.type : 'image/jpeg';
+
+          canvas.toBlob(
+            (blob) => {
+              URL.revokeObjectURL(img.src);
+              if (!blob) {
+                resolve(file);
+                return;
+              }
+              const resizedFile = new File([blob], file.name, { type: outputType, lastModified: Date.now() });
+              resolve(resizedFile);
+            },
+            outputType,
+            quality
+          );
+        } catch (err) {
+          URL.revokeObjectURL(img.src);
+          resolve(file);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        resolve(file);
+      };
+      img.src = URL.createObjectURL(file);
+    } catch (err) {
+      resolve(file);
+    }
+  });
+};
+
 export const FileUpload: React.FC<FileUploadProps> = ({
   folder,
   onUploaded,
@@ -49,16 +114,30 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
       if (acceptedFiles.length === 0) return;
-      const file = acceptedFiles[0];
+      const originalFile = acceptedFiles[0];
       setError(null);
       setUploading(true);
       setProgress(0);
 
       try {
+        let fileToUpload = originalFile;
+
+        if (isImageMimeType(originalFile.type)) {
+          fileToUpload = await resizeImageFile(originalFile, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION, 0.82);
+
+          if (fileToUpload.size > maxSize) {
+            setUploading(false);
+            setProgress(0);
+            setError(`Image too large even after compression. Max ${Math.round(maxSize / 1024 / 1024)}MB.`);
+            return;
+          }
+        }
+
         const timestamp = Date.now();
-        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        const safeName = originalFile.name.replace(/[^a-zA-Z0-9._-]/g, '_');
         const storageRef = ref(storage, `${folder}/${timestamp}_${safeName}`);
-        const task = uploadBytesResumable(storageRef, file);
+        const metadata = fileToUpload.type ? { contentType: fileToUpload.type } : undefined;
+        const task = uploadBytesResumable(storageRef, fileToUpload, metadata);
 
         task.on(
           'state_changed',
@@ -72,7 +151,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           },
           async () => {
             const url = await getDownloadURL(task.snapshot.ref);
-            onUploaded(url, file.name);
+            onUploaded(url, originalFile.name);
             setUploading(false);
             setProgress(0);
           }
