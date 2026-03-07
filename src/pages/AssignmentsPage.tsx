@@ -259,8 +259,8 @@ export const AssignmentsPage: React.FC = () => {
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setSubmitTarget(null)} className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]" />
             <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 20 }} className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none">
-              <div className="bg-[var(--ui-bg)] border border-[var(--ui-border)] rounded-3xl p-8 shadow-2xl max-w-lg w-full pointer-events-auto">
-                <div className="flex justify-between items-center mb-6">
+              <div className="bg-[var(--ui-bg)] border border-[var(--ui-border)] rounded-3xl shadow-2xl max-w-lg w-full pointer-events-auto max-h-[80vh] flex flex-col">
+                <div className="flex justify-between items-center px-8 pt-8 pb-4 border-b border-white/5">
                   <div>
                     <h3 className="text-xl font-bold text-[var(--ui-heading)]">Submit Assignment</h3>
                     <p className="text-xs text-[var(--ui-muted)] mt-0.5 truncate max-w-[280px]">{submitTarget.title}</p>
@@ -269,27 +269,90 @@ export const AssignmentsPage: React.FC = () => {
                     <X size={22} />
                   </button>
                 </div>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold text-[var(--ui-muted)] uppercase tracking-wider">Your Answer / Notes <span className="text-red-400">*</span></label>
-                    <textarea required rows={5} value={notes} onChange={e => setNotes(e.target.value)} className="input-field w-full resize-none" placeholder="Write your response here..." />
+                <div className="px-8 pb-6 pt-4 overflow-y-auto space-y-5">
+                  {/* Assignment details */}
+                  <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
+                    <div className="flex items-start gap-3">
+                      <div className={cn('size-10 rounded-xl flex items-center justify-center border border-white/10', typeColors[submitTarget.type] ?? typeColors.writing)}>
+                        {(typeIcons[submitTarget.type] ?? FileText)({ size: 18 })}
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-1">
+                        <p className="text-[var(--ui-heading)] font-semibold text-sm">{submitTarget.title}</p>
+                        <p className="text-[11px] text-[var(--ui-muted)]">
+                          Due: {submitTarget.dueDate} · {submitTarget.type}
+                        </p>
+                        <p className="text-[11px] text-[var(--ui-muted)]">
+                          {courseName ?? 'Course'}
+                          {submitTarget.moduleId && modulesById[submitTarget.moduleId] && (
+                            <> · {modulesById[submitTarget.moduleId].name}</>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    {submitTarget.description && (
+                      <div className="mt-1 max-h-40 overflow-y-auto no-scrollbar text-xs text-[var(--ui-body)] leading-relaxed bg-[var(--ui-bg-3)]/60 border border-white/5 rounded-xl px-3 py-2 whitespace-pre-wrap">
+                        {submitTarget.description}
+                      </div>
+                    )}
+                    {submitTarget.attachmentUrl && (
+                      <a
+                        href={submitTarget.attachmentUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-2 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#6324eb]/10 border border-[#6324eb]/20 hover:bg-[#6324eb]/20 transition-colors text-xs"
+                      >
+                        <ExternalLink size={14} className="text-[#6324eb] shrink-0" />
+                        <span className="text-[#6324eb] font-semibold truncate">
+                          {submitTarget.attachmentName || 'Open assignment resource'}
+                        </span>
+                      </a>
+                    )}
                   </div>
-                  <FileUpload
-                    folder="submissions"
-                    label="Attach File (optional)"
-                    value={fileUrl}
-                    fileName={fileName}
-                    onUploaded={(url, name) => { setFileUrl(url); setFileName(name); }}
-                    onClear={() => { setFileUrl(''); setFileName(''); }}
-                    compact
-                  />
-                  <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={() => setSubmitTarget(null)} className="flex-1 py-3 rounded-2xl bg-white/5 text-[var(--ui-body)] font-bold hover:bg-white/10 transition-all">Cancel</button>
-                    <PrimaryButton type="submit" loading={submitting} className="flex-1 py-3">
-                      <CheckCircle2 size={16} /> Submit
-                    </PrimaryButton>
-                  </div>
-                </form>
+
+                  {/* Answer + upload */}
+                  <form onSubmit={handleSubmit} className="space-y-4">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-[var(--ui-muted)] uppercase tracking-wider">
+                        Your Answer / Notes <span className="text-red-400">*</span>
+                      </label>
+                      <textarea
+                        required
+                        rows={5}
+                        value={notes}
+                        onChange={e => setNotes(e.target.value)}
+                        className="input-field w-full resize-none"
+                        placeholder="Write your response here..."
+                      />
+                    </div>
+                    <FileUpload
+                      folder="submissions"
+                      label="Attach File (optional)"
+                      value={fileUrl}
+                      fileName={fileName}
+                      onUploaded={(url, name) => {
+                        setFileUrl(url);
+                        setFileName(name);
+                      }}
+                      onClear={() => {
+                        setFileUrl('');
+                        setFileName('');
+                      }}
+                      compact
+                    />
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setSubmitTarget(null)}
+                        className="flex-1 py-3 rounded-2xl bg-white/5 text-[var(--ui-body)] font-bold hover:bg-white/10 transition-all"
+                      >
+                        Cancel
+                      </button>
+                      <PrimaryButton type="submit" loading={submitting} className="flex-1 py-3">
+                        <CheckCircle2 size={16} /> Submit
+                      </PrimaryButton>
+                    </div>
+                  </form>
+                </div>
               </div>
             </motion.div>
           </>
