@@ -272,23 +272,28 @@ export const AssignmentsPage: React.FC = () => {
                 <div className="px-8 pb-6 pt-4 overflow-y-auto space-y-5">
                   {/* Assignment details */}
                   <div className="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                    <div className="flex items-start gap-3">
-                      <div className={cn('size-10 rounded-xl flex items-center justify-center border border-white/10', typeColors[submitTarget.type] ?? typeColors.writing)}>
-                        {(typeIcons[submitTarget.type] ?? FileText)({ size: 18 })}
-                      </div>
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <p className="text-[var(--ui-heading)] font-semibold text-sm">{submitTarget.title}</p>
-                        <p className="text-[11px] text-[var(--ui-muted)]">
-                          Due: {submitTarget.dueDate} · {submitTarget.type}
-                        </p>
-                        <p className="text-[11px] text-[var(--ui-muted)]">
-                          {courseName ?? 'Course'}
-                          {submitTarget.moduleId && modulesById[submitTarget.moduleId] && (
-                            <> · {modulesById[submitTarget.moduleId].name}</>
-                          )}
-                        </p>
-                      </div>
-                    </div>
+                    {(() => {
+                      const Icon = typeIcons[submitTarget.type] ?? FileText;
+                      return (
+                        <div className="flex items-start gap-3">
+                          <div className={cn('size-10 rounded-xl flex items-center justify-center border border-white/10', typeColors[submitTarget.type] ?? typeColors.writing)}>
+                            <Icon size={18} />
+                          </div>
+                          <div className="flex-1 min-w-0 space-y-1">
+                            <p className="text-[var(--ui-heading)] font-semibold text-sm">{submitTarget.title}</p>
+                            <p className="text-[11px] text-[var(--ui-muted)]">
+                              Due: {submitTarget.dueDate} · {submitTarget.type}
+                            </p>
+                            <p className="text-[11px] text-[var(--ui-muted)]">
+                              {courseName ?? 'Course'}
+                              {submitTarget.moduleId && modulesById[submitTarget.moduleId] && (
+                                <> · {modulesById[submitTarget.moduleId].name}</>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })()}
                     {submitTarget.description && (
                       <div className="mt-1 max-h-40 overflow-y-auto no-scrollbar text-xs text-[var(--ui-body)] leading-relaxed bg-[var(--ui-bg-3)]/60 border border-white/5 rounded-xl px-3 py-2 whitespace-pre-wrap">
                         {submitTarget.description}
