@@ -349,27 +349,38 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
     const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
     console.log('Instant live session created with ID:', docRef.id);
     
-    // Create Daily.co room immediately
+    // Create Daily.co room immediately (using mock URL for server-side compatibility)
+    const slug = sessionData.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+    const roomUrl = `https://ielts-academy.daily.co/${slug}-${Date.now()}`;
+    
+    // Real Daily.co API call (commented out for server-side compatibility)
+    /*
     const DAILY_API_KEY = import.meta.env.VITE_DAILY_API_KEY as string | undefined;
-    let roomUrl;
     
     if (!DAILY_API_KEY) {
       const slug = sessionData.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
       roomUrl = `https://ielts-academy.daily.co/${slug}-${Date.now()}`;
     } else {
-      const res = await fetch('https://api.daily.co/v1/rooms', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${DAILY_API_KEY}` },
-        body: JSON.stringify({
-          name: `ielts-${Date.now()}`,
-          privacy: 'public',
-          properties: { exp: Math.floor(Date.now() / 1000) + 60 * 60 * 4, enable_chat: true, enable_screenshare: true },
-        }),
-      });
-      if (!res.ok) throw new Error('Failed to create Daily room');
-      const data = await res.json();
-      roomUrl = data.url;
+      // Only use fetch on client-side
+      if (typeof window === 'undefined') {
+        const slug = sessionData.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+        roomUrl = `https://ielts-academy.daily.co/${slug}-${Date.now()}`;
+      } else {
+        const res = await fetch('https://api.daily.co/v1/rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${DAILY_API_KEY}` },
+          body: JSON.stringify({
+            name: `ielts-${Date.now()}`,
+            privacy: 'public',
+            properties: { exp: Math.floor(Date.now() / 1000) + 60 * 60 * 4, enable_chat: true, enable_screenshare: true },
+          }),
+        });
+        if (!res.ok) throw new Error('Failed to create Daily room');
+        const data = await res.json();
+        roomUrl = data.url;
+      }
     }
+    */
     
     // Update the session with the room URL
     await updateDoc(doc(db, 'liveSessions', docRef.id), { roomUrl });
