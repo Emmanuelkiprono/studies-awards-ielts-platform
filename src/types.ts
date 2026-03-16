@@ -150,6 +150,8 @@ export interface LiveSession {
   roomUrl?: string;
   isLive?: boolean;
   startedAt?: string;
+  createdAt?: any;
+  createdBy?: string;
 }
 
 export interface Assignment {
