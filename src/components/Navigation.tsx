@@ -184,6 +184,12 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
         {isTeacher ? (
           <>
             <NavItem
+              icon={Video}
+              label="Live"
+              active={isActive('/live')}
+              onClick={() => navigate('/live')}
+            />
+            <NavItem
               icon={Users}
               label="Students"
               active={isActive('/teacher/students')}

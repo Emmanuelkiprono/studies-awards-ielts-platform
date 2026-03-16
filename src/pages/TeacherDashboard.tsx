@@ -322,13 +322,83 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
     }
   };
 
-  const handleScheduleSession = async (e: React.FormEvent) => {
+  const handleStartLiveNow = async () => {
+  if (!teacherUser || !selectedCourseId) {
+    alert('Please select a course first');
+    return;
+  }
+  
+  try {
+    // Create an instant live session
+    const now = new Date();
+    const endTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+    
+    const sessionData = {
+      title: `Live Session - ${now.toLocaleTimeString()}`,
+      courseId: selectedCourseId,
+      startTime: now.toISOString(),
+      endTime: endTime.toISOString(),
+      isLive: true,
+      startedAt: now.toISOString(),
+      createdAt: serverTimestamp(),
+      createdBy: teacherUser.uid,
+    };
+    
+    console.log('Creating instant live session:', sessionData);
+    
+    const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
+    console.log('Instant live session created with ID:', docRef.id);
+    
+    // Create Daily.co room immediately
+    const DAILY_API_KEY = import.meta.env.VITE_DAILY_API_KEY as string | undefined;
+    let roomUrl;
+    
+    if (!DAILY_API_KEY) {
+      const slug = sessionData.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+      roomUrl = `https://ielts-academy.daily.co/${slug}-${Date.now()}`;
+    } else {
+      const res = await fetch('https://api.daily.co/v1/rooms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${DAILY_API_KEY}` },
+        body: JSON.stringify({
+          name: `ielts-${Date.now()}`,
+          privacy: 'public',
+          properties: { exp: Math.floor(Date.now() / 1000) + 60 * 60 * 4, enable_chat: true, enable_screenshare: true },
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to create Daily room');
+      const data = await res.json();
+      roomUrl = data.url;
+    }
+    
+    // Update the session with the room URL
+    await updateDoc(doc(db, 'liveSessions', docRef.id), { roomUrl });
+    
+    // Navigate directly to live classes with the active room
+    navigate('/live', { state: { activeRoom: { session: { ...sessionData, id: docRef.id, roomUrl }, roomUrl } } });
+    
+  } catch (err) {
+    console.error('Error starting live session:', err);
+    alert(`Failed to start live session: ${err.message}`);
+  }
+};
+
+const handleScheduleSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teacherUser) return;
+    
+    console.log('Scheduling session with data:', liveForm);
+    console.log('Selected course ID:', selectedCourseId);
+    
     setLiveLoading(true);
     try {
       const liveCourseId = liveForm.courseId || selectedCourseId;
-      await addDoc(collection(db, 'liveSessions'), {
+      
+      if (!liveCourseId) {
+        throw new Error('No course selected');
+      }
+      
+      const sessionData = {
         title: liveForm.title,
         courseId: liveCourseId,
         startTime: liveForm.date && liveForm.startTime ? `${liveForm.date}T${liveForm.startTime}` : '',
@@ -336,7 +406,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
         meetingUrl: liveForm.meetingUrl || null,
         createdAt: serverTimestamp(),
         createdBy: teacherUser.uid,
-      });
+      };
+      
+      console.log('Creating session with data:', sessionData);
+      
+      const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
+      console.log('Session created with ID:', docRef.id);
 
       if (liveCourseId) {
         const enrollSnap = await getDocs(query(
@@ -359,9 +434,11 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
 
       setShowLiveModal(false);
       setLiveForm({ title: '', courseId: '', date: '', startTime: '', endTime: '', meetingUrl: '' });
+      
+      alert('Session scheduled successfully!');
     } catch (err) {
       console.error('Error scheduling session:', err);
-      alert('Failed to schedule session.');
+      alert(`Failed to schedule session: ${err.message}`);
     } finally {
       setLiveLoading(false);
     }
@@ -618,6 +695,9 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
               <div className="grid grid-cols-1 gap-3">
                 <PrimaryButton className="w-full py-4 justify-between group" onClick={() => setShowCreateModal(true)}>
                   Create Assignment <Plus size={18} className="group-hover:rotate-90 transition-transform" />
+                </PrimaryButton>
+                <PrimaryButton className="w-full py-4 justify-between group" onClick={() => handleStartLiveNow()}>
+                  Start Live Now <Video size={18} className="animate-pulse" />
                 </PrimaryButton>
                 <PrimaryButton variant="secondary" className="w-full py-4 justify-between border-white/10 hover:bg-white/5" onClick={() => setShowLiveModal(true)}>
                   Schedule Live Session <Video size={18} />

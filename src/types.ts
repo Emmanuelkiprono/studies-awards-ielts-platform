@@ -147,6 +147,9 @@ export interface LiveSession {
   startTime: string;
   endTime: string;
   meetingUrl?: string;
+  roomUrl?: string;
+  isLive?: boolean;
+  startedAt?: string;
 }
 
 export interface Assignment {

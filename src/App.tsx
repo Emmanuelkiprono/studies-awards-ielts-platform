@@ -122,6 +122,9 @@ const AppContent: React.FC = () => {
             </ProtectedRoute>
           } />
 
+          {/* Shared Routes - Live Classes for both teachers and students */}
+          <Route path="/live" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><LiveClassesPage /></ProtectedRoute>} />
+
           {/* Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['admin']}>
@@ -144,7 +147,6 @@ const AppContent: React.FC = () => {
           } />
 
           <Route path="/exam_booking" element={<ProtectedRoute allowedRoles={['student']}><ExamBookingPage /></ProtectedRoute>} />
-          <Route path="/live" element={<ProtectedRoute allowedRoles={['student']}><LiveClassesPage /></ProtectedRoute>} />
           <Route path="/tasks" element={<ProtectedRoute allowedRoles={['student']}><AssignmentsPage /></ProtectedRoute>} />
           <Route path="/resources" element={<ProtectedRoute allowedRoles={['student']}><ResourcesPage /></ProtectedRoute>} />
           <Route path="/progress" element={<ProtectedRoute allowedRoles={['student']}><ProgressPage /></ProtectedRoute>} />
