@@ -385,6 +385,24 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
     // Update the session with the room URL
     await updateDoc(doc(db, 'liveSessions', docRef.id), { roomUrl });
     
+    // Notify enrolled students about immediate live session
+    const enrollSnap = await getDocs(query(
+      collection(db, 'enrollments'),
+      where('courseId', '==', selectedCourseId)
+    ));
+    
+    await Promise.all(enrollSnap.docs.map(d =>
+      NotificationService.create(
+        d.data().userId,
+        '🔴 Live Class Started Now!',
+        `A live session for "${selectedCourse?.title || 'Your Course'}" has started. Join now!`,
+        'success',
+        '/live'
+      )
+    ));
+    
+    console.log(`Notified ${enrollSnap.docs.length} students about live session`);
+    
     // Navigate directly to live classes with the active room
     navigate('/live', { state: { activeRoom: { session: { ...sessionData, id: docRef.id, roomUrl }, roomUrl } } });
     
@@ -435,12 +453,14 @@ const handleScheduleSession = async (e: React.FormEvent) => {
         await Promise.all(enrollSnap.docs.map(d =>
           NotificationService.create(
             d.data().userId,
-            'New Live Session Scheduled',
-            `"${liveForm.title}" is scheduled for ${sessionDate}.`,
+            '📅 Live Class Scheduled',
+            `A live session "${liveForm.title}" is scheduled for ${sessionDate}. Don\'t miss it!`,
             'info',
             '/live'
           )
         ));
+        
+        console.log(`Notified ${enrollSnap.docs.length} students about scheduled live session`);
       }
 
       setShowLiveModal(false);
@@ -700,18 +720,18 @@ const handleScheduleSession = async (e: React.FormEvent) => {
             {/* Quick Actions / Course Info */}
             <section className="space-y-4">
               <h3 className="text-lg font-bold text-[var(--ui-heading)] flex items-center gap-2">
-                <LayoutDashboard className="text-[var(--ui-accent)]" size={20} />
-                Quick Actions
+                <LayoutDashboard className="text-[var(--ui-accent)] size={20} animate-pulse" />
+                🔴 Quick Actions - Live Classes
               </h3>
               <div className="grid grid-cols-1 gap-3">
+                <PrimaryButton className="w-full py-4 justify-between group bg-green-600 hover:bg-green-700 border-green-500" onClick={() => handleStartLiveNow()}>
+                  🔴 Start Live Now <Video size={18} className="animate-pulse" />
+                </PrimaryButton>
+                <PrimaryButton variant="secondary" className="w-full py-4 justify-between border-blue-500/30 bg-blue-600/10 hover:bg-blue-600/20 text-blue-400" onClick={() => setShowLiveModal(true)}>
+                  📅 Schedule Live Session <Video size={18} />
+                </PrimaryButton>
                 <PrimaryButton className="w-full py-4 justify-between group" onClick={() => setShowCreateModal(true)}>
                   Create Assignment <Plus size={18} className="group-hover:rotate-90 transition-transform" />
-                </PrimaryButton>
-                <PrimaryButton className="w-full py-4 justify-between group" onClick={() => handleStartLiveNow()}>
-                  Start Live Now <Video size={18} className="animate-pulse" />
-                </PrimaryButton>
-                <PrimaryButton variant="secondary" className="w-full py-4 justify-between border-white/10 hover:bg-white/5" onClick={() => setShowLiveModal(true)}>
-                  Schedule Live Session <Video size={18} />
                 </PrimaryButton>
                 <PrimaryButton variant="secondary" className="w-full py-4 justify-between border-white/10 hover:bg-white/5" onClick={() => setShowAnnouncementModal(true)}>
                   Send Announcement <Bell size={18} />
