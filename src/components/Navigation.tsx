@@ -77,13 +77,13 @@ const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center !items-center !justify-center">
       <button
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
         aria-label="Close appearance settings"
       />
-      <div className="relative glass-card rounded-2xl p-4 max-w-xs w-full mx-4">
+      <div className="relative glass-card rounded-2xl p-4 max-w-xs w-full mx-4 !fixed !top-1/2 !left-1/2 !transform !-translate-x-1/2 !-translate-y-1/2">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Palette size={16} className="text-[var(--ui-muted)]" />
