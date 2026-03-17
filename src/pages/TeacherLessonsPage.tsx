@@ -441,8 +441,8 @@ export const TeacherLessonsPage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="md:col-span-3 space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Class Options</label>
+                  <div className="md:col-span-3 space-y-2 bg-green-500/10 p-4 rounded-xl border border-green-500/30">
+                    <label className="text-[10px] font-bold text-green-400 uppercase tracking-widest">🔴 Live Class Options</label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <button
                         type="button"
