@@ -12,7 +12,9 @@ import {
   ChevronDown,
   BookOpen,
   FileText,
-  Clock
+  Clock,
+  Calendar,
+  Users
 } from 'lucide-react';
 import {
   collection,
@@ -23,15 +25,20 @@ import {
   deleteDoc,
   doc,
   orderBy,
-  serverTimestamp
+  serverTimestamp,
+  getDocs,
+  where
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { Course, Module, Lesson } from '../types';
 import { GlassCard, PrimaryButton, StatusBadge } from '../components/UI';
 import { FileUpload } from '../components/FileUpload';
 import { cn } from '../lib/utils';
+import { NotificationService } from '../services/notificationService';
+import { useAuth } from '../hooks/useAuth';
 
 export const TeacherLessonsPage: React.FC = () => {
+  const { teacherUser } = useAuth();
   const [searchParams] = useSearchParams();
   const [courses, setCourses] = useState<Course[]>([]);
   const [modules, setModules] = useState<Module[]>([]);
@@ -48,11 +55,18 @@ export const TeacherLessonsPage: React.FC = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [videoUrl, setVideoUrl] = useState('');
+  const [durationMinutes, setDurationMinutes] = useState(60);
   const [pdfUrl, setPdfUrl] = useState('');
   const [pdfFileName, setPdfFileName] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [imageFileName, setImageFileName] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState(15);
+
+  // Live class states
+  const [isLiveClass, setIsLiveClass] = useState(false);
+  const [liveOption, setLiveOption] = useState<'immediate' | 'scheduled' | 'none'>('none');
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
+  const [isCreatingLive, setIsCreatingLive] = useState(false);
   const [order, setOrder] = useState(1);
 
   // Fetch Courses
@@ -105,8 +119,10 @@ export const TeacherLessonsPage: React.FC = () => {
 
   const handleAddLesson = async () => {
     if (!title || !selectedCourseId || !selectedModuleId) return;
+    
     try {
-      await addDoc(collection(db, 'courses', selectedCourseId, 'modules', selectedModuleId, 'lessons'), {
+      // Create the lesson first
+      const lessonDoc = await addDoc(collection(db, 'courses', selectedCourseId, 'modules', selectedModuleId, 'lessons'), {
         title,
         description,
         videoUrl,
@@ -116,12 +132,105 @@ export const TeacherLessonsPage: React.FC = () => {
         imageFileName: imageFileName || null,
         durationMinutes: Number(durationMinutes),
         order: Number(order),
+        isLiveClass,
+        liveOption,
         createdAt: serverTimestamp()
       });
+
+      // Handle live class creation
+      if (isLiveClass && teacherUser) {
+        setIsCreatingLive(true);
+        
+        let sessionData: any = {
+          title: `Live: ${title}`,
+          courseId: selectedCourseId,
+          lessonId: lessonDoc.id,
+          moduleId: selectedModuleId,
+          createdBy: teacherUser.uid,
+          createdAt: serverTimestamp()
+        };
+
+        if (liveOption === 'immediate') {
+          // Start live immediately
+          const now = new Date();
+          const endTime = new Date(now.getTime() + 60 * 60 * 1000); // 1 hour from now
+          
+          sessionData = {
+            ...sessionData,
+            startTime: now.toISOString(),
+            endTime: endTime.toISOString(),
+            isLive: true,
+            startedAt: now.toISOString()
+          };
+
+          // Create live session
+          const liveSessionDoc = await addDoc(collection(db, 'liveSessions'), sessionData);
+          
+          // Create mock room URL
+          const slug = title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+          const roomUrl = `https://ielts-academy.daily.co/${slug}-${Date.now()}`;
+          
+          // Update session with room URL
+          await updateDoc(doc(db, 'liveSessions', liveSessionDoc.id), { roomUrl });
+
+          // Notify students about immediate live session
+          await notifyStudents(selectedCourseId, 'Live Class Started Now!', 
+            `A live session for "${title}" has started. Join now!`, 
+            `/live`, 'success');
+
+          // Navigate to live classes with active room
+          window.location.href = `/live`;
+
+        } else if (liveOption === 'scheduled' && scheduledDate && scheduledTime) {
+          // Schedule live session
+          const scheduledDateTime = new Date(`${scheduledDate}T${scheduledTime}`);
+          const endTime = new Date(scheduledDateTime.getTime() + 60 * 60 * 1000); // 1 hour duration
+          
+          sessionData = {
+            ...sessionData,
+            startTime: scheduledDateTime.toISOString(),
+            endTime: endTime.toISOString(),
+            isLive: false,
+            scheduledDate: scheduledDate,
+            scheduledTime: scheduledTime
+          };
+
+          // Create scheduled live session
+          await addDoc(collection(db, 'liveSessions'), sessionData);
+
+          // Notify students about scheduled session
+          await notifyStudents(selectedCourseId, 'Live Class Scheduled', 
+            `A live session for "${title}" is scheduled for ${scheduledDate} at ${scheduledTime}.`, 
+            `/live`, 'info');
+        }
+        
+        setIsCreatingLive(false);
+      }
+
       setIsAdding(false);
       resetForm();
     } catch (error) {
       console.error("Error adding lesson:", error);
+      setIsCreatingLive(false);
+    }
+  };
+
+  // Helper function to notify students
+  const notifyStudents = async (courseId: string, title: string, message: string, link?: string, type: 'info' | 'success' | 'warning' | 'error' = 'info') => {
+    try {
+      // Get all enrolled students for this course
+      const enrollmentsQuery = query(collection(db, 'enrollments'), where('courseId', '==', courseId));
+      const enrollmentsSnapshot = await getDocs(enrollmentsQuery);
+      
+      // Send notification to each enrolled student
+      const notifications = enrollmentsSnapshot.docs.map(async (enrollmentDoc) => {
+        const enrollment = enrollmentDoc.data();
+        return NotificationService.create(enrollment.studentId, title, message, type, link);
+      });
+      
+      await Promise.all(notifications);
+    } catch (error) {
+      console.error("Error notifying students:", error);
     }
   };
 
@@ -166,6 +275,11 @@ export const TeacherLessonsPage: React.FC = () => {
     setImageUrl('');
     setImageFileName('');
     setDurationMinutes(15);
+    setIsLiveClass(false);
+    setLiveOption('none');
+    setScheduledDate('');
+    setScheduledTime('');
+    setIsCreatingLive(false);
   };
 
   const startEditing = (les: Lesson) => {
@@ -323,6 +437,77 @@ export const TeacherLessonsPage: React.FC = () => {
                   </div>
 
                   <div className="md:col-span-3 space-y-2">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Class Options</label>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <button
+                        type="button"
+                        onClick={() => { setIsLiveClass(false); setLiveOption('none'); }}
+                        className={`p-3 rounded-xl border transition-all ${
+                          liveOption === 'none' 
+                            ? 'border-[#6324eb] bg-[#6324eb]/10 text-white' 
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                        }`}
+                      >
+                        <Video size={16} className="mx-auto mb-1" />
+                        <div className="text-xs font-bold">Regular Lesson</div>
+                        <div className="text-[10px] opacity-70">No live session</div>
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => { setIsLiveClass(true); setLiveOption('immediate'); }}
+                        className={`p-3 rounded-xl border transition-all ${
+                          liveOption === 'immediate' 
+                            ? 'border-green-500 bg-green-500/10 text-green-400' 
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                        }`}
+                      >
+                        <Clock size={16} className="mx-auto mb-1" />
+                        <div className="text-xs font-bold">Start Live Now</div>
+                        <div className="text-[10px] opacity-70">Create video room</div>
+                      </button>
+                      
+                      <button
+                        type="button"
+                        onClick={() => { setIsLiveClass(true); setLiveOption('scheduled'); }}
+                        className={`p-3 rounded-xl border transition-all ${
+                          liveOption === 'scheduled' 
+                            ? 'border-blue-500 bg-blue-500/10 text-blue-400' 
+                            : 'border-white/10 bg-white/5 text-slate-400 hover:bg-white/10'
+                        }`}
+                      >
+                        <Calendar size={16} className="mx-auto mb-1" />
+                        <div className="text-xs font-bold">Schedule Live</div>
+                        <div className="text-[10px] opacity-70">Set date & time</div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {liveOption === 'scheduled' && (
+                    <div className="md:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Scheduled Date</label>
+                        <input
+                          type="date"
+                          className="input-field w-full py-3 bg-[#0a0a0a]"
+                          value={scheduledDate}
+                          onChange={(e) => setScheduledDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Scheduled Time</label>
+                        <input
+                          type="time"
+                          className="input-field w-full py-3 bg-[#0a0a0a]"
+                          value={scheduledTime}
+                          onChange={(e) => setScheduledTime(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="md:col-span-3 space-y-2">
                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Description</label>
                     <textarea
                       className="input-field w-full py-4 min-h-[100px] bg-[#0a0a0a]"
@@ -342,8 +527,18 @@ export const TeacherLessonsPage: React.FC = () => {
                     <PrimaryButton
                       className="px-12 py-3"
                       onClick={() => editingId ? handleUpdateLesson(editingId) : handleAddLesson()}
+                      disabled={isCreatingLive}
                     >
-                      {editingId ? 'Save Changes' : 'Create Lesson'}
+                      {isCreatingLive ? (
+                        <>
+                          <Clock size={16} className="animate-spin" />
+                          Creating Live Session...
+                        </>
+                      ) : (
+                        <>
+                          {editingId ? 'Save Changes' : 'Create Lesson'}
+                        </>
+                      )}
                     </PrimaryButton>
                   </div>
                 </div>
