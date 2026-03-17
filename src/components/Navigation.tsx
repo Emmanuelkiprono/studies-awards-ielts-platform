@@ -278,6 +278,18 @@ export const TopBar: React.FC<{ title?: string; subtitle?: string; avatarUrl?: s
           <span className="bg-[rgba(var(--ui-accent-rgb)/0.20)] text-[var(--ui-accent)] text-[10px] font-black px-1.5 rounded w-fit border border-[rgba(var(--ui-accent-rgb)/0.30)]">IELTS</span>
         </div>
       </div>
+      
+      {/* Center Theme Button */}
+      <div className="flex items-center justify-center absolute left-1/2 transform -translate-x-1/2">
+        <button
+          onClick={() => setAppearanceOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--ui-card)] border border-[var(--ui-border)] hover:bg-white/10 transition-all text-[var(--ui-text)]"
+        >
+          <Palette size={16} className="text-[var(--ui-muted)]" />
+          <span className="text-sm font-semibold">Theme</span>
+        </button>
+      </div>
+      
       <div className="flex items-center gap-3">
         <NotificationBell />
         <div className="relative" ref={menuRef}>
@@ -304,16 +316,6 @@ export const TopBar: React.FC<{ title?: string; subtitle?: string; avatarUrl?: s
               >
                 <UserIcon size={16} className="text-[var(--ui-muted)]" />
                 <span className="text-sm font-semibold">Profile</span>
-              </button>
-              <button
-                onClick={() => {
-                  setMenuOpen(false);
-                  setAppearanceOpen(true);
-                }}
-                className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/5 transition-colors text-[var(--ui-heading)]"
-              >
-                <Settings size={16} className="text-[var(--ui-muted)]" />
-                <span className="text-sm font-semibold">Appearance</span>
               </button>
               <div className="h-px bg-white/5 my-1" />
               <button
