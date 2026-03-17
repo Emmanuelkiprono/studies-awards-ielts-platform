@@ -77,42 +77,42 @@ const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   );
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center">
       <button
         className="absolute inset-0 bg-black/60"
         onClick={onClose}
         aria-label="Close appearance settings"
       />
-      <div className="relative w-full sm:max-w-md glass-card rounded-t-3xl sm:rounded-2xl p-5">
-        <div className="flex items-center justify-between mb-4">
+      <div className="relative glass-card rounded-2xl p-4 max-w-xs w-full mx-4">
+        <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <Palette size={18} className="text-[var(--ui-muted)]" />
-            <h2 className="text-[var(--ui-text)] font-bold">Appearance</h2>
+            <Palette size={16} className="text-[var(--ui-muted)]" />
+            <h2 className="text-[var(--ui-text)] font-bold text-sm">Theme</h2>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-white/5 transition-colors text-[var(--ui-muted)] hover:text-[var(--ui-heading)]"
+            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-[var(--ui-muted)] hover:text-[var(--ui-heading)]"
           >
-            <X size={18} />
+            <X size={16} />
           </button>
         </div>
 
-        <div className="space-y-5">
+        <div className="space-y-3">
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Theme</div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Mode</div>
+            <div className="grid grid-cols-3 gap-1.5">
               {themeOptions.map(({ value, label, icon: Icon }) => (
                 <button
                   key={value}
                   onClick={() => setThemeMode(value)}
                   className={cn(
-                    'px-3 py-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-2',
+                    'px-2 py-2 rounded-lg border transition-all flex flex-col items-center justify-center gap-1',
                     themeMode === value
                       ? 'border-[rgba(var(--ui-accent-rgb)/0.45)] bg-[rgba(var(--ui-accent-rgb)/0.12)] text-[var(--ui-heading)]'
                       : 'border-[var(--ui-border)] bg-[var(--ui-card)] text-[var(--ui-body)] hover:bg-white/10'
                   )}
                 >
-                  <Icon size={18} />
+                  <Icon size={14} />
                   <span className="text-xs font-bold">{label}</span>
                 </button>
               ))}
@@ -120,20 +120,20 @@ const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
 
           <div>
-            <div className="text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)] mb-2">Accent</div>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)] mb-1.5">Color</div>
+            <div className="grid grid-cols-3 gap-1.5">
               {accentOptions.map(({ value, label, swatchClass }) => (
                 <button
                   key={value}
                   onClick={() => setAccent(value)}
                   className={cn(
-                    'px-3 py-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-2',
+                    'px-2 py-2 rounded-lg border transition-all flex flex-col items-center justify-center gap-1',
                     accent === value
                       ? 'border-[rgba(var(--ui-accent-rgb)/0.45)] bg-[rgba(var(--ui-accent-rgb)/0.12)] text-[var(--ui-heading)]'
                       : 'border-[var(--ui-border)] bg-[var(--ui-card)] text-[var(--ui-body)] hover:bg-white/10'
                   )}
                 >
-                  <span className={cn('size-5 rounded-full', swatchClass)} />
+                  <span className={cn('size-4 rounded-full', swatchClass)} />
                   <span className="text-xs font-bold">{label}</span>
                 </button>
               ))}
