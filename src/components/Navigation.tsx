@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import {
@@ -58,6 +58,17 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, onClick, b
 const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { themeMode, accent, setAccent, setThemeMode } = useTheme();
 
+  // Add escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [onClose]);
+
   const themeOptions: Array<{ value: ThemeMode; label: string; icon: React.ElementType }> = useMemo(
     () => [
       { value: 'system', label: 'System', icon: Monitor },
@@ -91,7 +102,8 @@ const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-white/5 transition-colors text-[var(--ui-muted)] hover:text-[var(--ui-heading)]"
+            className="p-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 transition-colors text-red-400 hover:text-red-300 border border-red-500/20"
+            aria-label="Close theme settings"
           >
             <X size={16} />
           </button>
@@ -139,6 +151,15 @@ const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               ))}
             </div>
           </div>
+        
+        {/* Close Button at Bottom */}
+        <div className="pt-3 border-t border-[var(--ui-border)]">
+          <button
+            onClick={onClose}
+            className="w-full py-2 px-4 rounded-xl bg-[var(--ui-card)] border border-[var(--ui-border)] hover:bg-white/10 transition-colors text-[var(--ui-text)] font-medium text-sm"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
