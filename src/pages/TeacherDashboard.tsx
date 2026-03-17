@@ -721,7 +721,7 @@ const handleScheduleSession = async (e: React.FormEvent) => {
             <section className="space-y-4">
               <h3 className="text-lg font-bold text-[var(--ui-heading)] flex items-center gap-2">
                 <LayoutDashboard className="text-[var(--ui-accent)] size={20} animate-pulse" />
-                🔴 Quick Actions - Live Classes
+                🔴 Quick Actions - Live Classes (Updated)
               </h3>
               <div className="grid grid-cols-1 gap-3">
                 <PrimaryButton className="w-full py-4 justify-between group bg-green-600 hover:bg-green-700 border-green-500" onClick={() => handleStartLiveNow()}>
