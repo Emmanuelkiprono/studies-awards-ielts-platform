@@ -71,7 +71,8 @@ export const TeacherLessonsPage: React.FC = () => {
   // Debug: Log when component mounts
   useEffect(() => {
     console.log('TeacherLessonsPage mounted - Live class features should be visible');
-  }, []);
+    console.log('isAdding state:', isAdding);
+  }, [isAdding]);
   const [order, setOrder] = useState(1);
 
   // Fetch Courses
@@ -441,8 +442,8 @@ export const TeacherLessonsPage: React.FC = () => {
                     />
                   </div>
 
-                  <div className="md:col-span-3 space-y-2 bg-green-500/10 p-4 rounded-xl border border-green-500/30">
-                    <label className="text-[10px] font-bold text-green-400 uppercase tracking-widest">🔴 Live Class Options</label>
+                  <div className="md:col-span-3 space-y-2 bg-red-500/20 p-6 rounded-xl border-2 border-red-500 shadow-lg shadow-red-500/20">
+                    <label className="text-lg font-bold text-red-400 uppercase tracking-widest">🔴 LIVE CLASS OPTIONS - CHOOSE TYPE</label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <button
                         type="button"
