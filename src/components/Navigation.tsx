@@ -58,7 +58,6 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, onClick, b
 const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const { themeMode, accent, setAccent, setThemeMode } = useTheme();
 
-  // Add escape key to close modal
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
