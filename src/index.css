@@ -67,6 +67,39 @@ html[data-accent="green"] {
     background: var(--ui-bg-gradient);
     background-attachment: fixed;
   }
+  
+  /* Light theme specific fixes */
+  html[data-theme="light"] {
+    color: var(--ui-text);
+  }
+  
+  html[data-theme="light"] h1, 
+  html[data-theme="light"] h2, 
+  html[data-theme="light"] h3, 
+  html[data-theme="light"] h4, 
+  html[data-theme="light"] h5, 
+  html[data-theme="light"] h6 {
+    color: var(--ui-heading);
+  }
+  
+  html[data-theme="light"] .text-muted,
+  html[data-theme="light"] .text-gray,
+  html[data-theme="light"] span.text-gray,
+  html[data-theme="light"] div.text-gray {
+    color: var(--ui-muted) !important;
+  }
+  
+  /* Navigation specific fixes */
+  html[data-theme="light"] nav *,
+  html[data-theme="light"] .nav-item,
+  html[data-theme="light"] button {
+    color: var(--ui-text);
+  }
+  
+  html[data-theme="light"] nav *.text-accent,
+  html[data-theme="light"] nav *[class*="accent"] {
+    color: var(--ui-accent);
+  }
 }
 
 @layer components {
