@@ -324,7 +324,14 @@ export const StudentOnboardingDashboard: React.FC = () => {
             <div>paymentInfo: <span className="text-yellow-300">{studentData?.paymentInfo ? 'EXISTS' : 'MISSING'}</span></div>
             <div>breemicEnrollmentId: <span className="text-yellow-300">{studentData?.breemicEnrollmentId || 'MISSING'}</span></div>
             <div>currentStatus: <span className="text-yellow-300">{currentStatus}</span></div>
-            <div>dashboardShows: <span className="text-yellow-300">{currentStatus === 'payment_pending' ? 'PROCEED TO PAYMENT' : 'COMPLETE ENROLLMENT'}</span></div>
+            <div>dashboardShows: <span className="text-yellow-300">
+                {currentStatus === 'account_created' && 'COMPLETE ENROLLMENT'}
+                {currentStatus === 'payment_pending' && 'PROCEED TO PAYMENT'}
+                {currentStatus === 'approval_pending' && 'WAITING FOR APPROVAL'}
+                {currentStatus === 'approved' && 'ACCESS COURSES'}
+                {currentStatus === 'rejected' && 'RESUBMIT ENROLLMENT'}
+                {currentStatus === 'suspended' && 'CONTACT SUPPORT'}
+              </span></div>
             <div className="text-red-300 font-bold">=== END DEBUG ===</div>
             <button
               onClick={() => {
@@ -351,10 +358,9 @@ export const StudentOnboardingDashboard: React.FC = () => {
             </div>
             <div className="text-xl font-light text-white">
               {currentStatus === 'account_created' && 'Complete Enrollment Form'}
-              {currentStatus === 'enrollment_pending' && 'Complete Enrollment Form'}
               {currentStatus === 'payment_pending' && 'Proceed to Payment'}
               {currentStatus === 'approval_pending' && 'Waiting for Approval'}
-              {currentStatus === 'approved' && 'Start Your Course'}
+              {currentStatus === 'approved' && 'Access Courses'}
               {currentStatus === 'rejected' && 'Resubmit Enrollment'}
               {currentStatus === 'suspended' && 'Contact Support'}
             </div>
@@ -383,29 +389,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
               </button>
             )}
             
-            {currentStatus === 'enrollment_pending' && (
-              <button
-                onClick={() => {
-                  setActionLoading('enrollment');
-                  navigate('/breemic-enrollment');
-                }}
-                disabled={actionLoading === 'enrollment'}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {actionLoading === 'enrollment' ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Loading...
-                  </>
-                ) : (
-                  <>
-                    Complete Enrollment Form
-                    <ArrowRight className="w-5 h-5" />
-                  </>
-                )}
-              </button>
-            )}
-            
+                        
             {currentStatus === 'payment_pending' && (
               <button
                 onClick={() => {
