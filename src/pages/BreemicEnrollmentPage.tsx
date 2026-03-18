@@ -159,6 +159,8 @@ export const BreemicEnrollmentPage: React.FC = () => {
     e.preventDefault();
     
     console.log('🚀 handleSubmit called!');
+    console.log('🔍 DEBUG: Current user uid:', user?.uid);
+    console.log('🔍 DEBUG: Students document path to update:', `students/${user?.uid}`);
     
     if (!validateForm()) {
       console.log('❌ Form validation failed');
@@ -173,6 +175,12 @@ export const BreemicEnrollmentPage: React.FC = () => {
     }
 
     console.log('✅ Form validation passed, user logged in:', user.uid);
+    console.log('🔍 DEBUG: Form data payload:', {
+      feePaid: Number(formData.feePaid),
+      balance: Number(formData.balance),
+      expectedStatus: Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending'
+    });
+    
     setLoading(true);
     setSubmitError('');
 
@@ -203,7 +211,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
       
       // Update users collection
       try {
-        await updateDoc(doc(db, 'users', user.uid), {
+        const usersPayload = {
           onboardingStatus: nextStatus,
           breemicEnrollmentId: docRef.id,
           lastStatusUpdate: serverTimestamp(),
@@ -213,7 +221,11 @@ export const BreemicEnrollmentPage: React.FC = () => {
             paymentMethod: 'other', // Will be updated by admin
             paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
           }
-        });
+        };
+        console.log('🔍 DEBUG: Users collection payload:', usersPayload);
+        console.log('🔍 DEBUG: Users document path:', `users/${user.uid}`);
+        
+        await updateDoc(doc(db, 'users', user.uid), usersPayload);
         console.log('✅ Users collection updated successfully');
       } catch (error) {
         console.error('❌ Error updating users collection:', error);
@@ -268,19 +280,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
         // Only update if the document existed (if we just created it, no need to update)
         if (beforeDoc.exists()) {
-          console.log('🔄 UPDATING: Students collection with:', {
-            onboardingStatus: nextStatus,
-            breemicEnrollmentId: docRef.id,
-            lastStatusUpdate: 'serverTimestamp()',
-            paymentInfo: {
-              amountPaid: Number(formData.feePaid),
-              balance: Number(formData.balance),
-              paymentMethod: 'other',
-              paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-            }
-          });
-
-          await updateDoc(studentRef, {
+          const studentsPayload = {
             onboardingStatus: nextStatus,
             breemicEnrollmentId: docRef.id,
             lastStatusUpdate: serverTimestamp(),
@@ -291,8 +291,15 @@ export const BreemicEnrollmentPage: React.FC = () => {
               paymentMethod: 'other',
               paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
             }
-          });
+          };
+          
+          console.log('🔄 UPDATING: Students collection with payload:', studentsPayload);
+          console.log('🔍 DEBUG: Students document path:', `students/${user.uid}`);
+          console.log('🔍 DEBUG: Exact updateDoc call about to be executed');
+
+          await updateDoc(studentRef, studentsPayload);
           console.log('✅ Students collection update command sent successfully');
+          console.log('✅ SUCCESS CONFIRMATION: students/${user.uid} document updated with onboardingStatus:', nextStatus);
         } else {
           console.log('✅ Students collection was just created - no update needed');
         }
@@ -375,14 +382,9 @@ export const BreemicEnrollmentPage: React.FC = () => {
         });
         setSubmitted(false);
         
-        // Redirect to onboarding dashboard with refresh state
-        navigate('/onboarding', { 
-          state: { 
-            enrollmentCompleted: true,
-            newStatus: nextStatus,
-            timestamp: Date.now()
-          } 
-        });
+        // HARD REDIRECT to onboarding dashboard
+        console.log('🔄 HARD REDIRECT: Redirecting to /onboarding...');
+        window.location.href = "/onboarding";
       }, 3000);
 
     } catch (error) {
