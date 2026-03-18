@@ -207,6 +207,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-slate-500/10 dark:from-blue-900/5 dark:via-purple-900/5 dark:to-slate-900/10 pointer-events-none" />
       
       <div className="relative z-10">
+        
         {/* Header */}
         <div className="text-center pt-12 pb-8 px-6">
           <motion.div
