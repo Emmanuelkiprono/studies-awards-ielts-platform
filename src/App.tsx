@@ -187,6 +187,7 @@ const AppContent: React.FC = () => {
           <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
           <Route path="/payment" element={<ProtectedRoute allowedRoles={['student']}><PaymentPage /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['student']}><StudentOnboardingDashboard /></ProtectedRoute>} />
+          <Route path="/onboarding-test" element={<StudentOnboardingDashboard />} />
           <Route path="/approvals" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentApprovalPanel /></ProtectedRoute>} />
 
           {/* Fallback */}

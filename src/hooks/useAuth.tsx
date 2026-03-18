@@ -141,6 +141,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       courseId: courseId,
       registrationDate: serverTimestamp(),
       eligibleExamDate: eligibleAtIso,
+      // Breemic International approval workflow fields
+      onboardingStatus: 'account_created',
+      lastStatusUpdate: serverTimestamp(),
     };
 
     await setDoc(doc(db, 'students', newUser.uid), {

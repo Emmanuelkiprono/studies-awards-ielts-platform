@@ -56,9 +56,18 @@ export const StudentOnboardingDashboard: React.FC = () => {
 
   useEffect(() => {
     if (studentData) {
-      setCurrentStatus(studentData.onboardingStatus || 'account_created');
+      // Handle existing students who don't have onboardingStatus yet
+      const status = studentData.onboardingStatus || 'account_created';
+      setCurrentStatus(status);
       setPaymentInfo(studentData.paymentInfo || null);
       setRejectionInfo(studentData.rejectionInfo || null);
+      
+      console.log('Student data loaded:', {
+        uid: studentData.uid,
+        onboardingStatus: studentData.onboardingStatus,
+        fallbackStatus: status,
+        trainingStatus: studentData.trainingStatus
+      });
     }
 
     // Show notification if redirected due to approval requirements
