@@ -234,159 +234,48 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
       // Update students collection (primary data source)
       try {
-        // CRITICAL: Read students document BEFORE update
-        console.log('🔍 BEFORE UPDATE: Reading students document...');
-        const studentRef = doc(db, 'students', user.uid);
-        const beforeDoc = await getDoc(studentRef);
-        if (beforeDoc.exists()) {
-          const beforeData = beforeDoc.data();
-          console.log('🔍 BEFORE UPDATE: Student data:', {
-            uid: beforeData.uid,
-            onboardingStatus: beforeData.onboardingStatus,
-            breemicEnrollmentId: beforeData.breemicEnrollmentId,
-            hasPaymentInfo: !!beforeData.paymentInfo
-          });
-        } else {
-          console.log('🔍 BEFORE UPDATE: Student document does not exist!');
-          console.log('🔨 CREATING: Student document since it does not exist...');
-          
-          // CRITICAL: Create the students document if it doesn't exist
-          try {
-            await setDoc(studentRef, {
-              uid: user.uid,
-              onboardingStatus: nextStatus,
-              breemicEnrollmentId: docRef.id,
-              lastStatusUpdate: serverTimestamp(),
-              enrollmentCompleted: true,  // CRITICAL: Add missing field
-              paymentInfo: {
-                amountPaid: Number(formData.feePaid),
-                balance: Number(formData.balance),
-                paymentMethod: 'other',
-                paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-              },
-              trainingPaymentStatus: 'pending',
-              trainingStatus: 'locked',
-              examPaymentStatus: 'unpaid',
-              examStatus: 'not_eligible',
-              preferredLocation: null,
-              idUploadUrl: null,
-            });
-            console.log('✅ Student document created successfully');
-          } catch (createError) {
-            console.error('❌ Failed to create student document:', createError);
-            throw new Error(`Failed to create student document: ${createError.message}`);
-          }
+        // 1. Define studentsPayload once before the if/else
+        const studentsPayload = {
+          onboardingStatus: nextStatus,
+          breemicEnrollmentId: docRef.id,
+          enrollmentCompleted: true,
+          paymentInfo: {
+            feePaid: Number(formData.feePaid),
+            balance: Number(formData.balance),
+          },
+          lastStatusUpdate: serverTimestamp(),
+        };
+        
+        console.log('🔍 DEBUG: Students payload:', studentsPayload);
+        console.log('🔍 DEBUG: Writing to exactly: students/', user.uid);
+        
+        // 2. Write it to exactly: doc(db, 'students', user.uid)
+        // 3. Use setDoc with merge so the write cannot fail
+        await setDoc(doc(db, 'students', user.uid), studentsPayload, { merge: true });
+        console.log('✅ Students document written successfully');
+        
+        // 4. Immediately after writing, read the same doc back
+        const verifySnap = await getDoc(doc(db, 'students', user.uid));
+        console.log('VERIFIED STUDENT DOC:', verifySnap.data());
+        
+        // 5. If verifySnap.data().onboardingStatus is not equal to nextStatus, throw an error
+        if (verifySnap.data().onboardingStatus !== nextStatus) {
+          console.error('❌ VERIFICATION FAILED: Expected', nextStatus, 'but got', verifySnap.data().onboardingStatus);
+          throw new Error(`Verification failed: Expected onboardingStatus=${nextStatus} but got ${verifySnap.data().onboardingStatus}`);
         }
-
-        // Only update if the document existed (if we just created it, no need to update)
-        if (beforeDoc.exists()) {
-          const studentsPayload = {
-            onboardingStatus: nextStatus,
-            breemicEnrollmentId: docRef.id,
-            lastStatusUpdate: serverTimestamp(),
-            enrollmentCompleted: true,  // CRITICAL: Add missing field
-            paymentInfo: {
-              amountPaid: Number(formData.feePaid),
-              balance: Number(formData.balance),
-              paymentMethod: 'other',
-              paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-            }
-          };
-          
-          console.log('🔄 UPDATING: Students collection with payload:', studentsPayload);
-          console.log('🔍 DEBUG: Students document path:', `students/${user.uid}`);
-          console.log('🔍 DEBUG: Exact updateDoc call about to be executed');
-
-          await updateDoc(studentRef, studentsPayload);
-          console.log('✅ Students collection update command sent successfully');
-          console.log('✅ SUCCESS CONFIRMATION: students/${user.uid} document updated with onboardingStatus:', nextStatus);
-        } else {
-          console.log('✅ Students collection was just created - no update needed');
-        }
+        
+        console.log('✅ VERIFICATION PASSED: onboardingStatus correctly updated to', nextStatus);
+        
+        // 6. After successful verification, hard redirect
+        console.log('🔄 HARD REDIRECT: Redirecting to /onboarding...');
+        window.location.href = '/onboarding';
+        
       } catch (error) {
         console.error('❌ Error updating students collection:', error);
-        throw new Error(`Failed to update students collection: ${error.message}`);
+        throw error;
       }
 
-      console.log('Student status updated to:', nextStatus);
-      console.log('Updated students collection with:', {
-        uid: user.uid,
-        onboardingStatus: nextStatus,
-        breemicEnrollmentId: docRef.id,
-        paymentInfo: {
-          amountPaid: Number(formData.feePaid),
-          balance: Number(formData.balance),
-          paymentMethod: 'other',
-          paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-        }
-      });
-
-      // CRITICAL: Verify the update was successful with exact proof
-      try {
-        console.log('🔍 VERIFYING: Reading students document after update...');
-        const studentRef = doc(db, 'students', user.uid);
-        const studentDoc = await getDoc(studentRef);
-        if (studentDoc.exists()) {
-          const updatedData = studentDoc.data();
-          
-          console.log('=== PROOF: STUDENT DOCUMENT AFTER UPDATE ===');
-          console.log('onboardingStatus (stored):', updatedData.onboardingStatus);
-          console.log('expectedStatus (calculated):', nextStatus);
-          console.log('statusMatches:', updatedData.onboardingStatus === nextStatus);
-          console.log('enrollmentCompleted:', updatedData.enrollmentCompleted);
-          console.log('breemicEnrollmentId:', updatedData.breemicEnrollmentId);
-          console.log('paymentInfo exists:', !!updatedData.paymentInfo);
-          console.log('paymentAmount:', updatedData.paymentInfo?.amountPaid);
-          console.log('lastStatusUpdate:', updatedData.lastStatusUpdate?.toDate()?.toISOString());
-          console.log('=== END PROOF ===');
-          
-          // CRITICAL: Check exact values
-          if (updatedData.onboardingStatus === nextStatus) {
-            console.log('✅ PROVEN: onboardingStatus correctly updated to', nextStatus);
-            console.log('✅ PROVEN: Dashboard should show "Proceed to Payment"');
-            alert(`HARD PROOF: nextStatus=${nextStatus}, stored=${updatedData.onboardingStatus}. Dashboard will show "Proceed to Payment".`);
-          } else {
-            console.error('❌ PROVEN: onboardingStatus NOT updated');
-            console.error('❌ Expected:', nextStatus);
-            console.error('❌ Actual stored:', updatedData.onboardingStatus);
-            alert(`HARD PROOF BUG: nextStatus=${nextStatus}, stored=${updatedData.onboardingStatus}. Dashboard will show "Complete Enrollment".`);
-          }
-        } else {
-          console.error('❌ PROVEN: Student document does not exist after update');
-          alert('❌ PROVEN BUG: Student document missing from database');
-        }
-      } catch (error) {
-        console.error('❌ PROVEN: Verification error:', error);
-        alert(`❌ PROVEN ERROR: ${error.message}`);
-      }
-
-      setSubmitted(true);
       
-      // Reset form after successful submission
-      setTimeout(() => {
-        setFormData({
-          fullName: '',
-          email: '',
-          contact: '',
-          dateOfEnrollment: new Date().toISOString().split('T')[0],
-          courseDuration: '',
-          expectedDateOfCompletion: '',
-          modeOfTraining: 'in-person',
-          physicalAddress: '',
-          idPassport: '',
-          highestLevelOfEducation: '',
-          courseType: 'IELTS',
-          feePaid: 0,
-          balance: 0,
-          officerInCharge: ''
-        });
-        setSubmitted(false);
-        
-        // HARD REDIRECT to onboarding dashboard
-        console.log('🔄 HARD REDIRECT: Redirecting to /onboarding...');
-        window.location.href = "/onboarding";
-      }, 3000);
-
     } catch (error) {
       console.error('Error submitting enrollment:', error);
       setSubmitError('Failed to submit enrollment. Please try again.');
