@@ -71,7 +71,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (unsubscribeStudent) unsubscribeStudent(); // Clean up previous if it exists
               unsubscribeStudent = onSnapshot(studentRef, (sDoc) => {
                 if (sDoc.exists()) {
-                  setStudentData(sDoc.data() as StudentData);
+                  const data = sDoc.data() as StudentData;
+                  console.log('Student data updated:', {
+                    uid: data.uid,
+                    onboardingStatus: data.onboardingStatus,
+                    hasPaymentInfo: !!data.paymentInfo,
+                    paymentAmount: data.paymentInfo?.amountPaid,
+                    timestamp: new Date().toISOString()
+                  });
+                  setStudentData(data);
+                } else {
+                  console.log('No student document found for UID:', firebaseUser.uid);
                 }
               });
             }

@@ -272,6 +272,27 @@ export const StudentOnboardingDashboard: React.FC = () => {
             </div>
           </motion.div>
         )}
+
+        {/* Debug Info */}
+        <div className="bg-slate-800/50 rounded-xl p-4 mx-auto max-w-md">
+          <div className="text-xs text-slate-400 space-y-1">
+            <div>Current Status: <span className="text-white">{currentStatus}</span></div>
+            <div>Has Student Data: <span className="text-white">{studentData ? 'YES' : 'NO'}</span></div>
+            <div>Student UID: <span className="text-white">{studentData?.uid || 'N/A'}</span></div>
+            <div>Payment Amount: <span className="text-white">${studentData?.paymentInfo?.amountPaid || 0}</span></div>
+            <div>Last Update: <span className="text-white">{studentData?.lastStatusUpdate?.toDate()?.toLocaleString() || 'N/A'}</span></div>
+            <button
+              onClick={() => {
+                console.log('Full student data:', studentData);
+                console.log('Current status from state:', currentStatus);
+                alert(`Debug: Status=${currentStatus}, HasData=${!!studentData}, Payment=$${studentData?.paymentInfo?.amountPaid || 0}`);
+              }}
+              className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+            >
+              DEBUG INFO
+            </button>
+          </div>
+        </div>
       </div>
         
         {/* Next Step Indicator & Primary Action */}

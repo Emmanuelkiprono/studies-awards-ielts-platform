@@ -216,6 +216,17 @@ export const BreemicEnrollmentPage: React.FC = () => {
       });
 
       console.log('Student status updated to:', nextStatus);
+      console.log('Updated students collection with:', {
+        uid: user.uid,
+        onboardingStatus: nextStatus,
+        breemicEnrollmentId: docRef.id,
+        paymentInfo: {
+          amountPaid: Number(formData.feePaid),
+          balance: Number(formData.balance),
+          paymentMethod: 'other',
+          paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+        }
+      });
 
       setSubmitted(true);
       
