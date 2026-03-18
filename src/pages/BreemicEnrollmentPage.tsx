@@ -220,9 +220,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
           <p className="text-slate-400 mb-6">
             Thank you for enrolling at Breemic International. Your enrollment has been received and is currently pending review.
           </p>
-          <StatusBadge variant="success" className="inline-flex">
-            Application ID: {Date.now()}
-          </StatusBadge>
+          <StatusBadge status={`Application ID: ${Date.now()}`} variant="success" className="inline-flex" />
         </GlassCard>
       </motion.div>
     );
