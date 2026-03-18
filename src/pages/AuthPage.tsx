@@ -132,21 +132,23 @@ export const AuthPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-tl from-neutral-900/15 to-transparent opacity-20 pointer-events-none" />
           
           <div className="text-center space-y-8 relative z-10">
-            {/* Breemic logo container */}
+            {/* Refined Breemic logo */}
             <div className="relative mx-auto mb-8">
-              {/* Logo container with glass background */}
-              <div className="relative w-16 h-16 bg-gradient-to-br from-white/8 to-white/4 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center shadow-xl shadow-black/20">
-                {/* Breemic logo - replace with actual logo file */}
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-                  <div className="text-white font-bold text-lg">B</div>
+              {/* Subtle glass container */}
+              <div className="relative w-14 h-14 bg-white/6 backdrop-blur-sm rounded-2xl flex items-center justify-center shadow-lg shadow-black/15">
+                {/* Breemic icon - B + orbit + plane */}
+                <div className="relative w-10 h-10">
+                  {/* B letter center */}
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-white font-bold text-xl">B</div>
+                  </div>
+                  {/* Orbit ring */}
+                  <div className="absolute inset-0 border-2 border-white/30 rounded-full" />
+                  {/* Small plane icon on orbit */}
+                  <div className="absolute top-0 right-2 w-2 h-2 bg-white/80 rounded-full" />
+                  {/* Subtle glow effect */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-md" />
                 </div>
-                {/* Uncomment and replace with actual logo:
-                <img 
-                  src="/breemic-logo.png" 
-                  alt="Breemic International"
-                  className="w-12 h-12 object-contain"
-                />
-                */}
               </div>
             </div>
             
