@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { GlassCard, PrimaryButton, StatusBadge } from '../components/UI';
 import {
   User,
@@ -16,11 +17,12 @@ import {
   AlertCircle,
   Save
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
-import { BreemicEnrollment } from '../types';
+import { BreemicEnrollment, OnboardingStatus } from '../types';
 import { cn } from '../lib/utils';
+import { useAuth } from '../hooks/useAuth';
+import { useNavigate } from 'react-router-dom';
 
 interface FormErrors {
   [key: string]: string;
@@ -43,6 +45,8 @@ const trainingModes = [
 ] as const;
 
 export const BreemicEnrollmentPage: React.FC = () => {
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -158,10 +162,17 @@ export const BreemicEnrollmentPage: React.FC = () => {
       return;
     }
 
+    // Check if user is logged in
+    if (!user) {
+      setSubmitError('Please log in to submit your enrollment.');
+      return;
+    }
+
     setLoading(true);
     setSubmitError('');
 
     try {
+      // Create Breemic enrollment record
       const enrollmentData: Omit<BreemicEnrollment, 'id'> = {
         ...formData,
         feePaid: Number(formData.feePaid),
@@ -174,6 +185,22 @@ export const BreemicEnrollmentPage: React.FC = () => {
       const docRef = await addDoc(collection(db, 'breemicEnrollments'), enrollmentData);
       
       console.log('Enrollment created with ID:', docRef.id);
+
+      // Update student's onboarding status
+      const nextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
+      
+      await updateDoc(doc(db, 'users', user.uid), {
+        onboardingStatus: nextStatus,
+        breemicEnrollmentId: docRef.id,
+        lastStatusUpdate: serverTimestamp(),
+        paymentInfo: {
+          amountPaid: Number(formData.feePaid),
+          balance: Number(formData.balance),
+          paymentMethod: 'other', // Will be updated by admin
+          paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+        }
+      });
+
       setSubmitted(true);
       
       // Reset form after successful submission
@@ -195,6 +222,9 @@ export const BreemicEnrollmentPage: React.FC = () => {
           officerInCharge: ''
         });
         setSubmitted(false);
+        
+        // Redirect to onboarding dashboard
+        navigate('/onboarding');
       }, 3000);
 
     } catch (error) {

@@ -1,0 +1,44 @@
+import React from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth';
+import { OnboardingStatus } from '../types';
+
+interface ApprovalGuardProps {
+  children: React.ReactNode;
+  allowedStatuses?: OnboardingStatus[];
+  fallbackPath?: string;
+}
+
+export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({ 
+  children, 
+  allowedStatuses = ['approved'], 
+  fallbackPath = '/onboarding' 
+}) => {
+  const { studentData, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[var(--ui-bg)]">
+        <div className="w-8 h-8 border-4 border-[rgba(var(--ui-accent-rgb)/0.30)] border-t-[var(--ui-accent)] rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Check if student has the required approval status
+  if (studentData && !allowedStatuses.includes(studentData.onboardingStatus)) {
+    return (
+      <Navigate 
+        to={fallbackPath} 
+        state={{ 
+          from: location.pathname,
+          reason: 'approval_required',
+          currentStatus: studentData.onboardingStatus
+        }} 
+        replace 
+      />
+    );
+  }
+
+  return <>{children}</>;
+};

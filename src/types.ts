@@ -28,6 +28,37 @@ export type ExamStatus =
   | 'completed';
 export type PaymentStatus = 'unpaid' | 'paid' | 'pending';
 
+// Breemic International Approval Workflow Stages
+export type OnboardingStatus = 
+  | 'account_created'
+  | 'enrollment_pending'
+  | 'payment_pending'
+  | 'approval_pending'
+  | 'approved'
+  | 'rejected'
+  | 'suspended';
+
+export type PaymentMethod = 'cash' | 'bank_transfer' | 'mobile_money' | 'credit_card' | 'other';
+
+export interface PaymentInfo {
+  amountPaid: number;
+  balance: number;
+  paymentMethod: PaymentMethod;
+  transactionCode?: string;
+  paymentDate?: string;
+  verifiedBy?: string;
+  verifiedAt?: any;
+  notes?: string;
+}
+
+export interface RejectionInfo {
+  reason: string;
+  rejectedBy: string;
+  rejectedAt: any;
+  canResubmit: boolean;
+  resubmissionDeadline?: string;
+}
+
 export interface StudentData {
   uid: string;
   trainingPaymentStatus: PaymentStatus;
@@ -52,6 +83,16 @@ export interface StudentData {
     writing: number;
     speaking: number;
   };
+  
+  // Breemic International Approval Workflow Fields
+  onboardingStatus: OnboardingStatus;
+  breemicEnrollmentId?: string;  // Reference to BreemicEnrollment document
+  paymentInfo?: PaymentInfo;
+  rejectionInfo?: RejectionInfo;
+  approvedBy?: string;
+  approvedAt?: any;
+  lastStatusUpdate?: any;
+  onboardingCompletedAt?: any;    // When student completes full onboarding
 }
 
 export interface Course {

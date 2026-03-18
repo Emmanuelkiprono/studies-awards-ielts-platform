@@ -13,6 +13,9 @@ import { ProgressPage } from './pages/ProgressPage';
 import { EnrollmentPage } from './pages/EnrollmentPage';
 import { BreemicEnrollmentPage } from './pages/BreemicEnrollmentPage';
 import { TestPage } from './pages/TestPage';
+import { StudentOnboardingDashboard } from './pages/StudentOnboardingDashboard';
+import { StudentApprovalPanel } from './pages/StudentApprovalPanel';
+import { ApprovalGuard } from './components/ApprovalGuard';
 import { PaymentPendingPage } from './pages/PaymentPendingPage';
 import { ExamBookingPage } from './pages/ExamBookingPage';
 
@@ -142,21 +145,47 @@ const AppContent: React.FC = () => {
           {/* Student Routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute allowedRoles={['student']}>
-              {studentData?.trainingPaymentStatus === 'unpaid' ? <EnrollmentPage onEnrolled={() => { }} /> :
-                (studentData?.trainingPaymentStatus === 'pending' || studentData?.trainingStatus === 'locked') ? <PaymentPendingPage /> :
-                  <StudentDashboard />}
+              <ApprovalGuard>
+                <StudentDashboard />
+              </ApprovalGuard>
             </ProtectedRoute>
           } />
 
-          <Route path="/exam_booking" element={<ProtectedRoute allowedRoles={['student']}><ExamBookingPage /></ProtectedRoute>} />
-          <Route path="/tasks" element={<ProtectedRoute allowedRoles={['student']}><AssignmentsPage /></ProtectedRoute>} />
-          <Route path="/resources" element={<ProtectedRoute allowedRoles={['student']}><ResourcesPage /></ProtectedRoute>} />
-          <Route path="/progress" element={<ProtectedRoute allowedRoles={['student']}><ProgressPage /></ProtectedRoute>} />
+          <Route path="/exam_booking" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <ExamBookingPage />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/tasks" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <AssignmentsPage />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/resources" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <ResourcesPage />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/progress" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <ProgressPage />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
           <Route path="/profile" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><ProfilePage /></ProtectedRoute>} />
 
           {/* Public Routes - MUST be before fallback */}
           <Route path="/test" element={<TestPage />} />
           <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
+          <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['student']}><StudentOnboardingDashboard /></ProtectedRoute>} />
+          <Route path="/approvals" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentApprovalPanel /></ProtectedRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
