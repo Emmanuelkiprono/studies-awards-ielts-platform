@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { GlassCard, PrimaryButton } from '../components/UI';
-import { GraduationCap, LogIn, UserPlus, Mail, Lock, User, ArrowLeft, AlertCircle, BookOpen } from 'lucide-react';
+import { GraduationCap, LogIn, UserPlus, Mail, Lock, User, ArrowLeft, AlertCircle, BookOpen, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from '../hooks/useAuth';
 import { collection, getDocs, query, where } from 'firebase/firestore';
@@ -285,7 +285,14 @@ export const AuthPage: React.FC = () => {
             </motion.button>
           </form>
 
-          <div className="pt-6 border-t border-white/10 text-center relative z-10">
+          <div className="pt-6 border-t border-white/10 text-center relative z-10 space-y-4">
+            {/* Security branding */}
+            <div className="flex items-center justify-center gap-2 text-xs text-white/40">
+              <Shield size={12} />
+              <span>Secure login • Powered by Breemic International</span>
+            </div>
+            
+            {/* Auth mode toggle */}
             {mode === 'signin' ? (
               <p className="text-sm text-white/60">
                 Don't have an account?{' '}
