@@ -77,18 +77,15 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-black via-neutral-900 to-black">
-      {/* Enhanced background with supporting glow */}
+    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-neutral-900 to-slate-950">
+      {/* Premium ambient background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Primary radial gradient behind card */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-purple-500/8 via-blue-500/4 to-transparent rounded-full blur-3xl opacity-70" />
+        {/* Soft center glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-to-br from-blue-500/6 via-purple-500/3 to-transparent rounded-full blur-3xl opacity-50" />
         
-        {/* Supporting ambient lights */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/6 to-purple-500/3 rounded-full blur-[200px] opacity-60" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-purple-500/6 to-blue-500/3 rounded-full blur-[200px] opacity-60" />
-        
-        {/* Subtle center glow for depth */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-white/3 to-transparent rounded-full blur-[300px] opacity-40" />
+        {/* Subtle corner accents */}
+        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-500/4 to-transparent rounded-full blur-[300px] opacity-40" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/4 to-transparent rounded-full blur-[300px] opacity-40" />
       </div>
 
       <motion.div
@@ -97,30 +94,30 @@ export const AuthPage: React.FC = () => {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-md w-full relative z-10"
       >
-        {/* Premium auth card with enhanced glass effect */}
-        <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl shadow-black/30 p-8 space-y-8 relative overflow-hidden hover:scale-[1.01] transition-transform duration-300 ease-out">
-          {/* Enhanced glass layers */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-60 pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-tl from-neutral-900/20 to-transparent opacity-40 pointer-events-none" />
+        {/* Premium glassmorphism card */}
+        <div className="bg-white/8 backdrop-blur-2xl border border-white/8 rounded-3xl shadow-2xl shadow-black/40 p-8 space-y-8 relative overflow-hidden hover:scale-[1.01] transition-all duration-300 ease-out">
+          {/* Subtle glass layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/6 to-transparent opacity-30 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-tl from-neutral-900/15 to-transparent opacity-20 pointer-events-none" />
           
           <div className="text-center space-y-8 relative z-10">
-            {/* Real Breemic branding */}
-            <div className="relative mx-auto mb-8">
-              {/* Soft glow background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-3xl blur-xl scale-150" />
+            {/* Premium Breemic branding */}
+            <div className="relative mx-auto mb-10">
+              {/* Subtle logo glow */}
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/12 to-purple-500/8 rounded-3xl blur-2xl scale-125" />
               {/* Logo container */}
-              <div className="relative w-20 h-20 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border border-white/15 rounded-3xl flex items-center justify-center shadow-xl shadow-black/20">
+              <div className="relative w-24 h-24 bg-gradient-to-br from-white/12 to-white/4 backdrop-blur-md border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl shadow-black/30">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white tracking-tight">B</div>
-                  <div className="text-xs font-medium text-white/70 tracking-wider">BREEMIC</div>
+                  <div className="text-3xl font-bold text-white tracking-tight">B</div>
+                  <div className="text-xs font-medium text-white/60 tracking-wider mt-1">BREEMIC</div>
                 </div>
               </div>
             </div>
             
-            {/* Enhanced typography hierarchy */}
-            <div className="space-y-4">
-              <h1 className="text-2xl font-semibold text-white tracking-tight">Breemic International</h1>
-              <p className="text-sm text-neutral-400 leading-relaxed max-w-sm mx-auto">
+            {/* Premium typography */}
+            <div className="space-y-5">
+              <h1 className="text-3xl font-semibold text-white tracking-tight">Breemic International</h1>
+              <p className="text-sm text-neutral-500 leading-relaxed max-w-sm mx-auto">
                 {mode === 'signin' ? 
                   'Sign in to continue your enrollment and access your courses.' : 
                   mode === 'signup' ? 
@@ -167,7 +164,7 @@ export const AuthPage: React.FC = () => {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
+                      className="w-full bg-white/6 border border-white/8 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-white/16 focus:bg-white/10 transition-all duration-300"
                       placeholder="John Doe"
                       required
                     />
@@ -181,7 +178,7 @@ export const AuthPage: React.FC = () => {
                     <select
                       value={selectedCourseId}
                       onChange={(e) => setSelectedCourseId(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200 appearance-none cursor-pointer"
+                      className="w-full bg-white/6 border border-white/8 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-white/16 focus:bg-white/10 transition-all duration-300 appearance-none cursor-pointer"
                       required
                     >
                       <option value="" disabled className="bg-[#1a1a1a] text-white">Choose a course</option>
@@ -210,7 +207,7 @@ export const AuthPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
+                  className="w-full bg-white/6 border border-white/8 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-white/16 focus:bg-white/10 transition-all duration-300"
                   placeholder="name@example.com"
                   required
                 />
@@ -237,7 +234,7 @@ export const AuthPage: React.FC = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
+                    className="w-full bg-white/6 border border-white/8 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-white/16 focus:bg-white/10 transition-all duration-300"
                     placeholder="••••••••"
                     required
                   />
@@ -254,7 +251,7 @@ export const AuthPage: React.FC = () => {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
+                    className="w-full bg-white/6 border border-white/8 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-white/16 focus:bg-white/10 transition-all duration-300"
                     placeholder="••••••••"
                     required
                   />
@@ -266,7 +263,7 @@ export const AuthPage: React.FC = () => {
             <motion.button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl py-5 px-6 font-semibold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:scale-100 disabled:hover:brightness-100 flex items-center justify-center gap-3"
+              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-2xl py-5 px-6 font-semibold text-base shadow-lg shadow-blue-500/25 hover:shadow-xl hover:shadow-blue-500/35 hover:scale-[1.02] hover:brightness-105 active:scale-[0.98] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:scale-100 disabled:hover:brightness-100 disabled:shadow-none flex items-center justify-center gap-3"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
