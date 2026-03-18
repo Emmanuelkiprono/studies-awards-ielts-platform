@@ -13,6 +13,7 @@ import { NotificationService } from '../services/notificationService';
 import { db } from '../services/firebase';
 import { useAuth } from '../hooks/useAuth';
 import { cn } from '../lib/utils';
+import { Link } from 'react-router-dom';
 
 export const EnrollmentPage: React.FC<{ onEnrolled: () => void }> = ({ onEnrolled }) => {
   const { user } = useAuth();
@@ -113,6 +114,18 @@ export const EnrollmentPage: React.FC<{ onEnrolled: () => void }> = ({ onEnrolle
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold text-white">Complete Your Enrollment</h2>
         <p className="text-slate-400">Provide your details to unlock your intensive training.</p>
+        
+        {/* Breemic Enrollment Link */}
+        <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/30 rounded-xl">
+          <p className="text-blue-400 text-sm mb-2">🎓 New to Breemic International?</p>
+          <Link 
+            to="/breemic-enrollment"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
+          >
+            Complete Full Enrollment Form
+            <ArrowRight size={16} />
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

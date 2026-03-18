@@ -146,12 +146,28 @@ export interface LiveSession {
   title: string;
   startTime: string;
   endTime: string;
-  meetingUrl?: string;
-  roomUrl?: string;
-  isLive?: boolean;
-  startedAt?: string;
-  createdAt?: any;
-  createdBy?: string;
+}
+
+export interface BreemicEnrollment {
+  id: string;
+  fullName: string;
+  email: string;
+  contact: string;
+  dateOfEnrollment: string;
+  courseDuration: string;
+  expectedDateOfCompletion: string;
+  modeOfTraining: 'in-person' | 'online';
+  physicalAddress: string;
+  idPassport: string;
+  highestLevelOfEducation: string;
+  courseType: 'IELTS' | 'TOEFL' | 'PTE' | 'SAT' | 'TOEIC' | 'German' | 'French' | 'Chinese';
+  feePaid: number;
+  balance: number;
+  officerInCharge: string;
+  createdAt: any;
+  updatedAt: any;
+  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  notes?: string;
 }
 
 export interface Assignment {
