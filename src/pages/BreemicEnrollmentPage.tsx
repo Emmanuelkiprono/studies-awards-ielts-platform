@@ -236,7 +236,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
     >
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-white">🎓 Breemic International Enrollment (Updated)</h1>
+        <h1 className="text-3xl font-bold text-white">🎓 Breemic International Enrollment (Live Now)</h1>
         <p className="text-slate-400">Complete your enrollment form to start your learning journey</p>
       </div>
 
