@@ -77,44 +77,56 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#050505]">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-[#0a0a0a]">
+      {/* Refined background with subtle ambient lighting */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px]" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-full blur-[200px] opacity-60" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-br from-purple-500/5 to-blue-500/5 rounded-full blur-[200px] opacity-60" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-white/2 to-transparent rounded-full blur-[300px] opacity-30" />
       </div>
 
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-md w-full relative z-10"
       >
-        <GlassCard className="p-8 space-y-8">
-          <div className="text-center space-y-4">
-            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/30">
-              <GraduationCap size={40} className="text-white" />
+        {/* Premium auth card with better visibility */}
+        <div className="bg-white/8 backdrop-blur-2xl border border-white/12 rounded-3xl shadow-2xl shadow-black/20 p-8 space-y-8 relative overflow-hidden">
+          {/* Subtle inner glow */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/3 to-transparent opacity-40 pointer-events-none" />
+          
+          <div className="text-center space-y-6 relative z-10">
+            {/* Refined branding */}
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-black/10">
+              <GraduationCap size={32} className="text-white/90" />
             </div>
-            <h1 className="text-3xl font-light text-white">Breemic International</h1>
-            <p className="text-lg text-slate-300 max-w-sm mx-auto leading-relaxed">
-              {mode === 'signin' ? 
-                'Sign in to continue your enrollment and access your courses.' : 
-                mode === 'signup' ? 
-                'Create your account to begin your learning journey.' : 
-                'Enter your email to reset your password.'
-              }
-            </p>
+            
+            {/* Better typography hierarchy */}
+            <div className="space-y-3">
+              <h1 className="text-2xl font-semibold text-white tracking-tight">Breemic International</h1>
+              <p className="text-base text-white/70 leading-relaxed max-w-sm mx-auto">
+                {mode === 'signin' ? 
+                  'Sign in to continue your enrollment and access your courses.' : 
+                  mode === 'signup' ? 
+                  'Create your account to begin your learning journey.' : 
+                  'Enter your email to reset your password.'
+                }
+              </p>
+            </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
             <AnimatePresence mode="wait">
               {error && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 flex items-center gap-2 text-red-400 text-sm"
+                  className="bg-red-500/8 border border-red-500/20 rounded-2xl p-4 flex items-center gap-3 text-red-300 text-sm"
                 >
-                  <AlertCircle size={16} />
-                  {error}
+                  <AlertCircle size={18} className="flex-shrink-0" />
+                  <span className="leading-relaxed">{error}</span>
                 </motion.div>
               )}
               {message && (
@@ -122,62 +134,68 @@ export const AuthPage: React.FC = () => {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 flex items-center gap-2 text-emerald-400 text-sm"
+                  className="bg-emerald-500/8 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-3 text-emerald-300 text-sm"
                 >
-                  <AlertCircle size={16} />
-                  {message}
+                  <AlertCircle size={18} className="flex-shrink-0" />
+                  <span className="leading-relaxed">{message}</span>
                 </motion.div>
               )}
             </AnimatePresence>
 
             {mode === 'signup' && (
               <>
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Full Name</label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/80">Full Name</label>
+                  <div className="relative group">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white/70 transition-colors" size={20} />
                     <input
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#6324eb] transition-colors"
+                      className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
                       placeholder="John Doe"
                       required
                     />
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Select Course</label>
-                  <div className="relative">
-                    <BookOpen className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-white/80">Select Course</label>
+                  <div className="relative group">
+                    <BookOpen className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white/70 transition-colors" size={20} />
                     <select
                       value={selectedCourseId}
                       onChange={(e) => setSelectedCourseId(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#6324eb] transition-colors appearance-none"
+                      className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200 appearance-none cursor-pointer"
                       required
                     >
-                      <option value="" disabled className="bg-[#050505]">Choose a course</option>
+                      <option value="" disabled className="bg-[#1a1a1a] text-white">Choose a course</option>
                       {courses.map(course => (
-                        <option key={course.id} value={course.id} className="bg-[#050505]">
+                        <option key={course.id} value={course.id} className="bg-[#1a1a1a] text-white">
                           {course.name} - KSh {course.trainingPrice?.toLocaleString()}
                         </option>
                       ))}
                     </select>
+                    {/* Custom dropdown arrow */}
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-5 h-5 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
                   </div>
                 </div>
               </>
             )}
 
-            <div className="space-y-1">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Email Address</label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white/80">Email Address</label>
+              <div className="relative group">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white/70 transition-colors" size={20} />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#6324eb] transition-colors"
+                  className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
                   placeholder="name@example.com"
                   required
                 />
@@ -185,26 +203,26 @@ export const AuthPage: React.FC = () => {
             </div>
 
             {mode !== 'forgot' && (
-              <div className="space-y-1">
-                <div className="flex justify-between items-center ml-1">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Password</label>
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-sm font-medium text-white/80">Password</label>
                   {mode === 'signin' && (
                     <button
                       type="button"
                       onClick={() => setMode('forgot')}
-                      className="text-[10px] text-[#6324eb] font-bold hover:underline"
+                      className="text-sm text-white/60 hover:text-white/80 transition-colors"
                     >
                       Forgot Password?
                     </button>
                   )}
                 </div>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white/70 transition-colors" size={20} />
                   <input
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#6324eb] transition-colors"
+                    className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
                     placeholder="••••••••"
                     required
                   />
@@ -213,15 +231,15 @@ export const AuthPage: React.FC = () => {
             )}
 
             {mode === 'signup' && (
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest ml-1">Confirm Password</label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/80">Confirm Password</label>
+                <div className="relative group">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 group-focus-within:text-white/70 transition-colors" size={20} />
                   <input
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[#6324eb] transition-colors"
+                    className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
                     placeholder="••••••••"
                     required
                   />
@@ -229,31 +247,50 @@ export const AuthPage: React.FC = () => {
               </div>
             )}
 
-            <PrimaryButton className="w-full py-4" loading={loading} type="submit">
-              {mode === 'signin' ? <><LogIn size={20} /> Sign In</> : 
-               mode === 'signup' ? <><UserPlus size={20} /> Create Account</> : 
-               'Reset Password'}
-            </PrimaryButton>
+            {/* Premium primary button */}
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-white text-black rounded-2xl py-4 px-6 font-semibold text-base shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-3"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  {mode === 'signin' && <><LogIn size={20} /> Sign In</>}
+                  {mode === 'signup' && <><UserPlus size={20} /> Create Account</>}
+                  {mode === 'forgot' && 'Reset Password'}
+                </>
+              )}
+            </motion.button>
           </form>
 
-          <div className="pt-4 border-t border-white/5 text-center">
+          <div className="pt-6 border-t border-white/10 text-center relative z-10">
             {mode === 'signin' ? (
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-white/60">
                 Don't have an account?{' '}
-                <button onClick={() => setMode('signup')} className="text-[#6324eb] font-bold hover:underline">
+                <button 
+                  onClick={() => setMode('signup')} 
+                  className="text-white font-medium hover:text-white/80 transition-colors"
+                >
                   Sign Up
                 </button>
               </p>
             ) : (
               <button
                 onClick={() => setMode('signin')}
-                className="text-sm text-slate-400 flex items-center justify-center gap-2 mx-auto hover:text-white transition-colors"
+                className="text-sm text-white/60 flex items-center justify-center gap-2 mx-auto hover:text-white/80 transition-colors"
               >
                 <ArrowLeft size={16} /> Back to Sign In
               </button>
             )}
           </div>
-        </GlassCard>
+        </div>
       </motion.div>
     </div>
   );
