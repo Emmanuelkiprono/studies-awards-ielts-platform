@@ -60,8 +60,41 @@ export const StudentOnboardingDashboard: React.FC = () => {
       setCurrentStatus(status);
       setPaymentInfo(studentData.paymentInfo || null);
       setRejectionInfo(studentData.rejectionInfo || null);
+      
+      console.log('Student data loaded:', {
+        uid: studentData.uid,
+        onboardingStatus: studentData.onboardingStatus,
+        currentStatus: status,
+        paymentInfo: studentData.paymentInfo
+      });
     }
-  }, [studentData]);
+
+    // Handle enrollment completion redirect
+    if (state?.enrollmentCompleted) {
+      console.log('Enrollment just completed, new status:', state.newStatus);
+      
+      // Force a refresh of student data after a short delay
+      const refreshTimer = setTimeout(() => {
+        // The useAuth hook will automatically refresh student data
+        // This timeout ensures Firebase has time to sync
+        console.log('Refreshing student data after enrollment completion');
+      }, 1000);
+      
+      return () => clearTimeout(refreshTimer);
+    }
+
+    // Handle payment completion redirect
+    if (state?.paymentCompleted) {
+      console.log('Payment just completed, new status:', state.newStatus);
+      
+      // Force a refresh of student data after a short delay
+      const refreshTimer = setTimeout(() => {
+        console.log('Refreshing student data after payment completion');
+      }, 1000);
+      
+      return () => clearTimeout(refreshTimer);
+    }
+  }, [studentData, state]);
 
   const getStatusSteps = (): StatusStep[] => {
     const steps: StatusStep[] = [
@@ -211,6 +244,35 @@ export const StudentOnboardingDashboard: React.FC = () => {
         <p className="text-lg text-slate-300 max-w-2xl mx-auto">
           Follow these simple steps to unlock your course access and start your learning journey.
         </p>
+        
+        {/* Success Message for Enrollment Completion */}
+        {state?.enrollmentCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-500/10 border border-green-500/30 rounded-xl p-4 mx-auto max-w-md"
+          >
+            <div className="flex items-center gap-3 text-green-400">
+              <CheckCircle2 className="w-5 h-5" />
+              <span className="font-medium">Enrollment form submitted successfully!</span>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Success Message for Payment Completion */}
+        {state?.paymentCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 mx-auto max-w-md"
+          >
+            <div className="flex items-center gap-3 text-purple-400">
+              <CreditCard className="w-5 h-5" />
+              <span className="font-medium">Payment submitted successfully!</span>
+            </div>
+          </motion.div>
+        )}
+      </div>
         
         {/* Next Step Indicator & Primary Action */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">

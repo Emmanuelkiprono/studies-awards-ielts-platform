@@ -186,9 +186,10 @@ export const BreemicEnrollmentPage: React.FC = () => {
       
       console.log('Enrollment created with ID:', docRef.id);
 
-      // Update student's onboarding status
+      // Update student's onboarding status in both collections
       const nextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
       
+      // Update users collection
       await updateDoc(doc(db, 'users', user.uid), {
         onboardingStatus: nextStatus,
         breemicEnrollmentId: docRef.id,
@@ -200,6 +201,21 @@ export const BreemicEnrollmentPage: React.FC = () => {
           paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
         }
       });
+
+      // Update students collection (primary data source)
+      await updateDoc(doc(db, 'students', user.uid), {
+        onboardingStatus: nextStatus,
+        breemicEnrollmentId: docRef.id,
+        lastStatusUpdate: serverTimestamp(),
+        paymentInfo: {
+          amountPaid: Number(formData.feePaid),
+          balance: Number(formData.balance),
+          paymentMethod: 'other', // Will be updated by admin
+          paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+        }
+      });
+
+      console.log('Student status updated to:', nextStatus);
 
       setSubmitted(true);
       
@@ -223,8 +239,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
         });
         setSubmitted(false);
         
-        // Redirect to onboarding dashboard
-        navigate('/onboarding');
+        // Redirect to onboarding dashboard with refresh state
+        navigate('/onboarding', { 
+          state: { 
+            enrollmentCompleted: true,
+            newStatus: nextStatus,
+            timestamp: Date.now()
+          } 
+        });
       }, 3000);
 
     } catch (error) {

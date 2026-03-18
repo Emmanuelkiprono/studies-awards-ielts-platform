@@ -84,20 +84,32 @@ export const PaymentPage: React.FC = () => {
     setError('');
 
     try {
-      // Update student payment information
+      // Update student payment information in both collections
+      const paymentInfo = {
+        amountPaid: paymentData.amountPaid,
+        balance: paymentData.balance,
+        paymentMethod: paymentData.paymentMethod,
+        transactionCode: paymentData.transactionCode,
+        paymentDate: paymentData.paymentDate,
+        verifiedBy: 'pending', // Will be verified by admin
+        notes: paymentData.notes
+      };
+
+      // Update users collection
       await updateDoc(doc(db, 'users', user.uid), {
-        paymentInfo: {
-          amountPaid: paymentData.amountPaid,
-          balance: paymentData.balance,
-          paymentMethod: paymentData.paymentMethod,
-          transactionCode: paymentData.transactionCode,
-          paymentDate: paymentData.paymentDate,
-          verifiedBy: 'pending', // Will be verified by admin
-          notes: paymentData.notes
-        },
+        paymentInfo,
         onboardingStatus: 'approval_pending' as OnboardingStatus,
         lastStatusUpdate: serverTimestamp()
       });
+
+      // Update students collection (primary data source)
+      await updateDoc(doc(db, 'students', user.uid), {
+        paymentInfo,
+        onboardingStatus: 'approval_pending' as OnboardingStatus,
+        lastStatusUpdate: serverTimestamp()
+      });
+
+      console.log('Payment submitted, status updated to: approval_pending');
 
       // Update Breemic enrollment record
       if (studentData?.breemicEnrollmentId) {
@@ -112,7 +124,13 @@ export const PaymentPage: React.FC = () => {
       
       // Redirect to onboarding dashboard after 3 seconds
       setTimeout(() => {
-        navigate('/onboarding');
+        navigate('/onboarding', { 
+          state: { 
+            paymentCompleted: true,
+            newStatus: 'approval_pending',
+            timestamp: Date.now()
+          } 
+        });
       }, 3000);
 
     } catch (error) {
