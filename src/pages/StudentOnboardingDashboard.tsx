@@ -267,8 +267,12 @@ export const StudentOnboardingDashboard: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 space-y-6 max-w-4xl mx-auto w-full"
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
     >
+      {/* HARD PROOF: Visible onboardingStatus */}
+      <div className="bg-yellow-500 text-black p-2 text-center font-bold">
+        HARD PROOF: studentData.onboardingStatus = {studentData?.onboardingStatus || 'MISSING'}
+      </div>
       {/* Header */}
       <div className="text-center space-y-6">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">

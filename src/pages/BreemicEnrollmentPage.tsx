@@ -337,12 +337,12 @@ export const BreemicEnrollmentPage: React.FC = () => {
           if (updatedData.onboardingStatus === nextStatus) {
             console.log('✅ PROVEN: onboardingStatus correctly updated to', nextStatus);
             console.log('✅ PROVEN: Dashboard should show "Proceed to Payment"');
-            alert(`✅ PROVEN: Status stored as ${nextStatus}. Dashboard will show "Proceed to Payment".`);
+            alert(`HARD PROOF: nextStatus=${nextStatus}, stored=${updatedData.onboardingStatus}. Dashboard will show "Proceed to Payment".`);
           } else {
             console.error('❌ PROVEN: onboardingStatus NOT updated');
             console.error('❌ Expected:', nextStatus);
             console.error('❌ Actual stored:', updatedData.onboardingStatus);
-            alert(`❌ PROVEN BUG: onboardingStatus is ${updatedData.onboardingStatus}, expected ${nextStatus}`);
+            alert(`HARD PROOF BUG: nextStatus=${nextStatus}, stored=${updatedData.onboardingStatus}. Dashboard will show "Complete Enrollment".`);
           }
         } else {
           console.error('❌ PROVEN: Student document does not exist after update');
