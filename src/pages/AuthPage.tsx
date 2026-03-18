@@ -103,16 +103,16 @@ export const AuthPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-60 pointer-events-none" />
           <div className="absolute inset-0 bg-gradient-to-tl from-neutral-900/20 to-transparent opacity-40 pointer-events-none" />
           
-          <div className="text-center space-y-6 relative z-10">
+          <div className="text-center space-y-8 relative z-10">
             {/* Refined branding */}
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-white/10 rounded-2xl flex items-center justify-center mx-auto shadow-lg shadow-black/10">
               <GraduationCap size={32} className="text-white/90" />
             </div>
             
-            {/* Better typography hierarchy */}
-            <div className="space-y-3">
+            {/* Enhanced typography hierarchy */}
+            <div className="space-y-4">
               <h1 className="text-2xl font-semibold text-white tracking-tight">Breemic International</h1>
-              <p className="text-base text-white/70 leading-relaxed max-w-sm mx-auto">
+              <p className="text-sm text-neutral-400 leading-relaxed max-w-sm mx-auto">
                 {mode === 'signin' ? 
                   'Sign in to continue your enrollment and access your courses.' : 
                   mode === 'signup' ? 
@@ -123,7 +123,7 @@ export const AuthPage: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-5 relative z-10 mt-8">
             <AnimatePresence mode="wait">
               {error && (
                 <motion.div
