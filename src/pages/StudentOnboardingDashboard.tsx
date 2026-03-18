@@ -495,9 +495,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
-
-      
+        
       {/* Progress Steps */}
       <div className="space-y-8">
         {/* Visual Progress Tracker */}
