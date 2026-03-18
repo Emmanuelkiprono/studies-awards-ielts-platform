@@ -158,20 +158,45 @@ export const BreemicEnrollmentPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🚀 handleSubmit called!');
+    alert('Form submission started - check console for details');
+    
     if (!validateForm()) {
+      console.log('❌ Form validation failed');
       return;
     }
 
     // Check if user is logged in
     if (!user) {
+      console.log('❌ No user logged in');
       setSubmitError('Please log in to submit your enrollment.');
       return;
     }
 
+    console.log('✅ Form validation passed, user logged in:', user.uid);
     setLoading(true);
     setSubmitError('');
 
     try {
+      // SIMPLE TEST: Just try to update the status directly first
+      console.log('🧪 Testing direct status update...');
+      try {
+        const studentRef = doc(db, 'students', user.uid);
+        await updateDoc(studentRef, {
+          onboardingStatus: 'payment_pending',
+          lastStatusUpdate: serverTimestamp(),
+          testUpdate: `direct_test_${Date.now()}`
+        });
+        console.log('✅ Direct status update successful');
+        alert('Direct status update successful! Check dashboard now.');
+      } catch (error) {
+        console.error('❌ Direct status update failed:', error);
+        alert(`Direct status update failed: ${error.message}`);
+      }
+
+      // Now try the full enrollment process
+      console.log('🔄 Starting full enrollment process...');
+      
       // Create Breemic enrollment record
       const enrollmentData: Omit<BreemicEnrollment, 'id'> = {
         ...formData,
