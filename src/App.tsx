@@ -12,6 +12,7 @@ import { ProgressPage } from './pages/ProgressPage';
 
 import { EnrollmentPage } from './pages/EnrollmentPage';
 import { BreemicEnrollmentPage } from './pages/BreemicEnrollmentPage';
+import { TestPage } from './pages/TestPage';
 import { PaymentPendingPage } from './pages/PaymentPendingPage';
 import { ExamBookingPage } from './pages/ExamBookingPage';
 
@@ -127,6 +128,7 @@ const AppContent: React.FC = () => {
           <Route path="/live" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><LiveClassesPage /></ProtectedRoute>} />
 
           {/* Public Routes */}
+          <Route path="/test" element={<TestPage />} />
           <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
 
           {/* Admin Routes */}
