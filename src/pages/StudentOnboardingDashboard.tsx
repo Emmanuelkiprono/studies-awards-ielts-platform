@@ -11,11 +11,16 @@ import {
   AlertCircle,
   RefreshCw,
   ArrowRight,
+  Upload,
+  FileText as FileTextIcon,
   Calendar,
   DollarSign,
+  Building,
+  Smartphone,
+  Users,
+  BookOpen,
   UserCheck,
-  Mail,
-  Phone
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -43,10 +48,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const location = useLocation();
   const state = location.state as any;
   const [currentStatus, setCurrentStatus] = useState<OnboardingStatus>('account_created');
-
-    const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [rejectionInfo, setRejectionInfo] = useState<RejectionInfo | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (studentData) {
@@ -198,7 +203,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
       className="p-4 space-y-6 max-w-4xl mx-auto w-full"
     >
       {/* Header */}
-      <div className="text-center space-y-4">
+      <div className="text-center space-y-6">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <UserCheck className="w-8 h-8 text-white" />
         </div>
@@ -206,6 +211,159 @@ export const StudentOnboardingDashboard: React.FC = () => {
         <p className="text-lg text-slate-300 max-w-2xl mx-auto">
           Follow these simple steps to unlock your course access and start your learning journey.
         </p>
+        
+        {/* Next Step Indicator & Primary Action */}
+        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
+          <div className="text-center space-y-4">
+            <div className="text-sm text-slate-400 font-medium uppercase tracking-wider">
+              Next Step
+            </div>
+            <div className="text-xl font-light text-white">
+              {currentStatus === 'account_created' && 'Complete Enrollment Form'}
+              {currentStatus === 'enrollment_pending' && 'Complete Enrollment Form'}
+              {currentStatus === 'payment_pending' && 'Proceed to Payment'}
+              {currentStatus === 'approval_pending' && 'Waiting for Approval'}
+              {currentStatus === 'approved' && 'Start Your Course'}
+              {currentStatus === 'rejected' && 'Resubmit Enrollment'}
+              {currentStatus === 'suspended' && 'Contact Support'}
+            </div>
+            
+            {/* Primary Action Button */}
+            {currentStatus === 'account_created' && (
+              <button
+                onClick={() => {
+                  setActionLoading('enrollment');
+                  navigate('/breemic-enrollment');
+                }}
+                disabled={actionLoading === 'enrollment'}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {actionLoading === 'enrollment' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Complete Enrollment Form
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
+            
+            {currentStatus === 'enrollment_pending' && (
+              <button
+                onClick={() => {
+                  setActionLoading('enrollment');
+                  navigate('/breemic-enrollment');
+                }}
+                disabled={actionLoading === 'enrollment'}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {actionLoading === 'enrollment' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Complete Enrollment Form
+                    <ArrowRight className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
+            
+            {currentStatus === 'payment_pending' && (
+              <button
+                onClick={() => {
+                  setActionLoading('payment');
+                  navigate('/payment');
+                }}
+                disabled={actionLoading === 'payment'}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium rounded-2xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {actionLoading === 'payment' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Proceed to Payment
+                    <CreditCard className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
+            
+            {currentStatus === 'approval_pending' && (
+              <button
+                disabled
+                className="inline-flex items-center gap-3 px-8 py-4 bg-slate-700 text-slate-400 font-medium rounded-2xl cursor-not-allowed opacity-60"
+              >
+                <Clock className="w-5 h-5" />
+                Waiting for Approval
+              </button>
+            )}
+            
+            {currentStatus === 'approved' && (
+              <button
+                onClick={() => {
+                  setActionLoading('dashboard');
+                  navigate('/dashboard');
+                }}
+                disabled={actionLoading === 'dashboard'}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {actionLoading === 'dashboard' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Go to My Course
+                    <BookOpen className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
+            
+            {currentStatus === 'rejected' && (
+              <button
+                onClick={() => {
+                  setActionLoading('resubmit');
+                  navigate('/breemic-enrollment');
+                }}
+                disabled={actionLoading === 'resubmit'}
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-2xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
+                {actionLoading === 'resubmit' ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    Loading...
+                  </>
+                ) : (
+                  <>
+                    Resubmit Enrollment
+                    <RefreshCw className="w-5 h-5" />
+                  </>
+                )}
+              </button>
+            )}
+            
+            {currentStatus === 'suspended' && (
+              <button
+                disabled
+                className="inline-flex items-center gap-3 px-8 py-4 bg-slate-700 text-slate-400 font-medium rounded-2xl cursor-not-allowed opacity-60"
+              >
+                Contact Support
+              </button>
+            )}
+          </div>
+        </div>
       </div>
 
       
@@ -349,11 +507,48 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     {isClickable && step.action && (
                       <div className="mt-4">
                         <button
-                          onClick={() => navigate(step.action.href)}
-                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                          onClick={() => {
+                            const actionType = step.id === 'enrollment_pending' ? 'enrollment' : 
+                                             step.id === 'payment_pending' ? 'payment' : 
+                                             step.id === 'approved' ? 'dashboard' : 'resubmit';
+                            setActionLoading(actionType);
+                            navigate(step.action.href);
+                          }}
+                          disabled={actionLoading !== null}
+                          className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         >
-                          {step.action.label}
-                          <ArrowRight className="w-4 h-4" />
+                          {actionLoading && (step.id === 'enrollment_pending' && actionLoading === 'enrollment' ||
+                                             step.id === 'payment_pending' && actionLoading === 'payment' ||
+                                             step.id === 'approved' && actionLoading === 'dashboard') ? (
+                            <>
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              Loading...
+                            </>
+                          ) : (
+                            <>
+                              {step.id === 'enrollment_pending' && 'Fill Enrollment Form'}
+                              {step.id === 'payment_pending' && 'Make Payment'}
+                              {step.id === 'approved' && 'Go to Dashboard'}
+                              {step.action.label}
+                              <ArrowRight className="w-4 h-4" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    
+                    {/* Disabled state for future steps */}
+                    {!isClickable && !isCompleted && step.action && (
+                      <div className="mt-4">
+                        <button
+                          disabled
+                          className="inline-flex items-center gap-3 px-6 py-3 bg-slate-700/50 text-slate-500 font-medium rounded-xl cursor-not-allowed opacity-50"
+                        >
+                          {step.id === 'enrollment_pending' && 'Complete Previous Steps First'}
+                          {step.id === 'payment_pending' && 'Complete Enrollment First'}
+                          {step.id === 'approval_pending' && 'Submit Payment First'}
+                          {step.id === 'approved' && 'Complete Previous Steps First'}
+                          <Lock className="w-4 h-4" />
                         </button>
                       </div>
                     )}
