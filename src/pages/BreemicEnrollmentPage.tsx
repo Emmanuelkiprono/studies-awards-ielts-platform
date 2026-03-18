@@ -43,11 +43,6 @@ const trainingModes = [
 ] as const;
 
 export const BreemicEnrollmentPage: React.FC = () => {
-  // Debug: Log when component mounts
-  useEffect(() => {
-    console.log('BreemicEnrollmentPage mounted - form should be visible');
-  }, []);
-
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -239,7 +234,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
     >
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-red-500 bg-red-500/20 p-4 rounded-xl border-2 border-red-500">🎓 BREEMIC ENROLLMENT FORM - TESTING</h1>
+        <h1 className="text-3xl font-bold text-white">🎓 Breemic International Enrollment</h1>
         <p className="text-slate-400">Complete your enrollment form to start your learning journey</p>
       </div>
 
