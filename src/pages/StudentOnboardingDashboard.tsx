@@ -307,34 +307,29 @@ export const StudentOnboardingDashboard: React.FC = () => {
           </motion.div>
         )}
 
-        {/* Debug Info */}
-        <div className="bg-slate-800/50 rounded-xl p-4 mx-auto max-w-md">
-          <div className="text-xs text-slate-400 space-y-1">
-            <div>Current Status: <span className="text-white">{currentStatus}</span></div>
-            <div>Has Student Data: <span className="text-white">{studentData ? 'YES' : 'NO'}</span></div>
-            <div>Student UID: <span className="text-white">{studentData?.uid || 'N/A'}</span></div>
-            <div>Payment Amount: <span className="text-white">${studentData?.paymentInfo?.amountPaid || 0}</span></div>
-            <div>Last Update: <span className="text-white">{studentData?.lastStatusUpdate?.toDate()?.toLocaleString() || 'N/A'}</span></div>
+        {/* CRITICAL DEBUG INFO - Visible Proof */}
+        <div className="bg-red-900/80 border-2 border-red-500 rounded-xl p-4 mx-auto max-w-md">
+          <div className="text-xs font-mono text-white space-y-2">
+            <div className="text-red-300 font-bold">=== ONBOARDING STATUS DEBUG ===</div>
+            <div>onboardingStatus: <span className="text-yellow-300">{studentData?.onboardingStatus || 'MISSING'}</span></div>
+            <div>enrollmentCompleted: <span className="text-yellow-300">{studentData?.enrollmentCompleted?.toString() || 'MISSING'}</span></div>
+            <div>paymentInfo: <span className="text-yellow-300">{studentData?.paymentInfo ? 'EXISTS' : 'MISSING'}</span></div>
+            <div>breemicEnrollmentId: <span className="text-yellow-300">{studentData?.breemicEnrollmentId || 'MISSING'}</span></div>
+            <div>currentStatus: <span className="text-yellow-300">{currentStatus}</span></div>
+            <div>dashboardShows: <span className="text-yellow-300">{currentStatus === 'payment_pending' ? 'PROCEED TO PAYMENT' : 'COMPLETE ENROLLMENT'}</span></div>
+            <div className="text-red-300 font-bold">=== END DEBUG ===</div>
             <button
               onClick={() => {
-                console.log('Full student data:', studentData);
-                console.log('Current status from state:', currentStatus);
-                alert(`Debug: Status=${currentStatus}, HasData=${!!studentData}, Payment=$${studentData?.paymentInfo?.amountPaid || 0}`);
+                console.log('=== FULL STUDENT DATA ===');
+                console.log(JSON.stringify(studentData, null, 2));
+                console.log('=== CURRENT STATUS ===');
+                console.log('currentStatus:', currentStatus);
+                console.log('=== DASHBOARD LOGIC ===');
+                console.log('Should show payment:', currentStatus === 'payment_pending');
               }}
-              className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 mr-2"
+              className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 w-full"
             >
-              DEBUG INFO
-            </button>
-            <button
-              onClick={() => {
-                console.log('Manual refresh triggered');
-                setActionLoading('manual-refresh');
-                setTimeout(() => setActionLoading(null), 100);
-                alert('Manual refresh triggered - check console for data updates');
-              }}
-              className="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
-            >
-              REFRESH DATA
+              LOG FULL DATA TO CONSOLE
             </button>
           </div>
         </div>

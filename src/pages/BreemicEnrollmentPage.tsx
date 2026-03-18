@@ -314,38 +314,43 @@ export const BreemicEnrollmentPage: React.FC = () => {
         }
       });
 
-      // CRITICAL: Verify the update was successful
+      // CRITICAL: Verify the update was successful with exact proof
       try {
-        console.log('🔍 DEBUG: Verifying students collection update...');
+        console.log('🔍 VERIFYING: Reading students document after update...');
         const studentRef = doc(db, 'students', user.uid);
         const studentDoc = await getDoc(studentRef);
         if (studentDoc.exists()) {
           const updatedData = studentDoc.data();
-          console.log('🔍 DEBUG: Student data after update:', {
-            onboardingStatus: updatedData.onboardingStatus,
-            expectedStatus: nextStatus,
-            statusMatches: updatedData.onboardingStatus === nextStatus,
-            breemicEnrollmentId: updatedData.breemicEnrollmentId,
-            hasPaymentInfo: !!updatedData.paymentInfo,
-            paymentAmount: updatedData.paymentInfo?.amountPaid,
-            lastStatusUpdate: updatedData.lastStatusUpdate?.toDate()?.toISOString()
-          });
           
+          console.log('=== PROOF: STUDENT DOCUMENT AFTER UPDATE ===');
+          console.log('onboardingStatus (stored):', updatedData.onboardingStatus);
+          console.log('expectedStatus (calculated):', nextStatus);
+          console.log('statusMatches:', updatedData.onboardingStatus === nextStatus);
+          console.log('enrollmentCompleted:', updatedData.enrollmentCompleted);
+          console.log('breemicEnrollmentId:', updatedData.breemicEnrollmentId);
+          console.log('paymentInfo exists:', !!updatedData.paymentInfo);
+          console.log('paymentAmount:', updatedData.paymentInfo?.amountPaid);
+          console.log('lastStatusUpdate:', updatedData.lastStatusUpdate?.toDate()?.toISOString());
+          console.log('=== END PROOF ===');
+          
+          // CRITICAL: Check exact values
           if (updatedData.onboardingStatus === nextStatus) {
-            console.log('✅ SUCCESS: Status update verified in students collection');
-            alert(`✅ SUCCESS: Status updated to ${nextStatus}. Dashboard should update automatically.`);
+            console.log('✅ PROVEN: onboardingStatus correctly updated to', nextStatus);
+            console.log('✅ PROVEN: Dashboard should show "Proceed to Payment"');
+            alert(`✅ PROVEN: Status stored as ${nextStatus}. Dashboard will show "Proceed to Payment".`);
           } else {
-            console.error('❌ CRITICAL BUG: Status update verification failed');
-            console.error('Expected:', nextStatus, 'Got:', updatedData.onboardingStatus);
-            alert(`❌ BUG: Status update failed. Expected: ${nextStatus}, Got: ${updatedData.onboardingStatus}`);
+            console.error('❌ PROVEN: onboardingStatus NOT updated');
+            console.error('❌ Expected:', nextStatus);
+            console.error('❌ Actual stored:', updatedData.onboardingStatus);
+            alert(`❌ PROVEN BUG: onboardingStatus is ${updatedData.onboardingStatus}, expected ${nextStatus}`);
           }
         } else {
-          console.error('❌ CRITICAL BUG: Student document not found after update');
-          alert('❌ BUG: Student document not found in database');
+          console.error('❌ PROVEN: Student document does not exist after update');
+          alert('❌ PROVEN BUG: Student document missing from database');
         }
       } catch (error) {
-        console.error('❌ CRITICAL ERROR: Error verifying update:', error);
-        alert(`❌ ERROR: Verification failed: ${error.message}`);
+        console.error('❌ PROVEN: Verification error:', error);
+        alert(`❌ PROVEN ERROR: ${error.message}`);
       }
 
       setSubmitted(true);
