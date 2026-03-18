@@ -15,6 +15,7 @@ import { BreemicEnrollmentPage } from './pages/BreemicEnrollmentPage';
 import { TestPage } from './pages/TestPage';
 import { StudentOnboardingDashboard } from './pages/StudentOnboardingDashboard';
 import { StudentApprovalPanel } from './pages/StudentApprovalPanel';
+import { PaymentPage } from './pages/PaymentPage';
 import { ApprovalGuard } from './components/ApprovalGuard';
 import { PaymentPendingPage } from './pages/PaymentPendingPage';
 import { ExamBookingPage } from './pages/ExamBookingPage';
@@ -184,6 +185,7 @@ const AppContent: React.FC = () => {
           {/* Public Routes - MUST be before fallback */}
           <Route path="/test" element={<TestPage />} />
           <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
+          <Route path="/payment" element={<ProtectedRoute allowedRoles={['student']}><PaymentPage /></ProtectedRoute>} />
           <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['student']}><StudentOnboardingDashboard /></ProtectedRoute>} />
           <Route path="/approvals" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentApprovalPanel /></ProtectedRoute>} />
 

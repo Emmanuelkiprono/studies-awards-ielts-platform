@@ -91,8 +91,8 @@ export const StudentOnboardingDashboard: React.FC = () => {
         completed: ['approval_pending', 'approved', 'suspended'].includes(currentStatus),
         current: currentStatus === 'payment_pending',
         action: currentStatus === 'payment_pending' ? {
-          label: 'View Payment Details',
-          href: '#payment'
+          label: 'Complete Payment',
+          href: '/payment'
         } : undefined
       },
       {
@@ -291,49 +291,87 @@ export const StudentOnboardingDashboard: React.FC = () => {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
-              className={cn(
-                "flex items-center gap-4 p-4 rounded-xl border transition-all",
-                step.completed 
-                  ? "bg-green-500/10 border-green-500/30" 
-                  : step.current 
-                    ? "bg-[var(--ui-accent)]/10 border-[var(--ui-accent)]/30" 
-                    : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)]/50"
-              )}
             >
-              <div className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                step.completed 
-                  ? "bg-green-500 text-white" 
-                  : step.current 
-                    ? "bg-[var(--ui-accent)] text-white" 
-                    : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
-              )}>
-                {step.completed ? (
-                  <CheckCircle2 className="w-5 h-5" />
-                ) : (
-                  <step.icon className="w-5 h-5" />
-                )}
-              </div>
-              <div className="flex-1">
-                <h4 className={cn(
-                  "font-semibold",
-                  step.completed 
-                    ? "text-green-400" 
-                    : step.current 
-                      ? "text-[var(--ui-accent)]" 
-                      : "text-[var(--ui-muted)]"
-                )}>
-                  {step.title}
-                </h4>
-                <p className="text-sm text-slate-400">{step.description}</p>
-              </div>
-              {step.action && (
-                <Link to={step.action.href}>
-                  <PrimaryButton variant="secondary" size="sm" className="gap-2">
-                    {step.action.label}
-                    <ArrowRight className="w-4 h-4" />
-                  </PrimaryButton>
+              {step.action ? (
+                <Link to={step.action.href} className="block">
+                  <div className={cn(
+                    "flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:scale-[1.02]",
+                    step.completed 
+                      ? "bg-green-500/10 border-green-500/30 hover:bg-green-500/20" 
+                      : step.current 
+                        ? "bg-[var(--ui-accent)]/10 border-[var(--ui-accent)]/30 hover:bg-[var(--ui-accent)]/20" 
+                        : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)]/50 hover:bg-[var(--ui-border)]"
+                  )}>
+                    <div className={cn(
+                      "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                      step.completed 
+                        ? "bg-green-500 text-white" 
+                        : step.current 
+                          ? "bg-[var(--ui-accent)] text-white" 
+                          : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
+                    )}>
+                      {step.completed ? (
+                        <CheckCircle2 className="w-5 h-5" />
+                      ) : (
+                        <step.icon className="w-5 h-5" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h4 className={cn(
+                        "font-semibold",
+                        step.completed 
+                          ? "text-green-400" 
+                          : step.current 
+                            ? "text-[var(--ui-accent)]" 
+                            : "text-[var(--ui-muted)]"
+                      )}>
+                        {step.title}
+                      </h4>
+                      <p className="text-sm text-slate-400">{step.description}</p>
+                    </div>
+                    <PrimaryButton variant="secondary" size="sm" className="gap-2">
+                      {step.action.label}
+                      <ArrowRight className="w-4 h-4" />
+                    </PrimaryButton>
+                  </div>
                 </Link>
+              ) : (
+                <div className={cn(
+                  "flex items-center gap-4 p-4 rounded-xl border transition-all",
+                  step.completed 
+                    ? "bg-green-500/10 border-green-500/30" 
+                    : step.current 
+                      ? "bg-[var(--ui-accent)]/10 border-[var(--ui-accent)]/30" 
+                      : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)]/50"
+                )}>
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                    step.completed 
+                      ? "bg-green-500 text-white" 
+                      : step.current 
+                        ? "bg-[var(--ui-accent)] text-white" 
+                        : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
+                  )}>
+                    {step.completed ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <step.icon className="w-5 h-5" />
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <h4 className={cn(
+                      "font-semibold",
+                      step.completed 
+                        ? "text-green-400" 
+                        : step.current 
+                          ? "text-[var(--ui-accent)]" 
+                          : "text-[var(--ui-muted)]"
+                    )}>
+                      {step.title}
+                    </h4>
+                    <p className="text-sm text-slate-400">{step.description}</p>
+                  </div>
+                </div>
               )}
             </motion.div>
           ))}
