@@ -73,26 +73,47 @@ export const StudentOnboardingDashboard: React.FC = () => {
     if (state?.enrollmentCompleted) {
       console.log('Enrollment just completed, new status:', state.newStatus);
       
-      // Force a refresh of student data after a short delay
-      const refreshTimer = setTimeout(() => {
-        // The useAuth hook will automatically refresh student data
-        // This timeout ensures Firebase has time to sync
-        console.log('Refreshing student data after enrollment completion');
+      // Force multiple refresh attempts to ensure data sync
+      const refreshTimer1 = setTimeout(() => {
+        console.log('Refreshing student data after enrollment completion (1s)');
+        // Force a re-render by updating a dummy state
+        setActionLoading('refresh');
+        setTimeout(() => setActionLoading(null), 100);
       }, 1000);
       
-      return () => clearTimeout(refreshTimer);
+      const refreshTimer2 = setTimeout(() => {
+        console.log('Refreshing student data after enrollment completion (2.5s)');
+        setActionLoading('refresh');
+        setTimeout(() => setActionLoading(null), 100);
+      }, 2500);
+      
+      return () => {
+        clearTimeout(refreshTimer1);
+        clearTimeout(refreshTimer2);
+      };
     }
 
     // Handle payment completion redirect
     if (state?.paymentCompleted) {
       console.log('Payment just completed, new status:', state.newStatus);
       
-      // Force a refresh of student data after a short delay
-      const refreshTimer = setTimeout(() => {
-        console.log('Refreshing student data after payment completion');
+      // Force multiple refresh attempts to ensure data sync
+      const refreshTimer1 = setTimeout(() => {
+        console.log('Refreshing student data after payment completion (1s)');
+        setActionLoading('refresh');
+        setTimeout(() => setActionLoading(null), 100);
       }, 1000);
       
-      return () => clearTimeout(refreshTimer);
+      const refreshTimer2 = setTimeout(() => {
+        console.log('Refreshing student data after payment completion (2.5s)');
+        setActionLoading('refresh');
+        setTimeout(() => setActionLoading(null), 100);
+      }, 2500);
+      
+      return () => {
+        clearTimeout(refreshTimer1);
+        clearTimeout(refreshTimer2);
+      };
     }
   }, [studentData, state]);
 
@@ -287,9 +308,20 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 console.log('Current status from state:', currentStatus);
                 alert(`Debug: Status=${currentStatus}, HasData=${!!studentData}, Payment=$${studentData?.paymentInfo?.amountPaid || 0}`);
               }}
-              className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+              className="mt-2 px-3 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600 mr-2"
             >
               DEBUG INFO
+            </button>
+            <button
+              onClick={() => {
+                console.log('Manual refresh triggered');
+                setActionLoading('manual-refresh');
+                setTimeout(() => setActionLoading(null), 100);
+                alert('Manual refresh triggered - check console for data updates');
+              }}
+              className="mt-2 px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600"
+            >
+              REFRESH DATA
             </button>
           </div>
         </div>
