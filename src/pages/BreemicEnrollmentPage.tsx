@@ -343,7 +343,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Full Name */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <User className="w-3 h-3" />
                 Full Name *
               </label>
@@ -351,14 +351,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="text"
                 className={cn(
                   "input-field w-full",
-                  errors.fullName && "border-red-500/50 bg-red-500/5"
+                  errors.fullName && "error"
                 )}
                 placeholder="Enter your full name"
                 value={formData.fullName}
                 onChange={(e) => handleInputChange('fullName', e.target.value)}
               />
               {errors.fullName && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.fullName}
                 </p>
@@ -367,7 +367,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <Mail className="w-3 h-3" />
                 Email Address *
               </label>
@@ -375,14 +375,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="email"
                 className={cn(
                   "input-field w-full",
-                  errors.email && "border-red-500/50 bg-red-500/5"
+                  errors.email && "error"
                 )}
                 placeholder="your.email@example.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
               />
               {errors.email && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.email}
                 </p>
@@ -391,7 +391,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Contact */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <Phone className="w-3 h-3" />
                 Contact Number *
               </label>
@@ -399,14 +399,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="tel"
                 className={cn(
                   "input-field w-full",
-                  errors.contact && "border-red-500/50 bg-red-500/5"
+                  errors.contact && "error"
                 )}
                 placeholder="+1234567890"
                 value={formData.contact}
                 onChange={(e) => handleInputChange('contact', e.target.value)}
               />
               {errors.contact && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.contact}
                 </p>
@@ -415,7 +415,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* ID/Passport */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <CreditCard className="w-3 h-3" />
                 ID / Passport Number *
               </label>
@@ -423,14 +423,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="text"
                 className={cn(
                   "input-field w-full",
-                  errors.idPassport && "border-red-500/50 bg-red-500/5"
+                  errors.idPassport && "error"
                 )}
                 placeholder="Enter your ID or passport number"
                 value={formData.idPassport}
                 onChange={(e) => handleInputChange('idPassport', e.target.value)}
               />
               {errors.idPassport && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.idPassport}
                 </p>
@@ -449,7 +449,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Course Type */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <BookOpen className="w-3 h-3" />
                 Course Type *
               </label>
@@ -468,7 +468,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Mode of Training */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <GraduationCap className="w-3 h-3" />
                 Mode of Training *
               </label>
@@ -483,7 +483,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
                       onChange={(e) => handleInputChange('modeOfTraining', e.target.value)}
                       className="w-4 h-4 text-blue-500"
                     />
-                    <span className="text-white">{mode.label}</span>
+                    <span className="text-slate-200 dark:text-white font-medium">{mode.label}</span>
                   </label>
                 ))}
               </div>
@@ -491,7 +491,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Course Duration */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <Clock className="w-3 h-3" />
                 Course Duration *
               </label>
@@ -499,14 +499,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="text"
                 className={cn(
                   "input-field w-full",
-                  errors.courseDuration && "border-red-500/50 bg-red-500/5"
+                  errors.courseDuration && "error"
                 )}
                 placeholder="e.g., 12 weeks, 3 months"
                 value={formData.courseDuration}
                 onChange={(e) => handleInputChange('courseDuration', e.target.value)}
               />
               {errors.courseDuration && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.courseDuration}
                 </p>
@@ -515,7 +515,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Highest Level of Education */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <GraduationCap className="w-3 h-3" />
                 Highest Level of Education *
               </label>
@@ -523,14 +523,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="text"
                 className={cn(
                   "input-field w-full",
-                  errors.highestLevelOfEducation && "border-red-500/50 bg-red-500/5"
+                  errors.highestLevelOfEducation && "error"
                 )}
                 placeholder="e.g., Bachelor's Degree, High School"
                 value={formData.highestLevelOfEducation}
                 onChange={(e) => handleInputChange('highestLevelOfEducation', e.target.value)}
               />
               {errors.highestLevelOfEducation && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.highestLevelOfEducation}
                 </p>
@@ -549,7 +549,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Date of Enrollment */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <Calendar className="w-3 h-3" />
                 Date of Enrollment *
               </label>
@@ -557,13 +557,13 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="date"
                 className={cn(
                   "input-field w-full",
-                  errors.dateOfEnrollment && "border-red-500/50 bg-red-500/5"
+                  errors.dateOfEnrollment && "error"
                 )}
                 value={formData.dateOfEnrollment}
                 onChange={(e) => handleInputChange('dateOfEnrollment', e.target.value)}
               />
               {errors.dateOfEnrollment && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.dateOfEnrollment}
                 </p>
@@ -572,7 +572,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Expected Date of Completion */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <Calendar className="w-3 h-3" />
                 Expected Date of Completion *
               </label>
@@ -580,14 +580,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="date"
                 className={cn(
                   "input-field w-full",
-                  errors.expectedDateOfCompletion && "border-red-500/50 bg-red-500/5"
+                  errors.expectedDateOfCompletion && "error"
                 )}
                 value={formData.expectedDateOfCompletion}
                 onChange={(e) => handleInputChange('expectedDateOfCompletion', e.target.value)}
                 min={formData.dateOfEnrollment}
               />
               {errors.expectedDateOfCompletion && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.expectedDateOfCompletion}
                 </p>
@@ -596,21 +596,21 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Physical Address */}
             <div className="space-y-2 md:col-span-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <MapPin className="w-3 h-3" />
                 Physical Address *
               </label>
               <textarea
                 className={cn(
                   "input-field w-full min-h-[80px]",
-                  errors.physicalAddress && "border-red-500/50 bg-red-500/5"
+                  errors.physicalAddress && "error"
                 )}
                 placeholder="Enter your complete physical address"
                 value={formData.physicalAddress}
                 onChange={(e) => handleInputChange('physicalAddress', e.target.value)}
               />
               {errors.physicalAddress && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.physicalAddress}
                 </p>
@@ -629,7 +629,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Fee Paid */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <DollarSign className="w-3 h-3" />
                 Fee Paid *
               </label>
@@ -637,7 +637,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="number"
                 className={cn(
                   "input-field w-full",
-                  errors.feePaid && "border-red-500/50 bg-red-500/5"
+                  errors.feePaid && "error"
                 )}
                 placeholder="0.00"
                 value={formData.feePaid}
@@ -646,7 +646,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 step="0.01"
               />
               {errors.feePaid && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.feePaid}
                 </p>
@@ -655,7 +655,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Balance */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <DollarSign className="w-3 h-3" />
                 Balance *
               </label>
@@ -663,7 +663,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="number"
                 className={cn(
                   "input-field w-full",
-                  errors.balance && "border-red-500/50 bg-red-500/5"
+                  errors.balance && "error"
                 )}
                 placeholder="0.00"
                 value={formData.balance}
@@ -672,7 +672,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 step="0.01"
               />
               {errors.balance && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.balance}
                 </p>
@@ -681,7 +681,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             {/* Officer in Charge */}
             <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
                 <UserCheck className="w-3 h-3" />
                 Officer in Charge *
               </label>
@@ -689,14 +689,14 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 type="text"
                 className={cn(
                   "input-field w-full",
-                  errors.officerInCharge && "border-red-500/50 bg-red-500/5"
+                  errors.officerInCharge && "error"
                 )}
                 placeholder="Officer name"
                 value={formData.officerInCharge}
                 onChange={(e) => handleInputChange('officerInCharge', e.target.value)}
               />
               {errors.officerInCharge && (
-                <p className="text-red-400 text-xs flex items-center gap-1">
+                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
                   <AlertCircle className="w-3 h-3" />
                   {errors.officerInCharge}
                 </p>

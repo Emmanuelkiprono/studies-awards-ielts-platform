@@ -292,15 +292,134 @@ html[data-accent="green"] {
   }
 
   .input-field {
-    @apply w-full rounded-xl px-4 py-3 placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all;
-    background-color: var(--ui-card);
-    border: 1px solid var(--ui-border);
+    @apply w-full rounded-xl px-5 py-4 placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all duration-200;
+    background-color: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     color: var(--ui-text);
-    --tw-ring-color: rgba(var(--ui-accent-rgb) / 0.50);
+    --tw-ring-color: rgba(59, 130, 246, 0.25);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  }
+
+  .input-field:hover {
+    border-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
 
   .input-field:focus {
-    border-color: var(--ui-accent);
+    border-color: rgb(59, 130, 246);
+    background-color: rgba(255, 255, 255, 0.15);
+    --tw-ring-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1), 0 4px 20px rgba(59, 130, 246, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  /* Light mode overrides */
+  html[data-theme="light"] .input-field {
+    background-color: rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(15, 23, 42, 0.15);
+    color: rgb(15, 23, 42);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  }
+
+  html[data-theme="light"] .input-field:hover {
+    border-color: rgba(15, 23, 42, 0.25);
+    background-color: rgba(15, 23, 42, 0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  }
+
+  html[data-theme="light"] .input-field:focus {
+    border-color: rgb(59, 130, 246);
+    background-color: rgba(15, 23, 42, 0.04);
+    --tw-ring-color: rgba(59, 130, 246, 0.4);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08), 0 4px 20px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 1);
+  }
+
+  /* Select dropdown styling */
+  select.input-field {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25rem;
+    padding-right: 3rem;
+  }
+
+  html[data-theme="light"] select.input-field {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  }
+
+  /* Radio button styling */
+  input[type="radio"] {
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s ease;
+  }
+
+  input[type="radio"]:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+
+  input[type="radio"]:checked {
+    border-color: rgb(59, 130, 246);
+    background-color: rgb(59, 130, 246);
+  }
+
+  input[type="radio"]:checked::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: white;
+  }
+
+  /* Light mode radio buttons */
+  html[data-theme="light"] input[type="radio"] {
+    border-color: rgba(15, 23, 42, 0.3);
+    background-color: rgba(15, 23, 42, 0.05);
+  }
+
+  html[data-theme="light"] input[type="radio"]:hover {
+    border-color: rgba(15, 23, 42, 0.5);
+    background-color: rgba(15, 23, 42, 0.1);
+  }
+
+  html[data-theme="light"] input[type="radio"]:checked {
+    border-color: rgb(59, 130, 246);
+    background-color: rgb(59, 130, 246);
+  }
+
+  /* Error states */
+  .input-field.error {
+    border-color: rgb(239, 68, 68);
+    background-color: rgba(239, 68, 68, 0.05);
+  }
+
+  .input-field.error:focus {
+    --tw-ring-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1), 0 4px 20px rgba(239, 68, 68, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  }
+
+  html[data-theme="light"] .input-field.error {
+    border-color: rgb(239, 68, 68);
+    background-color: rgba(239, 68, 68, 0.08);
+  }
+
+  html[data-theme="light"] .input-field.error:focus {
+    --tw-ring-color: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.08), 0 4px 20px rgba(239, 68, 68, 0.08), inset 0 1px 0 rgba(255, 255, 255, 1);
   }
 }
 
