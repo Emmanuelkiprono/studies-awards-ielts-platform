@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Save
 } from 'lucide-react';
-import { collection, addDoc, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
+import { doc, addDoc, collection, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { BreemicEnrollment, OnboardingStatus } from '../types';
 import { cn } from '../lib/utils';
@@ -190,30 +190,42 @@ export const BreemicEnrollmentPage: React.FC = () => {
       const nextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
       
       // Update users collection
-      await updateDoc(doc(db, 'users', user.uid), {
-        onboardingStatus: nextStatus,
-        breemicEnrollmentId: docRef.id,
-        lastStatusUpdate: serverTimestamp(),
-        paymentInfo: {
-          amountPaid: Number(formData.feePaid),
-          balance: Number(formData.balance),
-          paymentMethod: 'other', // Will be updated by admin
-          paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-        }
-      });
+      try {
+        await updateDoc(doc(db, 'users', user.uid), {
+          onboardingStatus: nextStatus,
+          breemicEnrollmentId: docRef.id,
+          lastStatusUpdate: serverTimestamp(),
+          paymentInfo: {
+            amountPaid: Number(formData.feePaid),
+            balance: Number(formData.balance),
+            paymentMethod: 'other', // Will be updated by admin
+            paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+          }
+        });
+        console.log('✅ Users collection updated successfully');
+      } catch (error) {
+        console.error('❌ Error updating users collection:', error);
+        throw new Error(`Failed to update users collection: ${error.message}`);
+      }
 
       // Update students collection (primary data source)
-      await updateDoc(doc(db, 'students', user.uid), {
-        onboardingStatus: nextStatus,
-        breemicEnrollmentId: docRef.id,
-        lastStatusUpdate: serverTimestamp(),
-        paymentInfo: {
-          amountPaid: Number(formData.feePaid),
-          balance: Number(formData.balance),
-          paymentMethod: 'other', // Will be updated by admin
-          paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-        }
-      });
+      try {
+        await updateDoc(doc(db, 'students', user.uid), {
+          onboardingStatus: nextStatus,
+          breemicEnrollmentId: docRef.id,
+          lastStatusUpdate: serverTimestamp(),
+          paymentInfo: {
+            amountPaid: Number(formData.feePaid),
+            balance: Number(formData.balance),
+            paymentMethod: 'other', // Will be updated by admin
+            paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+          }
+        });
+        console.log('✅ Students collection updated successfully');
+      } catch (error) {
+        console.error('❌ Error updating students collection:', error);
+        throw new Error(`Failed to update students collection: ${error.message}`);
+      }
 
       console.log('Student status updated to:', nextStatus);
       console.log('Updated students collection with:', {
@@ -227,6 +239,31 @@ export const BreemicEnrollmentPage: React.FC = () => {
           paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
         }
       });
+
+      // Verify the update was successful
+      try {
+        const studentRef = doc(db, 'students', user.uid);
+        const studentDoc = await getDoc(studentRef);
+        if (studentDoc.exists()) {
+          const updatedData = studentDoc.data();
+          console.log('✅ Verification - Student data after update:', {
+            onboardingStatus: updatedData.onboardingStatus,
+            breemicEnrollmentId: updatedData.breemicEnrollmentId,
+            hasPaymentInfo: !!updatedData.paymentInfo,
+            paymentAmount: updatedData.paymentInfo?.amountPaid
+          });
+          
+          if (updatedData.onboardingStatus === nextStatus) {
+            console.log('✅ Status update verified successfully');
+          } else {
+            console.error('❌ Status update verification failed - expected:', nextStatus, 'got:', updatedData.onboardingStatus);
+          }
+        } else {
+          console.error('❌ Student document not found after update');
+        }
+      } catch (error) {
+        console.error('❌ Error verifying update:', error);
+      }
 
       setSubmitted(true);
       
