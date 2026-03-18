@@ -220,6 +220,32 @@ export const StudentOnboardingDashboard: React.FC = () => {
       <div className="text-center space-y-2">
         <h1 className="text-4xl font-bold text-red-500 bg-red-500/20 p-4 rounded-xl border-2 border-red-500">🎓 ONBOARDING DASHBOARD - TESTING</h1>
         <p className="text-slate-400">Track your enrollment status and complete required steps</p>
+        
+        {/* Test Button */}
+        <div className="mt-4 space-y-2">
+          <button
+            onClick={() => {
+              console.log('TEST BUTTON CLICKED!');
+              alert('Test button clicked!');
+            }}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          >
+            TEST CLICK HERE
+          </button>
+          <br />
+          <button
+            onClick={() => navigate('/breemic-enrollment')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 mx-2"
+          >
+            GO TO ENROLLMENT
+          </button>
+          <button
+            onClick={() => navigate('/payment')}
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
+          >
+            GO TO PAYMENT
+          </button>
+        </div>
       </div>
 
       {/* Current Status Card */}
@@ -301,109 +327,48 @@ export const StudentOnboardingDashboard: React.FC = () => {
       <GlassCard className="p-6">
         <h3 className="text-xl font-bold text-white mb-6">Onboarding Steps</h3>
         <div className="space-y-4">
-          {statusSteps.map((step, index) => (
-            <motion.div
-              key={step.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              {step.action ? (
-                <div 
-                  className={cn(
-                    "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
-                    step.completed 
-                      ? "bg-green-500/10 border-green-500 hover:bg-green-500/20" 
-                      : step.current 
-                        ? "bg-yellow-500/20 border-yellow-500 hover:bg-yellow-500/30" 
-                        : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)] hover:bg-[var(--ui-border)]"
-                  )}
-                  onClick={() => {
-                    console.log('Step clicked:', step.title, 'Navigate to:', step.action.href);
-                    navigate(step.action.href);
-                  }}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
+          <div className="text-white text-sm mb-4">
+            Debug: Total steps: {statusSteps.length}, Current status: {currentStatus}
+          </div>
+          {statusSteps.map((step, index) => {
+            console.log('Rendering step:', step.title, 'Has action:', !!step.action);
+            return (
+              <div key={step.id} className="border border-white/20 rounded-lg p-2 mb-2">
+                <div className="text-white text-xs mb-2">
+                  Step: {step.title} | Current: {step.current ? 'YES' : 'NO'} | Action: {step.action ? 'YES' : 'NO'}
+                </div>
+                {step.action ? (
+                  <div
+                    className="bg-yellow-500 border-2 border-yellow-300 p-4 rounded cursor-pointer hover:bg-yellow-400"
+                    onClick={() => {
+                      console.log('STEP CLICKED!', step.title, step.action.href);
+                      alert(`Step clicked: ${step.title}`);
                       navigate(step.action.href);
-                    }
-                  }}
-                >
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                    step.completed 
-                      ? "bg-green-500 text-white" 
-                      : step.current 
-                        ? "bg-yellow-500 text-white animate-pulse" 
-                        : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
-                  )}>
-                    {step.completed ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      <step.icon className="w-5 h-5" />
-                    )}
+                    }}
+                  >
+                    <div className="text-black font-bold">
+                      CLICKABLE: {step.title}
+                    </div>
+                    <div className="text-black text-sm">
+                      {step.description}
+                    </div>
+                    <div className="text-black text-xs mt-2">
+                      Click to go to: {step.action.href}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h4 className={cn(
-                      "font-semibold flex items-center gap-2",
-                      step.completed 
-                        ? "text-green-400" 
-                        : step.current 
-                          ? "text-yellow-400" 
-                          : "text-[var(--ui-muted)]"
-                    )}>
-                      {step.title}
-                      {step.current && <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">CLICK HERE</span>}
-                    </h4>
-                    <p className="text-sm text-slate-400">{step.description}</p>
+                ) : (
+                  <div className="bg-gray-500 p-4 rounded">
+                    <div className="text-white font-bold">
+                      NOT CLICKABLE: {step.title}
+                    </div>
+                    <div className="text-white text-sm">
+                      {step.description}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-[var(--ui-accent)] font-medium">Click to →</span>
-                    <ArrowRight className="w-4 h-4 text-[var(--ui-accent)]" />
-                  </div>
-                </div>
-              ) : (
-                <div className={cn(
-                  "flex items-center gap-4 p-4 rounded-xl border transition-all",
-                  step.completed 
-                    ? "bg-green-500/10 border-green-500/30" 
-                    : step.current 
-                      ? "bg-[var(--ui-accent)]/10 border-[var(--ui-accent)]/30" 
-                      : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)]/50"
-                )}>
-                  <div className={cn(
-                    "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                    step.completed 
-                      ? "bg-green-500 text-white" 
-                      : step.current 
-                        ? "bg-[var(--ui-accent)] text-white" 
-                        : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
-                  )}>
-                    {step.completed ? (
-                      <CheckCircle2 className="w-5 h-5" />
-                    ) : (
-                      <step.icon className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className={cn(
-                      "font-semibold",
-                      step.completed 
-                        ? "text-green-400" 
-                        : step.current 
-                          ? "text-[var(--ui-accent)]" 
-                          : "text-[var(--ui-muted)]"
-                    )}>
-                      {step.title}
-                    </h4>
-                    <p className="text-sm text-slate-400">{step.description}</p>
-                  </div>
-                </div>
-              )}
-            </motion.div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       </GlassCard>
 
