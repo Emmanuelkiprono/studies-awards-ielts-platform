@@ -77,15 +77,46 @@ export const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-950 via-neutral-900 to-slate-950">
-      {/* Premium ambient background */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {/* Soft center glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] bg-gradient-to-br from-blue-500/6 via-purple-500/3 to-transparent rounded-full blur-3xl opacity-50" />
-        
-        {/* Subtle corner accents */}
-        <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-gradient-to-br from-blue-500/4 to-transparent rounded-full blur-[300px] opacity-40" />
-        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-to-br from-purple-500/4 to-transparent rounded-full blur-[300px] opacity-40" />
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Premium immersive background */}
+      <div className="absolute inset-0">
+        {/* Background image with world map */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-blue-950/50 to-purple-950/50">
+          {/* Simulated world map background */}
+          <div className="absolute inset-0 opacity-20">
+            {/* World map outlines - subtle geographic patterns */}
+            <div className="absolute top-[10%] left-[20%] w-[30%] h-[25%] border border-white/10 rounded-full blur-sm" />
+            <div className="absolute top-[15%] right-[25%] w-[25%] h-[20%] border border-white/8 rounded-full blur-sm" />
+            <div className="absolute bottom-[20%] left-[15%] w-[35%] h-[30%] border border-white/10 rounded-full blur-sm" />
+            <div className="absolute bottom-[25%] right-[20%] w-[28%] h-[22%] border border-white/8 rounded-full blur-sm" />
+            
+            {/* Flight paths - curved connecting lines */}
+            <svg className="absolute inset-0 w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{stopColor: '#3b82f6', stopOpacity: 0.3}} />
+                  <stop offset="100%" style={{stopColor: '#8b5cf6', stopOpacity: 0.2}} />
+                </linearGradient>
+              </defs>
+              {/* Curved flight paths */}
+              <path d="M 200,150 Q 400,100 600,200" stroke="url(#pathGradient)" strokeWidth="1" fill="none" opacity="0.4" />
+              <path d="M 150,300 Q 350,250 550,350" stroke="url(#pathGradient)" strokeWidth="1" fill="none" opacity="0.3" />
+              <path d="M 250,200 Q 450,300 650,250" stroke="url(#pathGradient)" strokeWidth="1" fill="none" opacity="0.3" />
+            </svg>
+          </div>
+          
+          {/* Ambient lighting overlays */}
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-blue-600/10 via-transparent to-purple-600/10" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1200px] h-[1200px] bg-gradient-to-br from-blue-500/8 via-purple-500/4 to-transparent rounded-full blur-3xl opacity-60" />
+        </div>
+      </div>
+      
+      {/* Dark overlay to keep card as main focus */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-black/40" />
+      
+      {/* Additional dark vignette around card area */}
+      <div className="absolute inset-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-transparent via-black/5 to-black/20 rounded-full blur-3xl opacity-80" />
       </div>
 
       <motion.div
