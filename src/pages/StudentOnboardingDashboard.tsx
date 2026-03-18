@@ -198,19 +198,44 @@ export const StudentOnboardingDashboard: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
     >
-            {/* Header */}
-      <div className="text-center space-y-6">
-        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-          <UserCheck className="w-8 h-8 text-white" />
+      {/* Subtle ambient gradient overlay */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-900/5 via-purple-900/5 to-slate-900/10 pointer-events-none" />
+      
+      <div className="relative z-10">
+        {/* Header */}
+        <div className="text-center pt-12 pb-8 px-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl border border-white/5 backdrop-blur-sm mb-6"
+          >
+            <UserCheck className="w-7 h-7 text-blue-400" />
+          </motion.div>
+          
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-4xl font-light text-white mb-3 tracking-tight"
+          >
+            Welcome to Breemic International
+          </motion.h1>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed"
+          >
+            Complete your enrollment steps to unlock course access and begin your learning journey.
+          </motion.p>
         </div>
-        <h1 className="text-3xl font-light text-white">Welcome to Breemic International</h1>
-        <p className="text-lg text-slate-300 max-w-2xl mx-auto">
-          Follow these simple steps to unlock your course access and start your learning journey.
-        </p>
         
         {/* Success Message for Enrollment Completion */}
         {state?.enrollmentCompleted && (
@@ -242,35 +267,54 @@ export const StudentOnboardingDashboard: React.FC = () => {
 
               </div>
         
-        {/* Next Step Indicator & Primary Action */}
-        <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
-          <div className="text-center space-y-4">
-            <div className="text-sm text-slate-400 font-medium uppercase tracking-wider">
-              Next Step
-            </div>
-            <div className="text-xl font-light text-white">
-              {currentStatus === 'account_created' && 'Complete Enrollment Form'}
-              {currentStatus === 'payment_pending' && 'Proceed to Payment'}
-              {currentStatus === 'approval_pending' && 'Waiting for Approval'}
-              {currentStatus === 'approved' && 'Access Courses'}
-              {currentStatus === 'rejected' && 'Resubmit Enrollment'}
-              {currentStatus === 'suspended' && 'Contact Support'}
+        {/* Premium Hero Card - Next Step */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.5 }}
+          className="max-w-2xl mx-auto px-6 mb-12"
+        >
+          <div className="bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-2xl shadow-black/20">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-blue-400 rounded-full" />
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Current Step</span>
             </div>
             
-            {/* Primary Action Button */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-light text-white mb-2">
+                {currentStatus === 'account_created' && 'Complete Enrollment Form'}
+                {currentStatus === 'payment_pending' && 'Proceed to Payment'}
+                {currentStatus === 'approval_pending' && 'Waiting for Approval'}
+                {currentStatus === 'approved' && 'Access Your Courses'}
+                {currentStatus === 'rejected' && 'Resubmit Enrollment'}
+                {currentStatus === 'suspended' && 'Contact Support'}
+              </h2>
+              <p className="text-slate-400 leading-relaxed">
+                {currentStatus === 'account_created' && 'Fill out your enrollment details to begin your IELTS preparation journey.'}
+                {currentStatus === 'payment_pending' && 'Complete your payment to secure your spot in the training program.'}
+                {currentStatus === 'approval_pending' && 'Your enrollment is under review. We\'ll notify you once approved.'}
+                {currentStatus === 'approved' && 'Congratulations! You now have full access to your course materials.'}
+                {currentStatus === 'rejected' && 'Please update your information and resubmit your enrollment.'}
+                {currentStatus === 'suspended' && 'Your account has been suspended. Please contact our support team.'}
+              </p>
+            </div>
+            
+            {/* Premium CTA Button */}
             {currentStatus === 'account_created' && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setActionLoading('enrollment');
                   navigate('/breemic-enrollment');
                 }}
                 disabled={actionLoading === 'enrollment'}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-2xl transition-all duration-300 shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading === 'enrollment' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Loading...
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -278,23 +322,24 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
-              </button>
+              </motion.button>
             )}
             
-                        
             {currentStatus === 'payment_pending' && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setActionLoading('payment');
                   navigate('/payment');
                 }}
                 disabled={actionLoading === 'payment'}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white font-medium rounded-2xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-2xl transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading === 'payment' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Loading...
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -302,55 +347,56 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     <CreditCard className="w-5 h-5" />
                   </>
                 )}
-              </button>
+              </motion.button>
             )}
             
             {currentStatus === 'approval_pending' && (
-              <button
-                disabled
-                className="inline-flex items-center gap-3 px-8 py-4 bg-slate-700 text-slate-400 font-medium rounded-2xl cursor-not-allowed opacity-60"
-              >
+              <div className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800/50 text-slate-400 font-medium rounded-2xl border border-slate-700">
                 <Clock className="w-5 h-5" />
                 Waiting for Approval
-              </button>
+              </div>
             )}
             
             {currentStatus === 'approved' && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setActionLoading('dashboard');
                   navigate('/dashboard');
                 }}
                 disabled={actionLoading === 'dashboard'}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-2xl transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading === 'dashboard' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Loading...
+                    Processing...
                   </>
                 ) : (
                   <>
-                    Go to My Course
+                    Access Courses
                     <BookOpen className="w-5 h-5" />
                   </>
                 )}
-              </button>
+              </motion.button>
             )}
             
             {currentStatus === 'rejected' && (
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02, y: -1 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => {
                   setActionLoading('resubmit');
                   navigate('/breemic-enrollment');
                 }}
                 disabled={actionLoading === 'resubmit'}
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-2xl hover:from-orange-600 hover:to-orange-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white font-medium rounded-2xl transition-all duration-300 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {actionLoading === 'resubmit' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Loading...
+                    Processing...
                   </>
                 ) : (
                   <>
@@ -358,212 +404,220 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     <RefreshCw className="w-5 h-5" />
                   </>
                 )}
-              </button>
+              </motion.button>
             )}
             
             {currentStatus === 'suspended' && (
-              <button
-                disabled
-                className="inline-flex items-center gap-3 px-8 py-4 bg-slate-700 text-slate-400 font-medium rounded-2xl cursor-not-allowed opacity-60"
-              >
+              <div className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800/50 text-slate-400 font-medium rounded-2xl border border-slate-700">
+                <AlertCircle className="w-5 h-5" />
                 Contact Support
-              </button>
+              </div>
             )}
           </div>
-        </div>
+        </motion.div>
         
-      {/* Progress Steps */}
-      <div className="space-y-8">
-        {/* Visual Progress Tracker */}
-        <div className="relative">
-          <div className="flex items-center justify-between mb-8">
-            {[
-              { id: 'account_created', label: 'Account' },
-              { id: 'enrollment_pending', label: 'Enrollment' },
-              { id: 'payment_pending', label: 'Payment' },
-              { id: 'approval_pending', label: 'Approval' },
-              { id: 'approved', label: 'Course Access' }
-            ].map((step, index) => {
-              const isCompleted = ['account_created', 'enrollment_pending', 'payment_pending', 'approval_pending', 'approved'].indexOf(currentStatus) >= index;
-              const isCurrent = step.id === currentStatus || 
-                (currentStatus === 'enrollment_pending' && step.id === 'enrollment_pending') ||
-                (currentStatus === 'payment_pending' && step.id === 'payment_pending') ||
-                (currentStatus === 'approval_pending' && step.id === 'approval_pending') ||
-                (currentStatus === 'approved' && step.id === 'approved');
+      {/* Premium Progress Stepper */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+          className="max-w-4xl mx-auto px-6"
+        >
+          <div className="relative">
+            {/* Progress Line Background */}
+            <div className="absolute top-8 left-8 right-8 h-px bg-slate-800" />
+            
+            {/* Progress Line Fill */}
+            <div 
+              className="absolute top-8 left-8 h-px bg-gradient-to-r from-blue-500 to-blue-400 transition-all duration-700 ease-out"
+              style={{ 
+                width: `${(['account_created', 'enrollment_pending', 'payment_pending', 'approval_pending', 'approved'].indexOf(currentStatus) / 4) * 100}%` 
+              }}
+            />
+            
+            {/* Step Indicators */}
+            <div className="flex items-center justify-between relative">
+              {[
+                { id: 'account_created', label: 'Account', icon: User },
+                { id: 'enrollment_pending', label: 'Enrollment', icon: FileText },
+                { id: 'payment_pending', label: 'Payment', icon: CreditCard },
+                { id: 'approval_pending', label: 'Approval', icon: Clock },
+                { id: 'approved', label: 'Access', icon: BookOpen }
+              ].map((step, index) => {
+                const isCompleted = ['account_created', 'enrollment_pending', 'payment_pending', 'approval_pending', 'approved'].indexOf(currentStatus) >= index;
+                const isCurrent = step.id === currentStatus || 
+                  (currentStatus === 'enrollment_pending' && step.id === 'enrollment_pending') ||
+                  (currentStatus === 'payment_pending' && step.id === 'payment_pending') ||
+                  (currentStatus === 'approval_pending' && step.id === 'approval_pending') ||
+                  (currentStatus === 'approved' && step.id === 'approved');
+                
+                return (
+                  <motion.div
+                    key={step.id}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 + index * 0.1 }}
+                    className="flex flex-col items-center"
+                  >
+                    <div className="relative">
+                      {/* Step Circle */}
+                      <motion.div
+                        whileHover={{ scale: isCurrent ? 1.1 : 1 }}
+                        className={cn(
+                          "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 backdrop-blur-sm border",
+                          isCompleted 
+                            ? "bg-blue-500/20 border-blue-500 text-blue-400" 
+                            : isCurrent 
+                              ? "bg-white/10 border-blue-400 text-blue-300 shadow-lg shadow-blue-500/20" 
+                              : "bg-slate-800/50 border-slate-700 text-slate-500"
+                        )}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="w-7 h-7" />
+                        ) : (
+                          <step.icon className="w-6 h-6" />
+                        )}
+                      </motion.div>
+                      
+                      {/* Current Step Indicator */}
+                      {isCurrent && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
+                          className="absolute -top-1 -right-1 w-3 h-3 bg-blue-400 rounded-full"
+                        />
+                      )}
+                    </div>
+                    
+                    <span className={cn(
+                      "text-xs font-medium mt-3 transition-colors duration-300",
+                      isCompleted ? "text-blue-400" : isCurrent ? "text-white font-semibold" : "text-slate-600"
+                    )}>
+                      {step.label}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Premium Step Cards */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.7 }}
+          className="max-w-4xl mx-auto px-6 pb-12"
+        >
+          <div className="grid gap-4">
+            {statusSteps.map((step, index) => {
+              if (step.id === 'rejected' || step.id === 'suspended') return null;
+              
+              const isClickable = step.action && step.current;
+              const isCompleted = step.completed;
               
               return (
-                <div key={step.id} className="flex flex-col items-center relative z-10">
-                  <div className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300",
+                <motion.div
+                  key={step.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
+                  whileHover={isClickable ? { y: -2, x: 4 } : {}}
+                  className={cn(
+                    "bg-white/3 backdrop-blur-md rounded-2xl p-5 border transition-all duration-300",
                     isCompleted 
-                      ? "bg-gradient-to-br from-green-400 to-green-600 shadow-lg" 
-                      : isCurrent
-                        ? "bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg ring-4 ring-blue-400/20"
-                        : "bg-slate-700"
-                  )}>
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-6 h-6 text-white" />
-                    ) : (
-                      <div className="w-3 h-3 bg-slate-400 rounded-full" />
-                    )}
-                  </div>
-                  <span className={cn(
-                    "text-xs mt-2 font-medium transition-colors",
-                    isCompleted 
-                      ? "text-green-400" 
-                      : isCurrent
-                        ? "text-blue-400"
-                        : "text-slate-500"
-                  )}>
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-          {/* Progress Line */}
-          <div className="absolute top-6 left-0 right-0 h-0.5 bg-slate-700 -z-10" />
-          <div 
-            className="absolute top-6 left-0 h-0.5 bg-gradient-to-r from-green-400 to-green-600 -z-10 transition-all duration-500"
-            style={{
-              width: `${(['account_created', 'enrollment_pending', 'payment_pending', 'approval_pending', 'approved'].indexOf(currentStatus) / 4) * 100}%`
-            }}
-          />
-        </div>
-
-        {/* Step Cards */}
-        <div className="space-y-4">
-          {statusSteps.map((step, index) => {
-            if (step.id === 'rejected' || step.id === 'suspended') return null;
-            
-            const isClickable = step.action && step.current;
-            const isCompleted = step.completed;
-            
-            return (
-              <motion.div
-                key={step.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className={cn(
-                  "bg-white/5 backdrop-blur-sm rounded-2xl p-6 border transition-all duration-300",
-                  isCompleted 
-                    ? "border-green-500/20 bg-green-500/5" 
-                    : isClickable
-                      ? "border-blue-500/30 bg-blue-500/10 shadow-lg shadow-blue-500/10"
-                      : "border-slate-700/50 bg-slate-800/30"
-                )}
-              >
-                <div className="flex items-start gap-4">
-                  {/* Icon */}
-                  <div className={cn(
-                    "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all",
-                    isCompleted 
-                      ? "bg-green-500/20 text-green-400" 
+                      ? "border-green-500/20 bg-green-500/5" 
                       : isClickable
-                        ? "bg-blue-500/20 text-blue-400"
-                        : "bg-slate-700 text-slate-400"
-                  )}>
-                    {isCompleted ? (
-                      <CheckCircle2 className="w-6 h-6" />
-                    ) : (
-                      <step.icon className="w-6 h-6" />
-                    )}
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <h3 className={cn(
-                          "text-lg font-medium mb-1",
-                          isCompleted 
-                            ? "text-green-400" 
-                            : isClickable
-                              ? "text-white"
-                              : "text-slate-400"
-                        )}>
-                          {step.title}
-                        </h3>
-                        <p className="text-slate-400 text-sm leading-relaxed">
-                          {step.description}
-                        </p>
+                        ? "border-blue-500/30 bg-blue-500/8 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20"
+                        : "border-slate-700/30 bg-slate-800/20"
+                  )}
+                >
+                  <div className="flex items-center gap-4">
+                    {/* Compact Icon */}
+                    <div className={cn(
+                      "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300",
+                      isCompleted 
+                        ? "bg-green-500/15 text-green-400 border border-green-500/20" 
+                        : isClickable
+                          ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
+                          : "bg-slate-700/50 text-slate-500 border border-slate-600/30"
+                    )}>
+                      {isCompleted ? (
+                        <CheckCircle2 className="w-6 h-6" />
+                      ) : (
+                        <step.icon className="w-6 h-6" />
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-4">
+                        <div>
+                          <h3 className="text-lg font-medium text-white mb-1">{step.title}</h3>
+                          <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
+                        </div>
+                        
+                        {/* Status Badge */}
+                        <div className="flex-shrink-0">
+                          {isCompleted ? (
+                            <div className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
+                              Completed
+                            </div>
+                          ) : isClickable ? (
+                            <div className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
+                              Current
+                            </div>
+                          ) : (
+                            <div className="px-3 py-1 bg-slate-700/30 text-slate-500 text-xs font-medium rounded-full border border-slate-600/30">
+                              Upcoming
+                            </div>
+                          )}
+                        </div>
                       </div>
                       
-                      {/* Status Badge */}
-                      <div className="flex-shrink-0">
-                        {isCompleted ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
-                            Completed
-                          </span>
-                        ) : isClickable ? (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
-                            In Progress
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-700/50 text-slate-400 border border-slate-600/30">
-                            Pending
-                          </span>
+                      {/* Action Area */}
+                      <div className="mt-4">
+                        {isClickable && step.action && (
+                          <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => navigate(step.action!.href)}
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-xl hover:bg-blue-600 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+                          >
+                            {actionLoading && (step.id === 'enrollment_pending' && actionLoading === 'enrollment' ||
+                                               step.id === 'payment_pending' && actionLoading === 'payment' ||
+                                               step.id === 'approved' && actionLoading === 'dashboard') ? (
+                              <>
+                                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                Loading...
+                              </>
+                            ) : (
+                              <>
+                                {step.action.label}
+                                <ArrowRight className="w-4 h-4" />
+                              </>
+                            )}
+                          </motion.button>
+                        )}
+                        
+                        {!isClickable && !isCompleted && (
+                          <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800/50 text-slate-500 text-sm font-medium rounded-xl border border-slate-700/50">
+                            <Lock className="w-4 h-4" />
+                            {step.id === 'enrollment_pending' && 'Complete Previous Steps'}
+                            {step.id === 'payment_pending' && 'Complete Enrollment First'}
+                            {step.id === 'approval_pending' && 'Submit Payment First'}
+                            {step.id === 'approved' && 'Complete Previous Steps'}
+                          </div>
                         )}
                       </div>
                     </div>
-                    
-                    {/* Action Button */}
-                    {isClickable && step.action && (
-                      <div className="mt-4">
-                        <button
-                          onClick={() => {
-                            const actionType = step.id === 'enrollment_pending' ? 'enrollment' : 
-                                             step.id === 'payment_pending' ? 'payment' : 
-                                             step.id === 'approved' ? 'dashboard' : 'resubmit';
-                            setActionLoading(actionType);
-                            navigate(step.action.href);
-                          }}
-                          disabled={actionLoading !== null}
-                          className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                        >
-                          {actionLoading && (step.id === 'enrollment_pending' && actionLoading === 'enrollment' ||
-                                             step.id === 'payment_pending' && actionLoading === 'payment' ||
-                                             step.id === 'approved' && actionLoading === 'dashboard') ? (
-                            <>
-                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              Loading...
-                            </>
-                          ) : (
-                            <>
-                              {step.id === 'enrollment_pending' && 'Fill Enrollment Form'}
-                              {step.id === 'payment_pending' && 'Make Payment'}
-                              {step.id === 'approved' && 'Go to Dashboard'}
-                              {step.action.label}
-                              <ArrowRight className="w-4 h-4" />
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                    
-                    {/* Disabled state for future steps */}
-                    {!isClickable && !isCompleted && step.action && (
-                      <div className="mt-4">
-                        <button
-                          disabled
-                          className="inline-flex items-center gap-3 px-6 py-3 bg-slate-700/50 text-slate-500 font-medium rounded-xl cursor-not-allowed opacity-50"
-                        >
-                          {step.id === 'enrollment_pending' && 'Complete Previous Steps First'}
-                          {step.id === 'payment_pending' && 'Complete Enrollment First'}
-                          {step.id === 'approval_pending' && 'Submit Payment First'}
-                          {step.id === 'approved' && 'Complete Previous Steps First'}
-                          <Lock className="w-4 h-4" />
-                        </button>
-                      </div>
-                    )}
                   </div>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
-      </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
 
       {/* Success State */}
       {currentStatus === 'approved' && (
