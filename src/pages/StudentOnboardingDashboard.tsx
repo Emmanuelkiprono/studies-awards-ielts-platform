@@ -201,10 +201,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
     >
       {/* Subtle ambient gradient overlay */}
-      <div className="fixed inset-0 bg-gradient-to-br from-blue-900/5 via-purple-900/5 to-slate-900/10 pointer-events-none" />
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-slate-500/10 dark:from-blue-900/5 dark:via-purple-900/5 dark:to-slate-900/10 pointer-events-none" />
       
       <div className="relative z-10">
         {/* Header */}
@@ -213,16 +213,16 @@ export const StudentOnboardingDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl border border-white/5 backdrop-blur-sm mb-6"
+            className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 rounded-2xl border border-blue-500/20 dark:border-white/5 backdrop-blur-sm mb-6"
           >
-            <UserCheck className="w-7 h-7 text-blue-400" />
+            <UserCheck className="w-7 h-7 text-blue-600 dark:text-blue-400" />
           </motion.div>
           
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-4xl font-light text-white mb-3 tracking-tight"
+            className="text-4xl font-light text-slate-900 dark:text-white mb-3 tracking-tight"
           >
             Welcome to Breemic International
           </motion.h1>
@@ -231,7 +231,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed"
+            className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed"
           >
             Complete your enrollment steps to unlock course access and begin your learning journey.
           </motion.p>
@@ -274,14 +274,14 @@ export const StudentOnboardingDashboard: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.5 }}
           className="max-w-2xl mx-auto px-6 mb-12"
         >
-          <div className="bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-2xl shadow-black/20">
+          <div className="bg-white/80 dark:bg-white/5 backdrop-blur-md rounded-3xl p-8 border border-slate-200/50 dark:border-white/10 shadow-2xl shadow-slate-200/20 dark:shadow-black/20">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-blue-400 rounded-full" />
-              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">Current Step</span>
+              <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full" />
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400 uppercase tracking-wider">Current Step</span>
             </div>
             
             <div className="mb-6">
-              <h2 className="text-2xl font-light text-white mb-2">
+              <h2 className="text-2xl font-light text-slate-900 dark:text-white mb-2">
                 {currentStatus === 'account_created' && 'Complete Enrollment Form'}
                 {currentStatus === 'payment_pending' && 'Proceed to Payment'}
                 {currentStatus === 'approval_pending' && 'Waiting for Approval'}
@@ -289,7 +289,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 {currentStatus === 'rejected' && 'Resubmit Enrollment'}
                 {currentStatus === 'suspended' && 'Contact Support'}
               </h2>
-              <p className="text-slate-400 leading-relaxed">
+              <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                 {currentStatus === 'account_created' && 'Fill out your enrollment details to begin your IELTS preparation journey.'}
                 {currentStatus === 'payment_pending' && 'Complete your payment to secure your spot in the training program.'}
                 {currentStatus === 'approval_pending' && 'Your enrollment is under review. We\'ll notify you once approved.'}
@@ -425,7 +425,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         >
           <div className="relative">
             {/* Progress Line Background */}
-            <div className="absolute top-8 left-8 right-8 h-px bg-slate-800" />
+            <div className="absolute top-8 left-8 right-8 h-px bg-slate-300 dark:bg-slate-800" />
             
             {/* Progress Line Fill */}
             <div 
@@ -466,10 +466,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
                         className={cn(
                           "w-16 h-16 rounded-full flex items-center justify-center transition-all duration-500 backdrop-blur-sm border",
                           isCompleted 
-                            ? "bg-blue-500/20 border-blue-500 text-blue-400" 
+                            ? "bg-blue-500/20 border-blue-500 text-blue-600 dark:text-blue-400" 
                             : isCurrent 
-                              ? "bg-white/10 border-blue-400 text-blue-300 shadow-lg shadow-blue-500/20" 
-                              : "bg-slate-800/50 border-slate-700 text-slate-500"
+                              ? "bg-white/20 dark:bg-white/10 border-blue-400 text-blue-600 dark:text-blue-300 shadow-lg shadow-blue-500/20" 
+                              : "bg-slate-200/50 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-500"
                         )}
                       >
                         {isCompleted ? (
@@ -492,7 +492,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     
                     <span className={cn(
                       "text-xs font-medium mt-3 transition-colors duration-300",
-                      isCompleted ? "text-blue-400" : isCurrent ? "text-white font-semibold" : "text-slate-600"
+                      isCompleted ? "text-blue-600 dark:text-blue-400" : isCurrent ? "text-slate-900 dark:text-white font-semibold" : "text-slate-500 dark:text-slate-600"
                     )}>
                       {step.label}
                     </span>
@@ -525,12 +525,12 @@ export const StudentOnboardingDashboard: React.FC = () => {
                   transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
                   whileHover={isClickable ? { y: -2, x: 4 } : {}}
                   className={cn(
-                    "bg-white/3 backdrop-blur-md rounded-2xl p-5 border transition-all duration-300",
+                    "bg-white/80 dark:bg-white/3 backdrop-blur-md rounded-2xl p-5 border transition-all duration-300",
                     isCompleted 
-                      ? "border-green-500/20 bg-green-500/5" 
+                      ? "border-green-500/30 dark:border-green-500/20 bg-green-50 dark:bg-green-500/5" 
                       : isClickable
-                        ? "border-blue-500/30 bg-blue-500/8 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20"
-                        : "border-slate-700/30 bg-slate-800/20"
+                        ? "border-blue-500/40 dark:border-blue-500/30 bg-blue-50 dark:bg-blue-500/8 shadow-lg shadow-blue-500/10 hover:shadow-xl hover:shadow-blue-500/20"
+                        : "border-slate-300/50 dark:border-slate-700/30 bg-slate-50 dark:bg-slate-800/20"
                   )}
                 >
                   <div className="flex items-center gap-4">
@@ -538,10 +538,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     <div className={cn(
                       "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300",
                       isCompleted 
-                        ? "bg-green-500/15 text-green-400 border border-green-500/20" 
+                        ? "bg-green-100 dark:bg-green-500/15 text-green-600 dark:text-green-400 border border-green-300 dark:border-green-500/20" 
                         : isClickable
-                          ? "bg-blue-500/15 text-blue-400 border border-blue-500/20"
-                          : "bg-slate-700/50 text-slate-500 border border-slate-600/30"
+                          ? "bg-blue-100 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-300 dark:border-blue-500/20"
+                          : "bg-slate-100 dark:bg-slate-700/50 text-slate-500 dark:text-slate-500 border border-slate-300 dark:border-slate-600/30"
                     )}>
                       {isCompleted ? (
                         <CheckCircle2 className="w-6 h-6" />
@@ -554,22 +554,22 @@ export const StudentOnboardingDashboard: React.FC = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-4">
                         <div>
-                          <h3 className="text-lg font-medium text-white mb-1">{step.title}</h3>
-                          <p className="text-slate-400 text-sm leading-relaxed">{step.description}</p>
+                          <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-1">{step.title}</h3>
+                          <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">{step.description}</p>
                         </div>
                         
                         {/* Status Badge */}
                         <div className="flex-shrink-0">
                           {isCompleted ? (
-                            <div className="px-3 py-1 bg-green-500/20 text-green-400 text-xs font-medium rounded-full border border-green-500/30">
+                            <div className="px-3 py-1 bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 text-xs font-medium rounded-full border border-green-300 dark:border-green-500/30">
                               Completed
                             </div>
                           ) : isClickable ? (
-                            <div className="px-3 py-1 bg-blue-500/20 text-blue-400 text-xs font-medium rounded-full border border-blue-500/30">
+                            <div className="px-3 py-1 bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 text-xs font-medium rounded-full border border-blue-300 dark:border-blue-500/30">
                               Current
                             </div>
                           ) : (
-                            <div className="px-3 py-1 bg-slate-700/30 text-slate-500 text-xs font-medium rounded-full border border-slate-600/30">
+                            <div className="px-3 py-1 bg-slate-100 dark:bg-slate-700/30 text-slate-600 dark:text-slate-500 text-xs font-medium rounded-full border border-slate-300 dark:border-slate-600/30">
                               Upcoming
                             </div>
                           )}
@@ -583,7 +583,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => navigate(step.action!.href)}
-                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-xl hover:bg-blue-600 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30"
+                            className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-500 text-white text-sm font-medium rounded-xl hover:bg-blue-600 transition-all duration-200 shadow-lg shadow-blue-500/20 hover:shadow-blue-500/30 dark:shadow-blue-500/30 dark:hover:shadow-blue-500/40"
                           >
                             {actionLoading && (step.id === 'enrollment_pending' && actionLoading === 'enrollment' ||
                                                step.id === 'payment_pending' && actionLoading === 'payment' ||
@@ -602,7 +602,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                         )}
                         
                         {!isClickable && !isCompleted && (
-                          <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800/50 text-slate-500 text-sm font-medium rounded-xl border border-slate-700/50">
+                          <div className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 dark:bg-slate-800/50 text-slate-600 dark:text-slate-500 text-sm font-medium rounded-xl border border-slate-300 dark:border-slate-700/50">
                             <Lock className="w-4 h-4" />
                             {step.id === 'enrollment_pending' && 'Complete Previous Steps'}
                             {step.id === 'payment_pending' && 'Complete Enrollment First'}
@@ -626,14 +626,14 @@ export const StudentOnboardingDashboard: React.FC = () => {
           animate={{ opacity: 1, scale: 1 }}
           className="text-center space-y-6"
         >
-          <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-3xl p-8 border border-green-500/30">
+          <div className="bg-gradient-to-br from-green-100 to-emerald-100 dark:from-green-500/20 dark:to-emerald-500/20 backdrop-blur-sm rounded-3xl p-8 border border-green-300 dark:border-green-500/30">
             <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
               <CheckCircle2 className="w-10 h-10 text-white" />
             </div>
-            <h2 className="text-2xl font-light text-white mb-3">
+            <h2 className="text-2xl font-light text-slate-900 dark:text-white mb-3">
               🎉 Congratulations!
             </h2>
-            <p className="text-slate-300 mb-6 max-w-md mx-auto">
+            <p className="text-slate-700 dark:text-slate-300 mb-6 max-w-md mx-auto">
               Your enrollment has been approved. You now have full access to all courses and materials.
             </p>
             <button

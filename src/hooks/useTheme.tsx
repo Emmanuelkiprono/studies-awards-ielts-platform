@@ -48,6 +48,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const applyToDom = useCallback(() => {
     if (typeof document === 'undefined') return;
+    
+    // Remove existing theme classes
+    document.documentElement.classList.remove('dark', 'light');
+    
+    // Add current theme class
+    document.documentElement.classList.add(resolvedTheme);
+    
+    // Keep data attributes for CSS variables
     document.documentElement.dataset.theme = resolvedTheme;
     document.documentElement.dataset.accent = accent;
   }, [accent, resolvedTheme]);

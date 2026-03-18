@@ -309,12 +309,12 @@ export const BreemicEnrollmentPage: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"
     >
             {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-white">🎓 Breemic International Enrollment</h1>
-        <p className="text-slate-400">Complete your enrollment form to start your learning journey</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">🎓 Breemic International Enrollment</h1>
+        <p className="text-slate-600 dark:text-slate-400">Complete your enrollment form to start your learning journey</p>
       </div>
 
       {/* Error Message */}
