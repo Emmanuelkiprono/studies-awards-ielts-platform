@@ -269,6 +269,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
     >
+      {/* BUILD CHECK MARKER */}
+      <div className="bg-red-600 text-white p-4 text-center font-bold text-xl">
+        DEBUG VERSION 2 - 2026-03-18 - BUILD CHECK - StudentOnboardingDashboard.tsx
+      </div>
       {/* HARD PROOF: Visible onboardingStatus */}
       <div className="bg-yellow-500 text-black p-2 text-center font-bold">
         HARD PROOF: studentData.onboardingStatus = {studentData?.onboardingStatus || 'MISSING'}
