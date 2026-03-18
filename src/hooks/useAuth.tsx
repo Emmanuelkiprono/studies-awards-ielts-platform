@@ -70,18 +70,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               const studentRef = doc(db, 'students', firebaseUser.uid);
               if (unsubscribeStudent) unsubscribeStudent(); // Clean up previous if it exists
               unsubscribeStudent = onSnapshot(studentRef, (sDoc) => {
+                console.log('🔍 USEAUTH: Students collection snapshot triggered for UID:', firebaseUser.uid);
                 if (sDoc.exists()) {
                   const data = sDoc.data() as StudentData;
-                  console.log('Student data updated:', {
+                  console.log('🔍 USEAUTH: Student data received from students collection:', {
                     uid: data.uid,
                     onboardingStatus: data.onboardingStatus,
                     hasPaymentInfo: !!data.paymentInfo,
                     paymentAmount: data.paymentInfo?.amountPaid,
+                    breemicEnrollmentId: data.breemicEnrollmentId,
+                    lastStatusUpdate: data.lastStatusUpdate?.toDate()?.toISOString(),
                     timestamp: new Date().toISOString()
                   });
+                  
+                  // CRITICAL: Check if this is the expected status after enrollment
+                  if (data.onboardingStatus === 'payment_pending') {
+                    console.log('✅ USEAUTH: Student has payment_pending status - dashboard should show payment step');
+                  } else if (data.onboardingStatus === 'account_created') {
+                    console.log('🔍 USEAUTH: Student still has account_created status - enrollment update may have failed');
+                  }
+                  
                   setStudentData(data);
                 } else {
-                  console.log('No student document found for UID:', firebaseUser.uid);
+                  console.log('❌ USEAUTH: No student document found for UID:', firebaseUser.uid);
+                  console.log('❌ USEAUTH: This means the student document was never created or was deleted');
                 }
               });
             }

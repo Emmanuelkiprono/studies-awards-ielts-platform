@@ -17,7 +17,7 @@ import {
   AlertCircle,
   Save
 } from 'lucide-react';
-import { doc, addDoc, collection, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { doc, addDoc, collection, updateDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { BreemicEnrollment, OnboardingStatus } from '../types';
 import { cn } from '../lib/utils';
@@ -222,18 +222,78 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
       // Update students collection (primary data source)
       try {
-        await updateDoc(doc(db, 'students', user.uid), {
-          onboardingStatus: nextStatus,
-          breemicEnrollmentId: docRef.id,
-          lastStatusUpdate: serverTimestamp(),
-          paymentInfo: {
-            amountPaid: Number(formData.feePaid),
-            balance: Number(formData.balance),
-            paymentMethod: 'other', // Will be updated by admin
-            paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+        // CRITICAL: Read students document BEFORE update
+        console.log('🔍 BEFORE UPDATE: Reading students document...');
+        const studentRef = doc(db, 'students', user.uid);
+        const beforeDoc = await getDoc(studentRef);
+        if (beforeDoc.exists()) {
+          const beforeData = beforeDoc.data();
+          console.log('🔍 BEFORE UPDATE: Student data:', {
+            uid: beforeData.uid,
+            onboardingStatus: beforeData.onboardingStatus,
+            breemicEnrollmentId: beforeData.breemicEnrollmentId,
+            hasPaymentInfo: !!beforeData.paymentInfo
+          });
+        } else {
+          console.log('🔍 BEFORE UPDATE: Student document does not exist!');
+          console.log('🔨 CREATING: Student document since it does not exist...');
+          
+          // CRITICAL: Create the students document if it doesn't exist
+          try {
+            await setDoc(studentRef, {
+              uid: user.uid,
+              onboardingStatus: nextStatus,
+              breemicEnrollmentId: docRef.id,
+              lastStatusUpdate: serverTimestamp(),
+              paymentInfo: {
+                amountPaid: Number(formData.feePaid),
+                balance: Number(formData.balance),
+                paymentMethod: 'other',
+                paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+              },
+              trainingPaymentStatus: 'pending',
+              trainingStatus: 'locked',
+              examPaymentStatus: 'unpaid',
+              examStatus: 'not_eligible',
+              preferredLocation: null,
+              idUploadUrl: null,
+            });
+            console.log('✅ Student document created successfully');
+          } catch (createError) {
+            console.error('❌ Failed to create student document:', createError);
+            throw new Error(`Failed to create student document: ${createError.message}`);
           }
-        });
-        console.log('✅ Students collection updated successfully');
+        }
+
+        // Only update if the document existed (if we just created it, no need to update)
+        if (beforeDoc.exists()) {
+          console.log('🔄 UPDATING: Students collection with:', {
+            onboardingStatus: nextStatus,
+            breemicEnrollmentId: docRef.id,
+            lastStatusUpdate: 'serverTimestamp()',
+            paymentInfo: {
+              amountPaid: Number(formData.feePaid),
+              balance: Number(formData.balance),
+              paymentMethod: 'other',
+              paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+            }
+          });
+
+          await updateDoc(studentRef, {
+            onboardingStatus: nextStatus,
+            breemicEnrollmentId: docRef.id,
+            lastStatusUpdate: serverTimestamp(),
+            paymentInfo: {
+              amountPaid: Number(formData.feePaid),
+              balance: Number(formData.balance),
+              paymentMethod: 'other',
+              paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
+            }
+          });
+          console.log('✅ Students collection update command sent successfully');
+        } else {
+          console.log('✅ Students collection was just created - no update needed');
+        }
       } catch (error) {
         console.error('❌ Error updating students collection:', error);
         throw new Error(`Failed to update students collection: ${error.message}`);
