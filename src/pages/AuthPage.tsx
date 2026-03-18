@@ -101,16 +101,21 @@ export const AuthPage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-tl from-neutral-900/15 to-transparent opacity-20 pointer-events-none" />
           
           <div className="text-center space-y-8 relative z-10">
-            {/* Premium Breemic branding */}
-            <div className="relative mx-auto mb-10">
-              {/* Subtle logo glow */}
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/12 to-purple-500/8 rounded-3xl blur-2xl scale-125" />
-              {/* Logo container */}
-              <div className="relative w-24 h-24 bg-gradient-to-br from-white/12 to-white/4 backdrop-blur-md border border-white/10 rounded-3xl flex items-center justify-center shadow-2xl shadow-black/30">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-white tracking-tight">B</div>
-                  <div className="text-xs font-medium text-white/60 tracking-wider mt-1">BREEMIC</div>
+            {/* Breemic logo container */}
+            <div className="relative mx-auto mb-8">
+              {/* Logo container with glass background */}
+              <div className="relative w-16 h-16 bg-gradient-to-br from-white/8 to-white/4 backdrop-blur-md border border-white/10 rounded-2xl flex items-center justify-center shadow-xl shadow-black/20">
+                {/* Breemic logo - replace with actual logo file */}
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+                  <div className="text-white font-bold text-lg">B</div>
                 </div>
+                {/* Uncomment and replace with actual logo:
+                <img 
+                  src="/breemic-logo.png" 
+                  alt="Breemic International"
+                  className="w-12 h-12 object-contain"
+                />
+                */}
               </div>
             </div>
             
