@@ -159,7 +159,7 @@ export const AuthPage: React.FC = () => {
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
                       placeholder="John Doe"
                       required
                     />
@@ -173,7 +173,7 @@ export const AuthPage: React.FC = () => {
                     <select
                       value={selectedCourseId}
                       onChange={(e) => setSelectedCourseId(e.target.value)}
-                      className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200 appearance-none cursor-pointer"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200 appearance-none cursor-pointer"
                       required
                     >
                       <option value="" disabled className="bg-[#1a1a1a] text-white">Choose a course</option>
@@ -202,7 +202,7 @@ export const AuthPage: React.FC = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
                   placeholder="name@example.com"
                   required
                 />
@@ -229,7 +229,7 @@ export const AuthPage: React.FC = () => {
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
                     placeholder="••••••••"
                     required
                   />
@@ -246,7 +246,7 @@ export const AuthPage: React.FC = () => {
                     type="password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full bg-white/8 border border-white/12 rounded-2xl py-4 pl-12 pr-4 text-white placeholder-white/40 focus:outline-none focus:border-white/24 focus:bg-white/12 transition-all duration-200"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500/40 focus:border-white/20 focus:bg-white/8 transition-all duration-200"
                     placeholder="••••••••"
                     required
                   />
