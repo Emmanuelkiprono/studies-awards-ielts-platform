@@ -300,48 +300,61 @@ export const StudentOnboardingDashboard: React.FC = () => {
               transition={{ delay: index * 0.1 }}
             >
               {step.action ? (
-                <Link to={step.action.href} className="block">
-                  <div className={cn(
-                    "flex items-center gap-4 p-4 rounded-xl border transition-all cursor-pointer hover:scale-[1.02]",
+                <div 
+                  className={cn(
+                    "flex items-center gap-4 p-4 rounded-xl border-2 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]",
                     step.completed 
-                      ? "bg-green-500/10 border-green-500/30 hover:bg-green-500/20" 
+                      ? "bg-green-500/10 border-green-500 hover:bg-green-500/20" 
                       : step.current 
-                        ? "bg-[var(--ui-accent)]/10 border-[var(--ui-accent)]/30 hover:bg-[var(--ui-accent)]/20" 
-                        : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)]/50 hover:bg-[var(--ui-border)]"
+                        ? "bg-yellow-500/20 border-yellow-500 hover:bg-yellow-500/30" 
+                        : "bg-[var(--ui-bg)]/50 border-[var(--ui-border)] hover:bg-[var(--ui-border)]"
+                  )}
+                  onClick={() => {
+                    console.log('Step clicked:', step.title, 'Navigate to:', step.action.href);
+                    navigate(step.action.href);
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(step.action.href);
+                    }
+                  }}
+                >
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
+                    step.completed 
+                      ? "bg-green-500 text-white" 
+                      : step.current 
+                        ? "bg-yellow-500 text-white animate-pulse" 
+                        : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
                   )}>
-                    <div className={cn(
-                      "w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0",
-                      step.completed 
-                        ? "bg-green-500 text-white" 
-                        : step.current 
-                          ? "bg-[var(--ui-accent)] text-white" 
-                          : "bg-[var(--ui-border)] text-[var(--ui-muted)]"
-                    )}>
-                      {step.completed ? (
-                        <CheckCircle2 className="w-5 h-5" />
-                      ) : (
-                        <step.icon className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className={cn(
-                        "font-semibold",
-                        step.completed 
-                          ? "text-green-400" 
-                          : step.current 
-                            ? "text-[var(--ui-accent)]" 
-                            : "text-[var(--ui-muted)]"
-                      )}>
-                        {step.title}
-                      </h4>
-                      <p className="text-sm text-slate-400">{step.description}</p>
-                    </div>
-                    <PrimaryButton variant="secondary" size="sm" className="gap-2">
-                      {step.action.label}
-                      <ArrowRight className="w-4 h-4" />
-                    </PrimaryButton>
+                    {step.completed ? (
+                      <CheckCircle2 className="w-5 h-5" />
+                    ) : (
+                      <step.icon className="w-5 h-5" />
+                    )}
                   </div>
-                </Link>
+                  <div className="flex-1">
+                    <h4 className={cn(
+                      "font-semibold flex items-center gap-2",
+                      step.completed 
+                        ? "text-green-400" 
+                        : step.current 
+                          ? "text-yellow-400" 
+                          : "text-[var(--ui-muted)]"
+                    )}>
+                      {step.title}
+                      {step.current && <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded-full">CLICK HERE</span>}
+                    </h4>
+                    <p className="text-sm text-slate-400">{step.description}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-[var(--ui-accent)] font-medium">Click to →</span>
+                    <ArrowRight className="w-4 h-4 text-[var(--ui-accent)]" />
+                  </div>
+                </div>
               ) : (
                 <div className={cn(
                   "flex items-center gap-4 p-4 rounded-xl border transition-all",
