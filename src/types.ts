@@ -87,6 +87,7 @@ export interface StudentData {
   // Breemic International Approval Workflow Fields
   onboardingStatus: OnboardingStatus;
   breemicEnrollmentId?: string;  // Reference to BreemicEnrollment document
+  enrollmentCompleted?: boolean; // Whether enrollment form has been completed
   paymentInfo?: PaymentInfo;
   rejectionInfo?: RejectionInfo;
   approvedBy?: string;

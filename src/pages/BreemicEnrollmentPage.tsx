@@ -245,6 +245,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
               onboardingStatus: nextStatus,
               breemicEnrollmentId: docRef.id,
               lastStatusUpdate: serverTimestamp(),
+              enrollmentCompleted: true,  // CRITICAL: Add missing field
               paymentInfo: {
                 amountPaid: Number(formData.feePaid),
                 balance: Number(formData.balance),
@@ -283,6 +284,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
             onboardingStatus: nextStatus,
             breemicEnrollmentId: docRef.id,
             lastStatusUpdate: serverTimestamp(),
+            enrollmentCompleted: true,  // CRITICAL: Add missing field
             paymentInfo: {
               amountPaid: Number(formData.feePaid),
               balance: Number(formData.balance),

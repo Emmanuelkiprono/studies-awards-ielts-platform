@@ -65,6 +65,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         uid: studentData.uid,
         onboardingStatus: studentData.onboardingStatus,
         currentStatus: status,
+        enrollmentCompleted: studentData.enrollmentCompleted,
         paymentInfo: studentData.paymentInfo,
         hasBreemicEnrollmentId: !!studentData.breemicEnrollmentId,
         lastStatusUpdate: studentData.lastStatusUpdate?.toDate()?.toISOString(),
