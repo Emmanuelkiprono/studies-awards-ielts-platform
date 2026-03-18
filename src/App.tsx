@@ -127,10 +127,6 @@ const AppContent: React.FC = () => {
           {/* Shared Routes - Live Classes for both teachers and students */}
           <Route path="/live" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><LiveClassesPage /></ProtectedRoute>} />
 
-          {/* Public Routes */}
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
-
           {/* Admin Routes */}
           <Route path="/admin" element={
             <ProtectedRoute allowedRoles={['admin']}>
@@ -157,6 +153,10 @@ const AppContent: React.FC = () => {
           <Route path="/resources" element={<ProtectedRoute allowedRoles={['student']}><ResourcesPage /></ProtectedRoute>} />
           <Route path="/progress" element={<ProtectedRoute allowedRoles={['student']}><ProgressPage /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><ProfilePage /></ProtectedRoute>} />
+
+          {/* Public Routes - MUST be before fallback */}
+          <Route path="/test" element={<TestPage />} />
+          <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
