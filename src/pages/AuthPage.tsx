@@ -91,10 +91,11 @@ export const AuthPage: React.FC = () => {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="max-w-md w-full relative z-10"
       >
-        {/* Premium auth card with better visibility */}
-        <div className="bg-white/8 backdrop-blur-2xl border border-white/12 rounded-3xl shadow-2xl shadow-black/20 p-8 space-y-8 relative overflow-hidden">
-          {/* Subtle inner glow */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/3 to-transparent opacity-40 pointer-events-none" />
+        {/* Premium auth card with enhanced glass effect */}
+        <div className="bg-white/10 backdrop-blur-md border border-white/10 rounded-3xl shadow-2xl shadow-black/30 p-8 space-y-8 relative overflow-hidden hover:scale-[1.01] transition-transform duration-300 ease-out">
+          {/* Enhanced glass layers */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-60 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-tl from-neutral-900/20 to-transparent opacity-40 pointer-events-none" />
           
           <div className="text-center space-y-6 relative z-10">
             {/* Refined branding */}
