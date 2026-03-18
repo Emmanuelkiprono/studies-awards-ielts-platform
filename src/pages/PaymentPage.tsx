@@ -23,6 +23,13 @@ import { cn } from '../lib/utils';
 export const PaymentPage: React.FC = () => {
   const { user, studentData, loading } = useAuth();
   const navigate = useNavigate();
+
+  // Debug: Log when component mounts
+  useEffect(() => {
+    console.log('PaymentPage mounted');
+    console.log('Student data:', studentData);
+  }, [studentData]);
+
   const [paymentData, setPaymentData] = useState({
     amountPaid: 0,
     balance: 0,
@@ -163,7 +170,7 @@ export const PaymentPage: React.FC = () => {
     >
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-white">Complete Your Payment</h1>
+        <h1 className="text-4xl font-bold text-green-500 bg-green-500/20 p-4 rounded-xl border-2 border-green-500">💳 PAYMENT PAGE - TESTING</h1>
         <p className="text-slate-400">Submit your payment details to complete enrollment</p>
       </div>
 

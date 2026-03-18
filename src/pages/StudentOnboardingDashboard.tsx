@@ -43,6 +43,13 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const location = useLocation();
   const state = location.state as any;
   const [currentStatus, setCurrentStatus] = useState<OnboardingStatus>('account_created');
+
+  // Debug: Log when component mounts
+  useEffect(() => {
+    console.log('StudentOnboardingDashboard mounted');
+    console.log('Student data:', studentData);
+    console.log('Current status:', currentStatus);
+  }, [studentData, currentStatus]);
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [rejectionInfo, setRejectionInfo] = useState<RejectionInfo | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
@@ -202,7 +209,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
     >
       {/* Header */}
       <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-white">Your Onboarding Progress</h1>
+        <h1 className="text-4xl font-bold text-red-500 bg-red-500/20 p-4 rounded-xl border-2 border-red-500">🎓 ONBOARDING DASHBOARD - TESTING</h1>
         <p className="text-slate-400">Track your enrollment status and complete required steps</p>
       </div>
 
