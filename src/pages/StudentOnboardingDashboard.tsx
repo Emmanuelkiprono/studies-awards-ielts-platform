@@ -61,12 +61,24 @@ export const StudentOnboardingDashboard: React.FC = () => {
       setPaymentInfo(studentData.paymentInfo || null);
       setRejectionInfo(studentData.rejectionInfo || null);
       
-      console.log('Student data loaded:', {
+      console.log('🔍 DASHBOARD DEBUG: Student data received:', {
         uid: studentData.uid,
         onboardingStatus: studentData.onboardingStatus,
         currentStatus: status,
-        paymentInfo: studentData.paymentInfo
+        paymentInfo: studentData.paymentInfo,
+        hasBreemicEnrollmentId: !!studentData.breemicEnrollmentId,
+        lastStatusUpdate: studentData.lastStatusUpdate?.toDate()?.toISOString(),
+        timestamp: new Date().toISOString()
       });
+      
+      // CRITICAL: Check if the status logic is working
+      if (status === 'payment_pending') {
+        console.log('✅ DASHBOARD: Should show "Proceed to Payment" button');
+      } else if (status === 'account_created') {
+        console.log('🔍 DASHBOARD: Should show "Complete Enrollment Form" button');
+      } else {
+        console.log('🔍 DASHBOARD: Status is', status, '- check what should be shown');
+      }
     }
 
     // Handle enrollment completion redirect

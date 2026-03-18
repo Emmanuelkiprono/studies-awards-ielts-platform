@@ -159,7 +159,6 @@ export const BreemicEnrollmentPage: React.FC = () => {
     e.preventDefault();
     
     console.log('🚀 handleSubmit called!');
-    alert('Form submission started - check console for details');
     
     if (!validateForm()) {
       console.log('❌ Form validation failed');
@@ -178,24 +177,6 @@ export const BreemicEnrollmentPage: React.FC = () => {
     setSubmitError('');
 
     try {
-      // SIMPLE TEST: Just try to update the status directly first
-      console.log('🧪 Testing direct status update...');
-      try {
-        const studentRef = doc(db, 'students', user.uid);
-        await updateDoc(studentRef, {
-          onboardingStatus: 'payment_pending',
-          lastStatusUpdate: serverTimestamp(),
-          testUpdate: `direct_test_${Date.now()}`
-        });
-        console.log('✅ Direct status update successful');
-        alert('Direct status update successful! Check dashboard now.');
-      } catch (error) {
-        console.error('❌ Direct status update failed:', error);
-        alert(`Direct status update failed: ${error.message}`);
-      }
-
-      // Now try the full enrollment process
-      console.log('🔄 Starting full enrollment process...');
       
       // Create Breemic enrollment record
       const enrollmentData: Omit<BreemicEnrollment, 'id'> = {
@@ -213,6 +194,12 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
       // Update student's onboarding status in both collections
       const nextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
+      
+      console.log('🔍 DEBUG: Status calculation:', {
+        feePaid: Number(formData.feePaid),
+        nextStatus: nextStatus,
+        reason: Number(formData.feePaid) > 0 ? 'Payment made -> approval_pending' : 'No payment -> payment_pending'
+      });
       
       // Update users collection
       try {
@@ -265,29 +252,38 @@ export const BreemicEnrollmentPage: React.FC = () => {
         }
       });
 
-      // Verify the update was successful
+      // CRITICAL: Verify the update was successful
       try {
+        console.log('🔍 DEBUG: Verifying students collection update...');
         const studentRef = doc(db, 'students', user.uid);
         const studentDoc = await getDoc(studentRef);
         if (studentDoc.exists()) {
           const updatedData = studentDoc.data();
-          console.log('✅ Verification - Student data after update:', {
+          console.log('🔍 DEBUG: Student data after update:', {
             onboardingStatus: updatedData.onboardingStatus,
+            expectedStatus: nextStatus,
+            statusMatches: updatedData.onboardingStatus === nextStatus,
             breemicEnrollmentId: updatedData.breemicEnrollmentId,
             hasPaymentInfo: !!updatedData.paymentInfo,
-            paymentAmount: updatedData.paymentInfo?.amountPaid
+            paymentAmount: updatedData.paymentInfo?.amountPaid,
+            lastStatusUpdate: updatedData.lastStatusUpdate?.toDate()?.toISOString()
           });
           
           if (updatedData.onboardingStatus === nextStatus) {
-            console.log('✅ Status update verified successfully');
+            console.log('✅ SUCCESS: Status update verified in students collection');
+            alert(`✅ SUCCESS: Status updated to ${nextStatus}. Dashboard should update automatically.`);
           } else {
-            console.error('❌ Status update verification failed - expected:', nextStatus, 'got:', updatedData.onboardingStatus);
+            console.error('❌ CRITICAL BUG: Status update verification failed');
+            console.error('Expected:', nextStatus, 'Got:', updatedData.onboardingStatus);
+            alert(`❌ BUG: Status update failed. Expected: ${nextStatus}, Got: ${updatedData.onboardingStatus}`);
           }
         } else {
-          console.error('❌ Student document not found after update');
+          console.error('❌ CRITICAL BUG: Student document not found after update');
+          alert('❌ BUG: Student document not found in database');
         }
       } catch (error) {
-        console.error('❌ Error verifying update:', error);
+        console.error('❌ CRITICAL ERROR: Error verifying update:', error);
+        alert(`❌ ERROR: Verification failed: ${error.message}`);
       }
 
       setSubmitted(true);
