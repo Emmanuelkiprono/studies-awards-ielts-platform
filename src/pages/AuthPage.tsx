@@ -258,13 +258,13 @@ export const AuthPage: React.FC = () => {
             <motion.button
               type="submit"
               disabled={loading}
-              className="w-full bg-white text-black rounded-2xl py-4 px-6 font-semibold text-base shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-3"
+              className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-2xl py-5 px-6 font-semibold text-base shadow-lg hover:shadow-xl hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:scale-100 disabled:hover:brightness-100 flex items-center justify-center gap-3"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {loading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Processing...
                 </>
               ) : (
