@@ -79,8 +79,8 @@ export const AuthPage: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-[#050505]">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#6324eb]/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-[#3b82f6]/10 rounded-full blur-[120px]" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-500/10 rounded-full blur-[120px]" />
       </div>
 
       <motion.div
@@ -89,15 +89,18 @@ export const AuthPage: React.FC = () => {
         className="max-w-md w-full relative z-10"
       >
         <GlassCard className="p-8 space-y-8">
-          <div className="text-center space-y-2">
-            <div className="bg-[#6324eb] size-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xl shadow-[#6324eb]/30">
-              <GraduationCap size={32} className="text-white" />
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/30">
+              <GraduationCap size={40} className="text-white" />
             </div>
-            <h1 className="text-3xl font-bold text-white">IELTS Academy</h1>
-            <p className="text-slate-400">
-              {mode === 'signin' ? 'Welcome back! Sign in to continue.' : 
-               mode === 'signup' ? 'Create your account to start training.' : 
-               'Enter your email to reset password.'}
+            <h1 className="text-3xl font-light text-white">Breemic International</h1>
+            <p className="text-lg text-slate-300 max-w-sm mx-auto leading-relaxed">
+              {mode === 'signin' ? 
+                'Sign in to continue your enrollment and access your courses.' : 
+                mode === 'signup' ? 
+                'Create your account to begin your learning journey.' : 
+                'Enter your email to reset your password.'
+              }
             </p>
           </div>
 

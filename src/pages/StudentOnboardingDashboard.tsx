@@ -44,13 +44,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const state = location.state as any;
   const [currentStatus, setCurrentStatus] = useState<OnboardingStatus>('account_created');
 
-  // Debug: Log when component mounts
-  useEffect(() => {
-    console.log('StudentOnboardingDashboard mounted');
-    console.log('Student data:', studentData);
-    console.log('Current status:', currentStatus);
-  }, [studentData, currentStatus]);
-  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
+    const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [rejectionInfo, setRejectionInfo] = useState<RejectionInfo | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(false);
 
@@ -61,21 +55,8 @@ export const StudentOnboardingDashboard: React.FC = () => {
       setCurrentStatus(status);
       setPaymentInfo(studentData.paymentInfo || null);
       setRejectionInfo(studentData.rejectionInfo || null);
-      
-      console.log('Student data loaded:', {
-        uid: studentData.uid,
-        onboardingStatus: studentData.onboardingStatus,
-        fallbackStatus: status,
-        trainingStatus: studentData.trainingStatus
-      });
     }
-
-    // Show notification if redirected due to approval requirements
-    if (state?.reason === 'approval_required') {
-      // You could add a toast notification here
-      console.log('Redirected due to approval requirements. Current status:', state.currentStatus);
-    }
-  }, [studentData, state]);
+  }, [studentData]);
 
   const getStatusSteps = (): StatusStep[] => {
     const steps: StatusStep[] = [
@@ -217,178 +198,199 @@ export const StudentOnboardingDashboard: React.FC = () => {
       className="p-4 space-y-6 max-w-4xl mx-auto w-full"
     >
       {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-4xl font-bold text-red-500 bg-red-500/20 p-4 rounded-xl border-2 border-red-500">🎓 ONBOARDING DASHBOARD - TESTING</h1>
-        <p className="text-slate-400">Track your enrollment status and complete required steps</p>
-        
-        {/* Test Button */}
-        <div className="mt-4 space-y-2">
-          <button
-            onClick={() => {
-              console.log('TEST BUTTON CLICKED!');
-              alert('Test button clicked!');
-            }}
-            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-          >
-            TEST CLICK HERE
-          </button>
-          <br />
-          <button
-            onClick={() => navigate('/breemic-enrollment')}
-            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 mx-2"
-          >
-            GO TO ENROLLMENT
-          </button>
-          <button
-            onClick={() => navigate('/payment')}
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600"
-          >
-            GO TO PAYMENT
-          </button>
+      <div className="text-center space-y-4">
+        <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+          <UserCheck className="w-8 h-8 text-white" />
         </div>
+        <h1 className="text-3xl font-light text-white">Welcome to Breemic International</h1>
+        <p className="text-lg text-slate-300 max-w-2xl mx-auto">
+          Follow these simple steps to unlock your course access and start your learning journey.
+        </p>
       </div>
 
-      {/* Current Status Card */}
-      <GlassCard className="p-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className={cn("p-3 rounded-xl border", getStatusColor(currentStatus))}>
-              {getStatusIcon(currentStatus)}
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white capitalize">
-                {currentStatus.replace('_', ' ')}
-              </h2>
-              <p className="text-slate-400 text-sm">
-                Last updated: {studentData?.lastStatusUpdate?.toDate()?.toLocaleDateString() || 'Recently'}
-              </p>
-            </div>
+      
+      {/* Progress Steps */}
+      <div className="space-y-8">
+        {/* Visual Progress Tracker */}
+        <div className="relative">
+          <div className="flex items-center justify-between mb-8">
+            {[
+              { id: 'account_created', label: 'Account' },
+              { id: 'enrollment_pending', label: 'Enrollment' },
+              { id: 'payment_pending', label: 'Payment' },
+              { id: 'approval_pending', label: 'Approval' },
+              { id: 'approved', label: 'Course Access' }
+            ].map((step, index) => {
+              const isCompleted = ['account_created', 'enrollment_pending', 'payment_pending', 'approval_pending', 'approved'].indexOf(currentStatus) >= index;
+              const isCurrent = step.id === currentStatus || 
+                (currentStatus === 'enrollment_pending' && step.id === 'enrollment_pending') ||
+                (currentStatus === 'payment_pending' && step.id === 'payment_pending') ||
+                (currentStatus === 'approval_pending' && step.id === 'approval_pending') ||
+                (currentStatus === 'approved' && step.id === 'approved');
+              
+              return (
+                <div key={step.id} className="flex flex-col items-center relative z-10">
+                  <div className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300",
+                    isCompleted 
+                      ? "bg-gradient-to-br from-green-400 to-green-600 shadow-lg" 
+                      : isCurrent
+                        ? "bg-gradient-to-br from-blue-400 to-blue-600 shadow-lg ring-4 ring-blue-400/20"
+                        : "bg-slate-700"
+                  )}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-6 h-6 text-white" />
+                    ) : (
+                      <div className="w-3 h-3 bg-slate-400 rounded-full" />
+                    )}
+                  </div>
+                  <span className={cn(
+                    "text-xs mt-2 font-medium transition-colors",
+                    isCompleted 
+                      ? "text-green-400" 
+                      : isCurrent
+                        ? "text-blue-400"
+                        : "text-slate-500"
+                  )}>
+                    {step.label}
+                  </span>
+                </div>
+              );
+            })}
           </div>
-          <StatusBadge 
-            status={currentStatus.replace('_', ' ').toUpperCase()} 
-            variant={currentStatus === 'approved' ? 'success' : currentStatus === 'rejected' ? 'error' : 'primary'}
+          {/* Progress Line */}
+          <div className="absolute top-6 left-0 right-0 h-0.5 bg-slate-700 -z-10" />
+          <div 
+            className="absolute top-6 left-0 h-0.5 bg-gradient-to-r from-green-400 to-green-600 -z-10 transition-all duration-500"
+            style={{
+              width: `${(['account_created', 'enrollment_pending', 'payment_pending', 'approval_pending', 'approved'].indexOf(currentStatus) / 4) * 100}%`
+            }}
           />
         </div>
 
-        {/* Rejection Info */}
-        {rejectionInfo && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 mb-4"
-          >
-            <div className="flex items-start gap-3">
-              <XCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <h3 className="text-red-400 font-semibold mb-1">Rejection Reason</h3>
-                <p className="text-red-300 text-sm">{rejectionInfo.reason}</p>
-                {rejectionInfo.canResubmit && (
-                  <p className="text-red-400 text-xs mt-2">
-                    You can resubmit your enrollment before {rejectionInfo.resubmissionDeadline || 'the deadline'}
-                  </p>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* User Info Summary */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <Mail className="w-4 h-4" />
-              <span>{profile?.email}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <User className="w-4 h-4" />
-              <span>{profile?.name}</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            {paymentInfo && (
-              <>
-                <div className="flex items-center gap-2 text-sm text-slate-400">
-                  <DollarSign className="w-4 h-4" />
-                  <span>Paid: ${paymentInfo.amountPaid} | Balance: ${paymentInfo.balance}</span>
-                </div>
-                {paymentInfo.paymentDate && (
-                  <div className="flex items-center gap-2 text-sm text-slate-400">
-                    <Calendar className="w-4 h-4" />
-                    <span>Payment: {new Date(paymentInfo.paymentDate).toLocaleDateString()}</span>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </div>
-      </GlassCard>
-
-      {/* Progress Steps */}
-      <GlassCard className="p-6">
-        <h3 className="text-xl font-bold text-white mb-6">Onboarding Steps</h3>
+        {/* Step Cards */}
         <div className="space-y-4">
-          <div className="text-white text-sm mb-4">
-            Debug: Total steps: {statusSteps.length}, Current status: {currentStatus}
-          </div>
           {statusSteps.map((step, index) => {
-            console.log('Rendering step:', step.title, 'Has action:', !!step.action);
+            if (step.id === 'rejected' || step.id === 'suspended') return null;
+            
+            const isClickable = step.action && step.current;
+            const isCompleted = step.completed;
+            
             return (
-              <div key={step.id} className="border border-white/20 rounded-lg p-2 mb-2">
-                <div className="text-white text-xs mb-2">
-                  Step: {step.title} | Current: {step.current ? 'YES' : 'NO'} | Action: {step.action ? 'YES' : 'NO'}
-                </div>
-                {step.action ? (
-                  <div
-                    className="bg-yellow-500 border-2 border-yellow-300 p-4 rounded cursor-pointer hover:bg-yellow-400"
-                    onClick={() => {
-                      console.log('STEP CLICKED!', step.title, step.action.href);
-                      alert(`Step clicked: ${step.title}`);
-                      navigate(step.action.href);
-                    }}
-                  >
-                    <div className="text-black font-bold">
-                      CLICKABLE: {step.title}
-                    </div>
-                    <div className="text-black text-sm">
-                      {step.description}
-                    </div>
-                    <div className="text-black text-xs mt-2">
-                      Click to go to: {step.action.href}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-gray-500 p-4 rounded">
-                    <div className="text-white font-bold">
-                      NOT CLICKABLE: {step.title}
-                    </div>
-                    <div className="text-white text-sm">
-                      {step.description}
-                    </div>
-                  </div>
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={cn(
+                  "bg-white/5 backdrop-blur-sm rounded-2xl p-6 border transition-all duration-300",
+                  isCompleted 
+                    ? "border-green-500/20 bg-green-500/5" 
+                    : isClickable
+                      ? "border-blue-500/30 bg-blue-500/10 shadow-lg shadow-blue-500/10"
+                      : "border-slate-700/50 bg-slate-800/30"
                 )}
-              </div>
+              >
+                <div className="flex items-start gap-4">
+                  {/* Icon */}
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 transition-all",
+                    isCompleted 
+                      ? "bg-green-500/20 text-green-400" 
+                      : isClickable
+                        ? "bg-blue-500/20 text-blue-400"
+                        : "bg-slate-700 text-slate-400"
+                  )}>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-6 h-6" />
+                    ) : (
+                      <step.icon className="w-6 h-6" />
+                    )}
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <h3 className={cn(
+                          "text-lg font-medium mb-1",
+                          isCompleted 
+                            ? "text-green-400" 
+                            : isClickable
+                              ? "text-white"
+                              : "text-slate-400"
+                        )}>
+                          {step.title}
+                        </h3>
+                        <p className="text-slate-400 text-sm leading-relaxed">
+                          {step.description}
+                        </p>
+                      </div>
+                      
+                      {/* Status Badge */}
+                      <div className="flex-shrink-0">
+                        {isCompleted ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-500/20 text-green-400 border border-green-500/30">
+                            Completed
+                          </span>
+                        ) : isClickable ? (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            In Progress
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-slate-700/50 text-slate-400 border border-slate-600/30">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Action Button */}
+                    {isClickable && step.action && (
+                      <div className="mt-4">
+                        <button
+                          onClick={() => navigate(step.action.href)}
+                          className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-medium rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                        >
+                          {step.action.label}
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             );
           })}
         </div>
-      </GlassCard>
+      </div>
 
-      {/* Quick Actions */}
+      {/* Success State */}
       {currentStatus === 'approved' && (
-        <GlassCard className="p-6 text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="w-8 h-8 text-green-400" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center space-y-6"
+        >
+          <div className="bg-gradient-to-br from-green-500/20 to-emerald-500/20 backdrop-blur-sm rounded-3xl p-8 border border-green-500/30">
+            <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-xl">
+              <CheckCircle2 className="w-10 h-10 text-white" />
+            </div>
+            <h2 className="text-2xl font-light text-white mb-3">
+              🎉 Congratulations!
+            </h2>
+            <p className="text-slate-300 mb-6 max-w-md mx-auto">
+              Your enrollment has been approved. You now have full access to all courses and materials.
+            </p>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-medium rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-xl hover:shadow-2xl transform hover:scale-[1.05]"
+            >
+              Go to My Course
+              <ArrowRight className="w-5 h-5" />
+            </button>
           </div>
-          <h3 className="text-xl font-bold text-white mb-2">Ready to Start Learning!</h3>
-          <p className="text-slate-400 mb-4">
-            Your enrollment has been approved. You now have full access to all courses and materials.
-          </p>
-          <Link to="/dashboard">
-            <PrimaryButton className="gap-2">
-              Go to Student Dashboard
-              <ArrowRight className="w-4 h-4" />
-            </PrimaryButton>
-          </Link>
-        </GlassCard>
+        </motion.div>
       )}
     </motion.div>
   );
