@@ -311,11 +311,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
     >
-      {/* BUILD CHECK MARKER */}
-      <div className="bg-red-600 text-white p-4 text-center font-bold text-xl">
-        DEBUG ENROLLMENT PAGE - BUILD CHECK - BreemicEnrollmentPage.tsx
-      </div>
-      {/* Header */}
+            {/* Header */}
       <div className="text-center space-y-2">
         <h1 className="text-3xl font-bold text-white">🎓 Breemic International Enrollment</h1>
         <p className="text-slate-400">Complete your enrollment form to start your learning journey</p>

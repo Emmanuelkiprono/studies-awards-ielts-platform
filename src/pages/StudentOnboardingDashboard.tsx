@@ -60,73 +60,6 @@ export const StudentOnboardingDashboard: React.FC = () => {
       setCurrentStatus(status);
       setPaymentInfo(studentData.paymentInfo || null);
       setRejectionInfo(studentData.rejectionInfo || null);
-      
-      console.log('🔍 DASHBOARD DEBUG: Student data received:', {
-        uid: studentData.uid,
-        onboardingStatus: studentData.onboardingStatus,
-        currentStatus: status,
-        enrollmentCompleted: studentData.enrollmentCompleted,
-        paymentInfo: studentData.paymentInfo,
-        hasBreemicEnrollmentId: !!studentData.breemicEnrollmentId,
-        lastStatusUpdate: studentData.lastStatusUpdate?.toDate()?.toISOString(),
-        timestamp: new Date().toISOString()
-      });
-      
-      // CRITICAL: Check if the status logic is working
-      if (status === 'payment_pending') {
-        console.log('✅ DASHBOARD: Should show "Proceed to Payment" button');
-      } else if (status === 'account_created') {
-        console.log('🔍 DASHBOARD: Should show "Complete Enrollment Form" button');
-      } else {
-        console.log('🔍 DASHBOARD: Status is', status, '- check what should be shown');
-      }
-    }
-
-    // Handle enrollment completion redirect
-    if (state?.enrollmentCompleted) {
-      console.log('Enrollment just completed, new status:', state.newStatus);
-      
-      // Force multiple refresh attempts to ensure data sync
-      const refreshTimer1 = setTimeout(() => {
-        console.log('Refreshing student data after enrollment completion (1s)');
-        // Force a re-render by updating a dummy state
-        setActionLoading('refresh');
-        setTimeout(() => setActionLoading(null), 100);
-      }, 1000);
-      
-      const refreshTimer2 = setTimeout(() => {
-        console.log('Refreshing student data after enrollment completion (2.5s)');
-        setActionLoading('refresh');
-        setTimeout(() => setActionLoading(null), 100);
-      }, 2500);
-      
-      return () => {
-        clearTimeout(refreshTimer1);
-        clearTimeout(refreshTimer2);
-      };
-    }
-
-    // Handle payment completion redirect
-    if (state?.paymentCompleted) {
-      console.log('Payment just completed, new status:', state.newStatus);
-      
-      // Force multiple refresh attempts to ensure data sync
-      const refreshTimer1 = setTimeout(() => {
-        console.log('Refreshing student data after payment completion (1s)');
-        setActionLoading('refresh');
-        setTimeout(() => setActionLoading(null), 100);
-      }, 1000);
-      
-      const refreshTimer2 = setTimeout(() => {
-        console.log('Refreshing student data after payment completion (2.5s)');
-        setActionLoading('refresh');
-        setTimeout(() => setActionLoading(null), 100);
-      }, 2500);
-      
-      return () => {
-        clearTimeout(refreshTimer1);
-        clearTimeout(refreshTimer2);
-      };
     }
   }, [studentData, state]);
 
@@ -269,15 +202,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900"
     >
-      {/* BUILD CHECK MARKER */}
-      <div className="bg-red-600 text-white p-4 text-center font-bold text-xl">
-        DEBUG VERSION 2 - 2026-03-18 - BUILD CHECK - StudentOnboardingDashboard.tsx
-      </div>
-      {/* HARD PROOF: Visible onboardingStatus */}
-      <div className="bg-yellow-500 text-black p-2 text-center font-bold">
-        HARD PROOF: studentData.onboardingStatus = {studentData?.onboardingStatus || 'MISSING'}
-      </div>
-      {/* Header */}
+            {/* Header */}
       <div className="text-center space-y-6">
         <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <UserCheck className="w-8 h-8 text-white" />
@@ -315,40 +240,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
           </motion.div>
         )}
 
-        {/* CRITICAL DEBUG INFO - Visible Proof */}
-        <div className="bg-red-900/80 border-2 border-red-500 rounded-xl p-4 mx-auto max-w-md">
-          <div className="text-xs font-mono text-white space-y-2">
-            <div className="text-red-300 font-bold">=== ONBOARDING STATUS DEBUG ===</div>
-            <div>onboardingStatus: <span className="text-yellow-300">{studentData?.onboardingStatus || 'MISSING'}</span></div>
-            <div>enrollmentCompleted: <span className="text-yellow-300">{studentData?.enrollmentCompleted?.toString() || 'MISSING'}</span></div>
-            <div>paymentInfo: <span className="text-yellow-300">{studentData?.paymentInfo ? 'EXISTS' : 'MISSING'}</span></div>
-            <div>breemicEnrollmentId: <span className="text-yellow-300">{studentData?.breemicEnrollmentId || 'MISSING'}</span></div>
-            <div>currentStatus: <span className="text-yellow-300">{currentStatus}</span></div>
-            <div>dashboardShows: <span className="text-yellow-300">
-                {currentStatus === 'account_created' && 'COMPLETE ENROLLMENT'}
-                {currentStatus === 'payment_pending' && 'PROCEED TO PAYMENT'}
-                {currentStatus === 'approval_pending' && 'WAITING FOR APPROVAL'}
-                {currentStatus === 'approved' && 'ACCESS COURSES'}
-                {currentStatus === 'rejected' && 'RESUBMIT ENROLLMENT'}
-                {currentStatus === 'suspended' && 'CONTACT SUPPORT'}
-              </span></div>
-            <div className="text-red-300 font-bold">=== END DEBUG ===</div>
-            <button
-              onClick={() => {
-                console.log('=== FULL STUDENT DATA ===');
-                console.log(JSON.stringify(studentData, null, 2));
-                console.log('=== CURRENT STATUS ===');
-                console.log('currentStatus:', currentStatus);
-                console.log('=== DASHBOARD LOGIC ===');
-                console.log('Should show payment:', currentStatus === 'payment_pending');
-              }}
-              className="mt-2 px-3 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 w-full"
-            >
-              LOG FULL DATA TO CONSOLE
-            </button>
-          </div>
-        </div>
-      </div>
+              </div>
         
         {/* Next Step Indicator & Primary Action */}
         <div className="bg-white/5 backdrop-blur-sm rounded-2xl p-6 border border-white/10">

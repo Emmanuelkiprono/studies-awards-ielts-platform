@@ -79,6 +79,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
     startTime: '',
     endTime: '',
     meetingUrl: '',
+    sendReminder: true,
+    reminderMinutes: '15',
   });
   const [liveLoading, setLiveLoading] = useState(false);
 

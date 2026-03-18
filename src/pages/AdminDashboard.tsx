@@ -51,6 +51,13 @@ interface Student extends UserProfile {
   currentScore: number;
   joinDate: string;
   phone?: string;
+  // Breemic specific fields
+  breemicEnrollmentId?: string;
+  onboardingStatus?: string;
+  feePaid?: number;
+  balance?: number;
+  courseType?: string;
+  dateOfEnrollment?: string;
 }
 
 export const AdminDashboard: React.FC = () => {
@@ -137,22 +144,41 @@ export const AdminDashboard: React.FC = () => {
         const studentDoc = await getDoc(doc(db, 'students', profile.uid));
         const sData = studentDoc.exists() ? studentDoc.data() as StudentData : undefined;
 
-        // Fetch enrollment
+        // Fetch Breemic enrollment
+        let breemicEnrollment = null;
+        if (sData?.breemicEnrollmentId) {
+          const breemicDoc = await getDoc(doc(db, 'breemicEnrollments', sData.breemicEnrollmentId));
+          if (breemicDoc.exists()) {
+            breemicEnrollment = { id: breemicDoc.id, ...breemicDoc.data() };
+          }
+        }
+
+        // Fetch old enrollment (legacy)
         const enrollmentsQ = query(collection(db, 'enrollments'), where('userId', '==', profile.uid));
         const enrollmentSnap = await getDocs(enrollmentsQ);
         const firstEnrollment = enrollmentSnap.docs[0]?.data() as Enrollment | undefined;
         const enrollmentId = enrollmentSnap.docs[0]?.id;
 
+        // Use Breemic enrollment if available, otherwise fall back to old enrollment
+        const activeEnrollment = breemicEnrollment || firstEnrollment;
+
         allStudentsData.push({
           ...profile,
           studentData: sData,
-          enrollment: firstEnrollment ? { ...firstEnrollment, id: enrollmentId } : undefined,
-          paymentStatus: firstEnrollment?.paymentStatus || sData?.trainingPaymentStatus || 'unpaid',
-          trainingStatus: (firstEnrollment?.trainingStatus as TrainingStatus) || sData?.trainingStatus || 'inactive',
-          examStatus: (firstEnrollment?.examStatus as ExamStatus) || 'not_started',
+          enrollment: activeEnrollment ? { ...activeEnrollment, id: activeEnrollment.id || enrollmentId } : undefined,
+          paymentStatus: sData?.paymentInfo ? (sData.paymentInfo.amountPaid > 0 ? 'paid' : 'pending') : sData?.trainingPaymentStatus || 'unpaid',
+          trainingStatus: (activeEnrollment?.trainingStatus as TrainingStatus) || sData?.trainingStatus || 'inactive',
+          examStatus: (activeEnrollment?.examStatus as ExamStatus) || 'not_started',
           targetScore: sData?.targetScore || 0,
           currentScore: sData?.currentScore || 0,
-          joinDate: profile.createdAt?.toDate?.()?.toISOString() || new Date().toISOString()
+          joinDate: profile.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          // Add Breemic specific fields
+          breemicEnrollmentId: sData?.breemicEnrollmentId,
+          onboardingStatus: sData?.onboardingStatus,
+          feePaid: sData?.paymentInfo?.amountPaid || 0,
+          balance: sData?.paymentInfo?.balance || 0,
+          courseType: breemicEnrollment?.courseType,
+          dateOfEnrollment: breemicEnrollment?.dateOfEnrollment
         });
       }
       setStudents(allStudentsData);
@@ -304,13 +330,16 @@ export const AdminDashboard: React.FC = () => {
   const filteredStudents = students.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.phone && s.phone.includes(searchTerm));
+      (s.phone && s.phone.includes(searchTerm)) ||
+      (s.courseType && s.courseType.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.onboardingStatus && s.onboardingStatus.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (s.breemicEnrollmentId && s.breemicEnrollmentId.toLowerCase().includes(searchTerm.toLowerCase()));
 
     const matchesStatus = filterStatus === 'all' ||
-      (filterStatus === 'active' && s.trainingStatus === 'active') ||
-      (filterStatus === 'eligible' && s.trainingStatus === 'completed' && s.examStatus === 'not_started') ||
-      (filterStatus === 'booked' && (s.examStatus === 'scheduled' || s.examStatus === 'done')) ||
-      (filterStatus === 'pending_approval' && s.paymentStatus === 'pending');
+      (filterStatus === 'active' && s.onboardingStatus === 'approved') ||
+      (filterStatus === 'eligible' && s.onboardingStatus === 'payment_pending') ||
+      (filterStatus === 'booked' && s.onboardingStatus === 'approval_pending') ||
+      (filterStatus === 'pending_approval' && s.onboardingStatus === 'account_created');
 
     return matchesSearch && matchesStatus;
   });
@@ -548,10 +577,10 @@ export const AdminDashboard: React.FC = () => {
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
                   <option value="all">All Statuses</option>
-                  <option value="active">Active Training</option>
-                  <option value="eligible">Eligible for Exam</option>
-                  <option value="booked">Exam Booked</option>
-                  <option value="pending_approval">Pending Approval</option>
+                  <option value="active">Approved</option>
+                  <option value="eligible">Payment Pending</option>
+                  <option value="booked">Approval Pending</option>
+                  <option value="pending_approval">Account Created</option>
                 </select>
               </div>
             </GlassCard>
@@ -563,10 +592,11 @@ export const AdminDashboard: React.FC = () => {
                   <thead>
                     <tr className="bg-white/5 border-b border-[var(--ui-border-soft)]">
                       <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Student</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Training Status</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Exam Status</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Target</th>
-                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Joined</th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Course</th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Onboarding Status</th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Fee Paid</th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Balance</th>
+                      <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Date Enrolled</th>
                       <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]">Actions</th>
                     </tr>
                   </thead>
@@ -582,44 +612,39 @@ export const AdminDashboard: React.FC = () => {
                             <img src={student.avatarUrl || `https://picsum.photos/seed/${student.uid}/100/100`} alt={student.name} className="size-10 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                             <div>
                               <p className="text-sm font-bold text-[var(--ui-heading)]">{student.name}</p>
-                              <div className="flex items-center gap-2 mt-0.5">
-                                <p className="text-xs text-[var(--ui-muted)]">{student.email}</p>
-                                {student.enrollment?.location && (
-                                  <span className="text-[10px] text-[var(--ui-muted)] flex items-center gap-1">
-                                    • {student.enrollment.location.city}, {student.enrollment.location.country}
-                                  </span>
-                                )}
-                              </div>
+                              <p className="text-xs text-[var(--ui-muted)]">{student.email}</p>
+                              {student.phone && (
+                                <p className="text-xs text-[var(--ui-muted)]">{student.phone}</p>
+                              )}
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <StatusBadge
-                            status={student.trainingStatus.replace('_', ' ')}
-                            variant={student.trainingStatus === 'active' ? 'primary' : student.trainingStatus === 'completed' ? 'success' : 'accent'}
-                          />
-                        </td>
-                        <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">
-                            <StatusBadge
-                              status={student.examStatus.replace('_', ' ')}
-                              variant={student.examStatus === 'done' || student.examStatus === 'results_released' ? 'success' : student.examStatus === 'scheduled' ? 'warning' : 'accent'}
-                            />
-                            {student.enrollment?.eligibleAt && new Date() >= new Date(student.enrollment.eligibleAt) && (
-                              <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-1">
-                                <CheckCircle2 size={8} /> Eligible
-                              </span>
+                            <span className="text-sm font-medium text-[var(--ui-heading)]">{student.courseType || 'Not enrolled'}</span>
+                            {student.breemicEnrollmentId && (
+                              <span className="text-xs text-[var(--ui-muted)]">ID: {student.breemicEnrollmentId.slice(0, 8)}...</span>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4">
+                          <StatusBadge
+                            status={student.onboardingStatus?.replace('_', ' ') || 'account_created'}
+                            variant={student.onboardingStatus === 'approved' ? 'success' : student.onboardingStatus === 'payment_pending' ? 'warning' : 'accent'}
+                          />
+                        </td>
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-1">
-                            <span className="text-sm font-bold text-[var(--ui-heading)]">{student.targetScore}</span>
-                            <span className="text-[10px] text-[var(--ui-muted)]">Band</span>
+                            <span className="text-sm font-bold text-[var(--ui-heading)]">KSh {student.feePaid?.toLocaleString() || 0}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-1">
+                            <span className="text-sm font-medium text-[var(--ui-heading)]">KSh {student.balance?.toLocaleString() || 0}</span>
                           </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-[var(--ui-muted)]">
-                          {new Date(student.joinDate).toLocaleDateString()}
+                          {student.dateOfEnrollment ? new Date(student.dateOfEnrollment).toLocaleDateString() : 'Not enrolled'}
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
