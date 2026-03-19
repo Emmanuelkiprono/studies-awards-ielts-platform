@@ -295,7 +295,8 @@ export const BreemicEnrollmentPage: React.FC = () => {
       </AnimatePresence>
 
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="px-4 pb-24 max-w-2xl mx-auto">
+        <form onSubmit={handleSubmit} className="space-y-6">
         <GlassCard className="p-6">
           <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
             <User className="w-5 h-5 text-blue-400" />
@@ -668,12 +669,13 @@ export const BreemicEnrollmentPage: React.FC = () => {
         </GlassCard>
 
         {/* Submit Button */}
-        <div className="flex justify-center pt-6">
-          <PrimaryButton
-            type="submit"
-            disabled={loading}
-            className="px-8 py-4 text-lg font-bold min-w-[200px]"
-          >
+        <div className="sticky bottom-20 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-slate-900 dark:via-slate-900/95 pt-6 pb-4 -mx-4 px-4 md:static md:bg-transparent md:pt-6 md:pb-0 md:mx-0">
+          <div className="flex justify-center">
+            <PrimaryButton
+              type="submit"
+              disabled={loading}
+              className="px-8 py-4 text-lg font-bold min-w-[200px] shadow-lg"
+            >
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -685,9 +687,11 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 Submit Enrollment
               </div>
             )}
-          </PrimaryButton>
+            </PrimaryButton>
+          </div>
         </div>
       </form>
+      </div>
     </motion.div>
   );
 };
