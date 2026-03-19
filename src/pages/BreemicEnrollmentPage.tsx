@@ -186,12 +186,17 @@ export const BreemicEnrollmentPage: React.FC = () => {
       const docRef = await addDoc(collection(db, 'breemicEnrollments'), enrollmentData);
 
       // Update student's onboarding status in both collections
-      const nextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', user.uid));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const computedNextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
+      const safeStatus = existingStatus === 'approved' ? 'approved' : computedNextStatus;
       
       // Update users collection
       try {
         const usersPayload = {
-          onboardingStatus: nextStatus,
+          onboardingStatus: safeStatus,
           breemicEnrollmentId: docRef.id,
           lastStatusUpdate: serverTimestamp(),
           paymentInfo: {
@@ -212,7 +217,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
       try {
         // 1. Define studentsPayload once before the if/else
         const studentsPayload = {
-          onboardingStatus: nextStatus,
+          onboardingStatus: safeStatus,
           breemicEnrollmentId: docRef.id,
           enrollmentCompleted: true,
           paymentInfo: {

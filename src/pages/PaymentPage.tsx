@@ -95,21 +95,27 @@ export const PaymentPage: React.FC = () => {
         notes: paymentData.notes
       };
 
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', user.uid));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const safeStatus = existingStatus === 'approved' ? 'approved' : 'approval_pending';
+
       // Update users collection
       await updateDoc(doc(db, 'users', user.uid), {
         paymentInfo,
-        onboardingStatus: 'approval_pending' as OnboardingStatus,
+        onboardingStatus: safeStatus as OnboardingStatus,
         lastStatusUpdate: serverTimestamp()
       });
 
       // Update students collection (primary data source)
       await updateDoc(doc(db, 'students', user.uid), {
         paymentInfo,
-        onboardingStatus: 'approval_pending' as OnboardingStatus,
+        onboardingStatus: safeStatus as OnboardingStatus,
         lastStatusUpdate: serverTimestamp()
       });
 
-      console.log('Payment submitted, status updated to: approval_pending');
+      console.log('Payment submitted, status updated to:', safeStatus);
 
       // Update Breemic enrollment record
       if (studentData?.breemicEnrollmentId) {
