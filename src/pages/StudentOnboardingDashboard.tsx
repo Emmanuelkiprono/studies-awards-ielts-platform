@@ -60,9 +60,8 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Unified unlock logic
-  const isUnlocked =
-    studentData?.onboardingStatus === 'approved' ||
+  // Single source of truth for access
+  const hasAccess = studentData?.onboardingStatus === 'approved' ||
     studentData?.accessUnlocked === true ||
     studentData?.trainingStatus === 'active';
 
@@ -105,7 +104,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         icon: CreditCard,
         completed: ['approval_pending', 'approved', 'suspended'].includes(currentStatus),
         current: currentStatus === 'payment_pending',
-        action: isUnlocked ? {
+        action: hasAccess ? {
           label: 'Go to Dashboard',
           href: '/courses'
         } : currentStatus === 'payment_pending' ? {
@@ -118,17 +117,17 @@ export const StudentOnboardingDashboard: React.FC = () => {
         title: 'Approval Pending',
         description: 'Your enrollment is being reviewed by our team',
         icon: Clock,
-        completed: isUnlocked || currentStatus === 'suspended',
-        current: currentStatus === 'approval_pending' && !isUnlocked
+        completed: hasAccess || currentStatus === 'suspended',
+        current: currentStatus === 'approval_pending' && !hasAccess
       },
       {
         id: 'approved',
         title: 'Approved',
         description: 'Your enrollment has been approved! You can now access courses.',
         icon: CheckCircle2,
-        completed: isUnlocked,
-        current: isUnlocked,
-        action: isUnlocked ? {
+        completed: hasAccess,
+        current: hasAccess,
+        action: hasAccess ? {
           label: 'Go to Dashboard',
           href: '/courses'
         } : undefined
@@ -255,7 +254,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         </div>
         
         {/* Access Control Message */}
-        {state?.reason === 'approval_required' && (
+        {!hasAccess && state?.reason === 'approval_required' && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -399,14 +398,14 @@ export const StudentOnboardingDashboard: React.FC = () => {
               </motion.button>
             )}
             
-            {currentStatus === 'approval_pending' && (
+            {currentStatus === 'approval_pending' && !hasAccess && (
               <div className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-slate-800/50 text-slate-400 font-medium rounded-2xl border border-slate-700">
                 <Clock className="w-5 h-5" />
                 Waiting for Approval
               </div>
             )}
             
-            {isUnlocked && (
+            {hasAccess && (
               <motion.button
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
@@ -563,7 +562,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
             {statusSteps.map((step, index) => {
               if (step.id === 'rejected' || step.id === 'suspended') return null;
               
-              const isClickable = step.action && (step.current || (step.id === 'approved' && isUnlocked));
+              const isClickable = step.action && (step.current || (step.id === 'approved' && hasAccess));
               const isCompleted = step.completed;
               
               return (
