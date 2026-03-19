@@ -115,6 +115,12 @@ export const StudentDashboard: React.FC = () => {
   const isEnrolled = !!studentData?.courseId;
   const isActive = trainingStatus === 'active';
 
+  // Single source of truth for learning access
+  const hasLearningAccess =
+    studentData?.onboardingStatus === 'approved' ||
+    studentData?.accessUnlocked === true ||
+    studentData?.trainingStatus === 'active';
+
   useEffect(() => {
     const fetchCourseData = async () => {
       if (!studentData?.courseId || !user) {
@@ -319,7 +325,7 @@ export const StudentDashboard: React.FC = () => {
   }
 
   const steps = [
-    { id: 'training', label: 'Training', status: trainingStatus === 'completed' ? 'completed' : (isActive ? 'active' : 'pending'), icon: Zap },
+    { id: 'training', label: 'Training', status: trainingStatus === 'completed' ? 'completed' : (hasLearningAccess ? 'active' : 'pending'), icon: Zap },
     { id: 'eligibility', label: 'Eligibility', status: trainingStatus === 'completed' ? 'completed' : (trainingStatus === 'active' ? 'active' : 'pending'), icon: ShieldCheck },
     { id: 'booking', label: 'Exam Booking', status: examStatus !== 'not_started' ? 'completed' : (trainingStatus === 'completed' ? 'active' : 'pending'), icon: Calendar },
     { id: 'results', label: 'Results', status: examStatus === 'done' ? 'completed' : (examStatus === 'scheduled' ? 'active' : 'pending'), icon: Trophy },
@@ -348,12 +354,12 @@ export const StudentDashboard: React.FC = () => {
               <span>{course?.name || 'Loading Course...'}</span>
             </div>
             <p className="text-[var(--ui-body)] max-w-md leading-relaxed">
-              {isActive
+              {hasLearningAccess
                 ? "Your training is currently active. Keep up the great work and complete your daily modules."
                 : "Your enrollment is pending activation. Please wait for admin approval to unlock all modules."}
             </p>
             <div className="flex flex-wrap gap-3 pt-4">
-              {isActive ? (
+              {hasLearningAccess ? (
                 <PrimaryButton>
                   Continue Learning <ArrowRight size={16} />
                 </PrimaryButton>
@@ -369,7 +375,7 @@ export const StudentDashboard: React.FC = () => {
             <img
               alt="Course Success"
               className="relative z-10 w-full h-full object-contain"
-              src={isActive ? "https://picsum.photos/seed/success/400/400" : "https://picsum.photos/seed/locked/400/400"}
+              src={hasLearningAccess ? "https://picsum.photos/seed/success/400/400" : "https://picsum.photos/seed/locked/400/400"}
               referrerPolicy="no-referrer"
             />
           </div>
@@ -384,7 +390,7 @@ export const StudentDashboard: React.FC = () => {
               <BookOpen className="text-[#6324eb]" size={20} />
               Course Modules
             </h3>
-            {!isActive && (
+            {!hasLearningAccess && (
               <div className="flex items-center gap-2 text-amber-500 text-xs font-bold bg-amber-500/10 px-3 py-1 rounded-full border border-amber-500/20">
                 <Lock size={12} />
                 Locked
@@ -398,11 +404,11 @@ export const StudentDashboard: React.FC = () => {
                 key={mod.id}
                 className={cn(
                   "overflow-hidden transition-all border border-white/5",
-                  !isActive && "opacity-60 grayscale cursor-not-allowed"
+                  !hasLearningAccess && "opacity-60 grayscale cursor-not-allowed"
                 )}
               >
                 <button
-                  disabled={!isActive}
+                  disabled={!hasLearningAccess}
                   onClick={() => setExpandedModule(expandedModule === mod.id ? null : mod.id)}
                   className="w-full p-5 flex items-center justify-between hover:bg-white/5 transition-colors text-left"
                 >
@@ -415,7 +421,7 @@ export const StudentDashboard: React.FC = () => {
                       <p className="text-xs text-[var(--ui-muted)]">{mod.description}</p>
                     </div>
                   </div>
-                  {isActive ? (
+                  {hasLearningAccess ? (
                     expandedModule === mod.id ? <ChevronDown size={20} className="text-slate-500" /> : <ChevronRight size={20} className="text-slate-500" />
                   ) : (
                     <Lock size={18} className="text-slate-600" />
@@ -423,7 +429,7 @@ export const StudentDashboard: React.FC = () => {
                 </button>
 
                 <AnimatePresence>
-                  {expandedModule === mod.id && isActive && (
+                  {expandedModule === mod.id && hasLearningAccess && (
                     <motion.div
                       initial={{ height: 0, opacity: 0 }}
                       animate={{ height: 'auto', opacity: 1 }}
@@ -481,12 +487,12 @@ export const StudentDashboard: React.FC = () => {
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-bold">
                 <span className="text-[var(--ui-muted)]">Overall</span>
-                <span className="text-[#6324eb]">{isActive ? '35%' : '0%'}</span>
+                <span className="text-[#6324eb]">{hasLearningAccess ? '35%' : '0%'}</span>
               </div>
               <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
-                  animate={{ width: isActive ? '35%' : '0%' }}
+                  animate={{ width: hasLearningAccess ? '35%' : '0%' }}
                   className="h-full bg-[#6324eb] shadow-[0_0_10px_rgba(99,36,235,0.5)]"
                 />
               </div>

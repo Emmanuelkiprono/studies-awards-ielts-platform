@@ -176,8 +176,11 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   const isTeacher = role === 'teacher';
   const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
 
-  // Force navigation unlock
-  const canAccess = studentData?.onboardingStatus === 'approved';
+  // Single source of truth for navigation access
+  const canAccess = 
+    studentData?.onboardingStatus === 'approved' ||
+    studentData?.accessUnlocked === true ||
+    studentData?.trainingStatus === 'active';
 
   // Handle navigation with access control
   const handleNavigate = (path: string, requiresApproval = false) => {
