@@ -37,6 +37,7 @@ import { StudentProfilePage } from './pages/StudentProfilePage';
 
 import { ForcePasswordChangePage } from './pages/ForcePasswordChangePage';
 import { seedInitialData } from './services/seedData';
+import { ToastProvider } from './components/Toast';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({ children, allowedRoles }) => {
   const { user, profile, loading } = useAuth();
@@ -212,7 +213,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <AppContent />
+        <ToastProvider>
+          <AppContent />
+        </ToastProvider>
       </AuthProvider>
     </BrowserRouter>
   );

@@ -26,8 +26,11 @@ export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({
     );
   }
 
-  // Check if student has the required approval status
-  if (studentData && !allowedStatuses.includes(studentData.onboardingStatus)) {
+  // Check if student has the required approval status or access unlocked
+  const isApproved = studentData?.onboardingStatus === 'approved' || studentData?.accessUnlocked === true;
+  const hasRequiredStatus = studentData && (allowedStatuses.includes(studentData.onboardingStatus) || isApproved);
+  
+  if (studentData && !hasRequiredStatus) {
     // If we're coming from a navigation attempt, show the access control message
     if (location.state?.reason === 'approval_required') {
       return <AccessControlMessage />;

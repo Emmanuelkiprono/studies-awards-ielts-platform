@@ -19,12 +19,14 @@ import {
   Moon,
   Monitor,
   Palette,
-  X
+  X,
+  Lock
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { NotificationBell } from './NotificationBell';
 import { useTheme, type AccentColor, type ThemeMode } from '../hooks/useTheme';
+import { useToast } from './Toast';
 
 interface NavItemProps {
   icon: React.ElementType;
@@ -48,6 +50,11 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, onClick, b
   >
     <div className="relative">
       <Icon size={24} className={cn(active ? "fill-current" : "", disabled && "opacity-50")} />
+      {disabled && (
+        <div className="absolute -top-1 -right-1 w-3 h-3 bg-[var(--ui-muted)]/30 rounded-full flex items-center justify-center">
+          <Lock size={10} className="text-[var(--ui-muted)]" />
+        </div>
+      )}
       {badge && !disabled && (
         <span className="absolute -top-1 -right-1 flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--ui-accent)] opacity-75"></span>
@@ -165,11 +172,12 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   const navigate = useNavigate();
   const location = useLocation();
   const { studentData } = useAuth();
+  const { showToast } = useToast();
   const isTeacher = role === 'teacher';
   const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
 
-  // Check if student is approved
-  const isApproved = studentData?.onboardingStatus === 'approved';
+  // Check if student is approved or has access unlocked
+  const isApproved = studentData?.onboardingStatus === 'approved' || studentData?.accessUnlocked === true;
 
   // Handle navigation with access control
   const handleNavigate = (path: string, requiresApproval = false) => {
@@ -180,13 +188,8 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
 
     // For students, check approval status if required
     if (requiresApproval && !isApproved) {
-      // Show friendly message and redirect to onboarding
-      navigate('/onboarding', { 
-        state: { 
-          reason: 'approval_required',
-          message: 'Your course access will unlock after approval.'
-        } 
-      });
+      // Show toast message
+      showToast('Available after approval', 'info', 2000);
       return;
     }
 

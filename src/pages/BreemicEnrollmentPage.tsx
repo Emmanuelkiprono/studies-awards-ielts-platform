@@ -158,28 +158,15 @@ export const BreemicEnrollmentPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('🚀 handleSubmit called!');
-    console.log('🔍 DEBUG: Current user uid:', user?.uid);
-    console.log('🔍 DEBUG: Students document path to update:', `students/${user?.uid}`);
-    
     if (!validateForm()) {
-      console.log('❌ Form validation failed');
       return;
     }
 
     // Check if user is logged in
     if (!user) {
-      console.log('❌ No user logged in');
       setSubmitError('Please log in to submit your enrollment.');
       return;
     }
-
-    console.log('✅ Form validation passed, user logged in:', user.uid);
-    console.log('🔍 DEBUG: Form data payload:', {
-      feePaid: Number(formData.feePaid),
-      balance: Number(formData.balance),
-      expectedStatus: Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending'
-    });
     
     setLoading(true);
     setSubmitError('');
@@ -197,17 +184,9 @@ export const BreemicEnrollmentPage: React.FC = () => {
       };
 
       const docRef = await addDoc(collection(db, 'breemicEnrollments'), enrollmentData);
-      
-      console.log('Enrollment created with ID:', docRef.id);
 
       // Update student's onboarding status in both collections
       const nextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
-      
-      console.log('🔍 DEBUG: Status calculation:', {
-        feePaid: Number(formData.feePaid),
-        nextStatus: nextStatus,
-        reason: Number(formData.feePaid) > 0 ? 'Payment made -> approval_pending' : 'No payment -> payment_pending'
-      });
       
       // Update users collection
       try {
@@ -222,11 +201,8 @@ export const BreemicEnrollmentPage: React.FC = () => {
             paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
           }
         };
-        console.log('🔍 DEBUG: Users collection payload:', usersPayload);
-        console.log('🔍 DEBUG: Users document path:', `users/${user.uid}`);
         
         await updateDoc(doc(db, 'users', user.uid), usersPayload);
-        console.log('✅ Users collection updated successfully');
       } catch (error) {
         console.error('❌ Error updating users collection:', error);
         throw new Error(`Failed to update users collection: ${error.message}`);
@@ -246,38 +222,24 @@ export const BreemicEnrollmentPage: React.FC = () => {
           lastStatusUpdate: serverTimestamp(),
         };
         
-        console.log('🔍 DEBUG: Students payload:', studentsPayload);
-        console.log('🔍 DEBUG: Writing to exactly: students/', user.uid);
-        
-        // 2. Write it to exactly: doc(db, 'students', user.uid)
-        // 3. Use setDoc with merge so the write cannot fail
+        // Write to students collection with merge
         await setDoc(doc(db, 'students', user.uid), studentsPayload, { merge: true });
-        console.log('✅ Students document written successfully');
         
-        // 4. Immediately after writing, read the same doc back
+        // Verify the update was successful
         const verifySnap = await getDoc(doc(db, 'students', user.uid));
-        console.log('VERIFIED STUDENT DOC:', verifySnap.data());
-        
-        // 5. If verifySnap.data().onboardingStatus is not equal to nextStatus, throw an error
         if (verifySnap.data().onboardingStatus !== nextStatus) {
-          console.error('❌ VERIFICATION FAILED: Expected', nextStatus, 'but got', verifySnap.data().onboardingStatus);
           throw new Error(`Verification failed: Expected onboardingStatus=${nextStatus} but got ${verifySnap.data().onboardingStatus}`);
         }
         
-        console.log('✅ VERIFICATION PASSED: onboardingStatus correctly updated to', nextStatus);
-        
-        // 6. After successful verification, hard redirect
-        console.log('🔄 HARD REDIRECT: Redirecting to /onboarding...');
+        // Redirect to onboarding after successful submission
         window.location.href = '/onboarding';
         
       } catch (error) {
-        console.error('❌ Error updating students collection:', error);
         throw error;
       }
 
       
     } catch (error) {
-      console.error('Error submitting enrollment:', error);
       setSubmitError('Failed to submit enrollment. Please try again.');
     } finally {
       setLoading(false);
