@@ -25,8 +25,13 @@ export const useLessonManagement = (batchId?: string) => {
 
   // Fetch lessons for a batch
   useEffect(() => {
-    if (!batchId) return;
+    if (!batchId) {
+      console.log('VIEW LESSONS BATCH: No batchId provided');
+      return;
+    }
 
+    console.log('VIEW LESSONS BATCH ID:', batchId);
+    
     setLoading(true);
     const q = query(
       collection(db, 'lessons'),
@@ -35,13 +40,21 @@ export const useLessonManagement = (batchId?: string) => {
       orderBy('order', 'asc')
     );
 
+    console.log('LESSONS QUERY BATCH ID:', batchId);
+    console.log('LESSONS QUERY:', q);
+
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const lessonsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Lesson));
+      
+      console.log('LESSONS LOADED:', lessonsData);
+      console.log('LESSONS LOADED COUNT:', lessonsData.length);
+      
       setLessons(lessonsData);
       setLoading(false);
+      setError(null); // Clear any previous errors
     }, (err) => {
       console.error('Error fetching lessons:', err);
       setError('Failed to load lessons');

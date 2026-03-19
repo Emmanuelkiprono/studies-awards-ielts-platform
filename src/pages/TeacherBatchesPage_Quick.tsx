@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, getDocs } from 'firebase/firestore';
 import { GlassCard, PrimaryButton } from '../components/UI';
 
 interface Batch {
@@ -47,7 +47,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
     startDate: new Date().toISOString().split('T')[0]
   });
 
-  // Load batches from Firestore
+  // Load batches from Firestore with real-time student counts
   useEffect(() => {
     if (!teacherProfile?.uid) return;
 
@@ -57,12 +57,40 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
       where('teacherId', '==', teacherProfile.uid)
     );
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
+    const unsubscribe = onSnapshot(q, async (snapshot) => {
       const batchesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Batch));
-      setBatches(batchesData);
+
+      // Calculate real student count for each batch
+      const batchesWithCounts = await Promise.all(
+        batchesData.map(async (batch) => {
+          try {
+            const studentsQuery = query(
+              collection(db, 'students'),
+              where('batchId', '==', batch.id)
+            );
+            const studentsSnapshot = await getDocs(studentsQuery);
+            const realStudentCount = studentsSnapshot.size;
+            
+            console.log(`BATCH ${batch.id} REAL STUDENT COUNT:`, realStudentCount);
+            
+            return {
+              ...batch,
+              currentStudents: realStudentCount
+            };
+          } catch (error) {
+            console.error(`Error counting students for batch ${batch.id}:`, error);
+            return {
+              ...batch,
+              currentStudents: 0
+            };
+          }
+        })
+      );
+
+      setBatches(batchesWithCounts);
       setLoading(false);
     }, (err) => {
       console.error('Error fetching batches:', err);

@@ -425,15 +425,28 @@ export const TeacherBatchLessonsPage: React.FC = () => {
         </div>
       ))}
 
-      {lessons.length === 0 && (
+      {lessons.length === 0 && !loading && !error && (
         <div className="text-center py-24 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
           <BookOpen size={48} className="mx-auto text-slate-500/50 mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No Lessons Created</h3>
-          <p className="text-slate-500 mb-6">Create your first lesson to start building the curriculum for this batch.</p>
+          <h3 className="text-xl font-bold text-white mb-2">No lessons created for this batch yet</h3>
+          <p className="text-slate-500 mb-6">Create your first lesson to start building the curriculum for {batch?.name || 'this batch'}.</p>
           <PrimaryButton onClick={() => setShowCreateForm(true)}>
             <Plus size={20} className="mr-2" />
-            Create First Lesson
+            Create Lesson
           </PrimaryButton>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center py-24 bg-red-500/10 rounded-3xl border border-red-500/30">
+          <h3 className="text-xl font-bold text-white mb-2">Failed to load lessons</h3>
+          <p className="text-slate-400 mb-6">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors"
+          >
+            Try Again
+          </button>
         </div>
       )}
     </motion.div>
