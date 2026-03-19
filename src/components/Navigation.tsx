@@ -32,20 +32,22 @@ interface NavItemProps {
   icon: React.ElementType;
   label: string;
   active?: boolean;
-  onClick: () => void;
-  badge?: boolean;
   disabled?: boolean;
+  badge?: boolean;
+  onClick: () => void;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, onClick, badge, disabled }) => (
+const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, disabled, badge, onClick }) => (
   <button
     onClick={onClick}
     disabled={disabled}
     className={cn(
-      "flex flex-col items-center gap-1 p-2 transition-colors relative",
-      active ? "text-[var(--ui-accent)]" : 
-      disabled ? "text-[var(--ui-muted)]/50 cursor-not-allowed" : 
-      "text-[var(--ui-muted)] hover:text-[var(--ui-heading)]"
+      "flex flex-col items-center gap-1 p-3 rounded-xl transition-all",
+      active
+        ? "text-[#5B3DF5]"
+        : disabled
+          ? "text-[#6B7280] opacity-50"
+          : "text-[#6B7280] hover:text-[#111827]"
     )}
   >
     <div className="relative">
@@ -218,7 +220,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
 
   if (isTeacher) {
     return (
-      <nav className="fixed bottom-0 left-0 right-0 bg-[var(--ui-bg)] border-t border-[var(--ui-border)] z-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] z-50">
         <div className="grid grid-cols-5 max-w-md mx-auto">
           <NavItem
             icon={LayoutDashboard}
@@ -257,7 +259,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-[var(--ui-bg)] border-t border-[var(--ui-border)] z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] z-50">
       <div className="grid grid-cols-5 max-w-md mx-auto">
         <NavItem
           icon={LayoutDashboard}
