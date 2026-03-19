@@ -295,9 +295,9 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => navigate(`/teacher/batches/${batch.id}/lessons`)}
+                  onClick={() => navigate(`/teacher/batches/${batch.id}`)}
                   className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
-                  title="View Lessons"
+                  title="View Batch Details"
                 >
                   <Eye size={16} />
                 </button>
@@ -335,11 +335,11 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
 
             <div className="mt-6">
               <button
-                onClick={() => navigate(`/teacher/batches/${batch.id}/lessons`)}
+                onClick={() => navigate(`/teacher/batches/${batch.id}`)}
                 className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#6324eb] text-white rounded-lg hover:bg-[#6324eb]/80 transition-colors"
               >
                 <Eye size={16} />
-                View Lessons
+                View Batch Details
               </button>
             </div>
           </GlassCard>

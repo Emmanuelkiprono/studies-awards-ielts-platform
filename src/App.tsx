@@ -40,6 +40,7 @@ import { TeacherLiveSessionPage } from './pages/TeacherLiveSessionPage';
 import { StudentBatchView } from './pages/StudentBatchView';
 import { TeacherBatchesPage_Simple } from './pages/TeacherBatchesPage_Simple';
 import { TeacherBatchesPage_Quick } from './pages/TeacherBatchesPage_Quick';
+import { TeacherBatchDetailsPage } from './pages/TeacherBatchDetailsPage';
 import { TeacherLessonsPage_Simple } from './pages/TeacherLessonsPage_Simple';
 import { TeacherLiveClassesPage_Simple } from './pages/TeacherLiveClassesPage_Simple';
 import { TeacherAttendancePage_Simple } from './pages/TeacherAttendancePage_Simple';
@@ -127,6 +128,7 @@ const AppContent: React.FC = () => {
                 <Route path="/courses" element={<TeacherCoursesPage />} />
                 <Route path="/modules" element={<TeacherModulesPage />} />
                 <Route path="/batches" element={<TeacherBatchesPage_Quick />} />
+                <Route path="/batches/:batchId" element={<TeacherBatchDetailsPage />} />
                 <Route path="/batches/:batchId/lessons" element={<TeacherBatchLessonsPage />} />
                 <Route path="/batches/:batchId/lessons/:lessonId/live" element={<TeacherLiveSessionPage />} />
                 <Route path="/lessons" element={<TeacherLessonsPage_Simple />} />
