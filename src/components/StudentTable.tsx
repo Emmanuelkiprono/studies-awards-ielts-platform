@@ -24,7 +24,7 @@ import {
   AlertCircle,
   RefreshCw
 } from 'lucide-react';
-import { Course, StudentData, UserProfile, Enrollment, TrainingStatus, ExamStatus, OnboardingStatus } from '../types';
+import { StudentData, UserProfile, Enrollment, TrainingStatus, ExamStatus, OnboardingStatus } from '../types';
 
 interface StudentTableRow {
   id: string;
@@ -61,7 +61,6 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   const { profile: teacherData } = useAuth();
   const { showToast } = useToast();
   const [students, setStudents] = useState<StudentTableRow[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,29 +74,10 @@ export const StudentTable: React.FC<StudentTableProps> = ({
 
   const itemsPerPage = initialLimit;
 
-  // Fetch courses for course names
-  useEffect(() => {
-    const fetchCourses = async () => {
-      try {
-        const coursesQuery = query(collection(db, 'courses'));
-        const coursesSnapshot = await getDocs(coursesQuery);
-        const coursesData = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
-        setCourses(coursesData);
-      } catch (error) {
-        console.error('Error fetching courses:', error);
-      }
-    };
+  // Removed course fetching to avoid N+1 queries
+  // Using courseId directly for now for performance
 
-    fetchCourses();
-  }, []);
-
-  // Get course name by ID
-  const getCourseName = useCallback((courseId: string) => {
-    const course = courses.find(c => c.id === courseId);
-    return course?.name || courseId;
-  }, [courses]);
-
-  // Fetch students data with optimized queries
+  // Fetch students data with single query approach
   const fetchStudents = useCallback(async (isInitial = false) => {
     try {
       let studentsQuery = query(
@@ -126,17 +106,16 @@ export const StudentTable: React.FC<StudentTableProps> = ({
 
       const studentsSnapshot = await getDocs(studentsQuery);
       
-      // Batch course details to avoid N+1 queries
-      const studentPromises = studentsSnapshot.docs.map(async (doc) => {
+      // Direct mapping without async operations - no N+1 queries
+      const studentsData = studentsSnapshot.docs.map(doc => {
         const data = doc.data() as StudentData;
-        const courseName = getCourseName(data.courseId || '');
         
         return {
           id: doc.id,
           name: data.name || 'Unknown',
           email: data.email || '',
           phone: data.phone,
-          course: courseName,
+          course: data.courseId || 'N/A', // Use courseId directly, avoid lookup
           onboardingStatus: data.onboardingStatus || 'account_created',
           trainingStatus: data.trainingStatus || 'inactive',
           examStatus: data.examStatus || 'not_started',
@@ -144,11 +123,11 @@ export const StudentTable: React.FC<StudentTableProps> = ({
           progress: calculateProgress(data),
           enrollmentDate: data.enrollmentDate?.toDate() || new Date(),
           lastActive: data.lastActive?.toDate(),
-          courseName
+          courseName: data.courseId || 'N/A' // Use courseId as courseName for now
         } as StudentTableRow;
       });
 
-      const studentsData = await Promise.all(studentPromises);
+      console.log("FETCHED STUDENTS:", studentsData.length, "students");
 
       if (isInitial) {
         setStudents(studentsData);
@@ -160,12 +139,14 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       setHasMore(studentsSnapshot.docs.length === itemsPerPage);
 
     } catch (error) {
-      console.error('Error fetching students:', error);
-      showToast('Error fetching student data', 'error');
+      console.error("FETCH ERROR:", error);
+      // Show error only once, not in loops
+      showToast('Failed to load students. Please refresh.', 'error');
+      setStudents([]); // Clear students on error
     } finally {
       setLoading(false);
     }
-  }, [courseId, itemsPerPage, lastVisible, getCourseName, showToast]);
+  }, [courseId, itemsPerPage, lastVisible, showToast]);
 
   // Calculate progress percentage
   const calculateProgress = (student: StudentData): number => {
@@ -175,12 +156,10 @@ export const StudentTable: React.FC<StudentTableProps> = ({
     return 0;
   };
 
-  // Initial fetch
+  // Initial fetch - no dependency on courses
   useEffect(() => {
-    if (courses.length > 0) {
-      fetchStudents(true);
-    }
-  }, [fetchStudents, courses.length]);
+    fetchStudents(true);
+  }, [fetchStudents]);
 
   // Debounced search
   useEffect(() => {
@@ -203,6 +182,8 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   const filteredAndSortedStudents = useMemo(() => {
     let filtered = students;
 
+    console.log("FILTERING STUDENTS:", students.length, "total students");
+
     // Apply search filter
     if (searchTerm) {
       filtered = filtered.filter(student =>
@@ -223,6 +204,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       return 0;
     });
 
+    console.log("FINAL FILTERED STUDENTS:", filtered.length, "students");
     return filtered;
   }, [students, searchTerm, sortColumn, sortDirection]);
 
