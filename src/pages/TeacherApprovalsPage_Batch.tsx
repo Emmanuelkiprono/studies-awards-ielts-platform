@@ -87,55 +87,40 @@ export const TeacherApprovalsPage_Batch: React.FC = () => {
 
   // Handle approve with batch assignment
   const handleApprove = async (student: PendingStudent) => {
-    console.log('APPROVE BUTTON CLICKED', student.uid);
+    console.log('APPROVE CLICKED');
+    console.log('student.uid:', student.uid);
     
-    const batchId = selectedBatch[student.uid];
-    console.log('SELECTED BATCH', batchId);
+    const selectedBatchId = selectedBatch[student.uid];
+    console.log('selectedBatchId:', selectedBatchId);
     
     setActionLoading(student.uid);
     
     try {
-      // Validate batch selection
-      if (!batchId) {
-        showToast('Please select a batch before approving this student', 'error');
-        return;
-      }
-
-      // Update students collection
       const studentRef = doc(db, 'students', student.uid);
+
       await setDoc(studentRef, {
         onboardingStatus: 'approved',
         accessUnlocked: true,
         trainingStatus: 'active',
-        batchId: batchId,
-        approvedAt: serverTimestamp(),
-        lastStatusUpdate: serverTimestamp()
+        batchId: selectedBatchId || null,
+        approvedAt: serverTimestamp()
       }, { merge: true });
 
-      // Also update users collection for consistency
-      const userRef = doc(db, 'users', student.uid);
-      await updateDoc(userRef, {
-        batchId: batchId,
-        onboardingStatus: 'approved'
-      });
-
-      // Verify the write
       const verifySnap = await getDoc(studentRef);
       console.log('APPROVAL VERIFY:', verifySnap.data());
-      
+
       if (verifySnap.data()?.onboardingStatus !== 'approved') {
         throw new Error('Approval verification failed');
       }
 
-      // Update batch student count
-      const batchRef = doc(db, 'batches', batchId);
-      await updateDoc(batchRef, {
-        currentStudents: serverTimestamp()
-      });
+      // Show appropriate message
+      if (!selectedBatchId) {
+        showToast('Approved without batch assignment. Assign batch later.', 'warning');
+      } else {
+        showToast('Student approved successfully', 'success');
+      }
 
-      showToast('Student approved successfully', 'success');
-      
-      // Remove from pending list
+      // Remove student from pending list
       setStudents(prev => prev.filter(s => s.uid !== student.uid));
       
       // Clear selected batch for this student
@@ -146,8 +131,8 @@ export const TeacherApprovalsPage_Batch: React.FC = () => {
       });
       
     } catch (error) {
-      console.error('Error approving student:', error);
-      showToast('Failed to approve student. Please try again.', 'error');
+      console.error('APPROVE ERROR:', error);
+      showToast('Failed to approve student', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -318,9 +303,9 @@ export const TeacherApprovalsPage_Batch: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handleApprove(student)}
-                    disabled={actionLoading === student.uid || !selectedBatch[student.uid]}
+                    disabled={actionLoading === student.uid}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={!selectedBatch[student.uid] ? "Please select a batch before approving" : "Approve student"}
+                    title="Approve student"
                   >
                     {actionLoading === student.uid ? (
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
