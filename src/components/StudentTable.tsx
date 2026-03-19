@@ -107,42 +107,63 @@ const getStatusDisplayName = useCallback((status: string): string => {
   return statusMap[status] || status;
 }, []);
 
-// Merge users and students collections
+// Merge users and students collections with safe guards
 const mergeStudentData = useCallback(async (studentDocs: any[]) => {
-  console.log("MERGING STUDENT DATA FOR", studentDocs.length, "STUDENTS");
+  console.log("MERGING STUDENT DATA FOR", studentDocs?.length || 0, "STUDENTS");
+  
+  // Safe guard: if no docs, return empty array
+  if (!Array.isArray(studentDocs) || studentDocs.length === 0) {
+    console.log("NO STUDENT DOCS TO MERGE");
+    return [];
+  }
   
   const mergedStudents = [];
   let missingNameCount = 0;
   let missingEmailCount = 0;
   
   for (const studentDoc of studentDocs) {
+    // Safe guard: check if doc exists and has data method
+    if (!studentDoc || typeof studentDoc.data !== 'function') {
+      console.error("INVALID STUDENT DOC:", studentDoc);
+      continue;
+    }
+    
     const studentData = studentDoc.data();
     const uid = studentDoc.id;
+    
+    // Safe guard: check if uid exists
+    if (!uid) {
+      console.error("MISSING UID FOR STUDENT DOC:", studentDoc);
+      continue;
+    }
     
     try {
       // Get user data for identity fields
       const userDoc = await getDoc(doc(db, 'users', uid));
       const userData = userDoc.exists() ? userDoc.data() : {};
       
-      // Build merged student record
+      // Safe guard: ensure studentData exists
+      const safeStudentData = studentData || {};
+      
+      // Build merged student record with safe defaults
       const mergedStudent = {
         id: uid,
         // Identity from users collection (source of truth)
-        name: userData.name || userData.fullName || userData.displayName || studentData.name || 'Unknown',
-        email: userData.email || studentData.email || '',
-        phone: userData.phone || studentData.phone,
-        avatarUrl: userData.avatarUrl || userData.photoURL || '',
+        name: userData?.name || userData?.fullName || userData?.displayName || safeStudentData?.name || 'Unknown',
+        email: userData?.email || safeStudentData?.email || '',
+        phone: userData?.phone || safeStudentData?.phone || '',
+        avatarUrl: userData?.avatarUrl || userData?.photoURL || '',
         
-        // Student state from students collection
-        course: getCourseDisplayName(studentData.courseId || 'N/A'),
-        courseId: studentData.courseId || 'N/A',
-        onboardingStatus: studentData.onboardingStatus || 'account_created',
-        trainingStatus: studentData.trainingStatus || 'inactive',
-        examStatus: studentData.examStatus || 'not_started',
-        paymentStatus: studentData.trainingPaymentStatus || 'pending',
-        progress: calculateProgress(studentData),
-        enrollmentDate: studentData.enrollmentDate?.toDate() || new Date(),
-        lastActive: studentData.lastActive?.toDate()
+        // Student state from students collection with safe defaults
+        course: getCourseDisplayName(safeStudentData?.courseId || 'N/A'),
+        courseId: safeStudentData?.courseId || 'N/A',
+        onboardingStatus: safeStudentData?.onboardingStatus || 'account_created',
+        trainingStatus: safeStudentData?.trainingStatus || 'inactive',
+        examStatus: safeStudentData?.examStatus || 'not_started',
+        paymentStatus: safeStudentData?.trainingPaymentStatus || 'pending',
+        progress: calculateProgress(safeStudentData),
+        enrollmentDate: safeStudentData?.enrollmentDate?.toDate?.() || safeStudentData?.enrollmentDate?.toDate?.() || new Date(),
+        lastActive: safeStudentData?.lastActive?.toDate?.() || safeStudentData?.lastActive?.toDate?.() || undefined
       };
       
       if (mergedStudent.name === 'Unknown') missingNameCount++;
@@ -151,22 +172,23 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
       mergedStudents.push(mergedStudent);
     } catch (error) {
       console.error("Error merging student data for", uid, ":", error);
-      // Fallback to student data only
+      // Fallback to student data only with safe guards
+      const safeStudentData = studentData || {};
       mergedStudents.push({
         id: uid,
-        name: studentData.name || 'Unknown',
-        email: studentData.email || '',
-        phone: studentData.phone,
+        name: safeStudentData?.name || 'Unknown',
+        email: safeStudentData?.email || '',
+        phone: safeStudentData?.phone || '',
         avatarUrl: '',
-        course: getCourseDisplayName(studentData.courseId || 'N/A'),
-        courseId: studentData.courseId || 'N/A',
-        onboardingStatus: studentData.onboardingStatus || 'account_created',
-        trainingStatus: studentData.trainingStatus || 'inactive',
-        examStatus: studentData.examStatus || 'not_started',
-        paymentStatus: studentData.trainingPaymentStatus || 'pending',
-        progress: calculateProgress(studentData),
-        enrollmentDate: studentData.enrollmentDate?.toDate() || new Date(),
-        lastActive: studentData.lastActive?.toDate()
+        course: getCourseDisplayName(safeStudentData?.courseId || 'N/A'),
+        courseId: safeStudentData?.courseId || 'N/A',
+        onboardingStatus: safeStudentData?.onboardingStatus || 'account_created',
+        trainingStatus: safeStudentData?.trainingStatus || 'inactive',
+        examStatus: safeStudentData?.examStatus || 'not_started',
+        paymentStatus: safeStudentData?.trainingPaymentStatus || 'pending',
+        progress: calculateProgress(safeStudentData),
+        enrollmentDate: safeStudentData?.enrollmentDate?.toDate?.() || safeStudentData?.enrollmentDate?.toDate?.() || new Date(),
+        lastActive: safeStudentData?.lastActive?.toDate?.() || safeStudentData?.lastActive?.toDate?.() || undefined
       });
     }
   }
@@ -223,9 +245,35 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
         useFallback = true;
       }
       
-      // Use merged data from users + students collections
+      // Use merged data from users + students collections with error handling
       console.log("MERGING STUDENT DATA...");
-      studentsData = await mergeStudentData(studentsSnapshot.docs);
+      try {
+        studentsData = await mergeStudentData(studentsSnapshot.docs);
+      } catch (mergeError) {
+        console.error("MERGE ERROR:", mergeError);
+        console.log("FALLING BACK TO DIRECT MAPPING...");
+        
+        // Fallback: Direct mapping without merge
+        studentsData = studentsSnapshot.docs.map(doc => {
+          const data = doc.data() as StudentData;
+          return {
+            id: doc.id,
+            name: data.name || 'Unknown',
+            email: data.email || '',
+            phone: data.phone,
+            course: getCourseDisplayName(data.courseId || 'N/A'),
+            courseId: data.courseId || 'N/A',
+            onboardingStatus: data.onboardingStatus || 'account_created',
+            trainingStatus: data.trainingStatus || 'inactive',
+            examStatus: data.examStatus || 'not_started',
+            paymentStatus: data.trainingPaymentStatus || 'pending',
+            progress: calculateProgress(data),
+            enrollmentDate: data.enrollmentDate?.toDate() || new Date(),
+            lastActive: data.lastActive?.toDate(),
+            courseName: getCourseDisplayName(data.courseId || 'N/A')
+          } as StudentTableRow;
+        });
+      }
       
       // If using fallback and courseId filter, apply in memory
       if (useFallback && courseId) {
@@ -301,31 +349,49 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
     };
   }, [searchTerm]);
 
-  // Filter and sort students with memoization
+  // Filter and sort students with memoization and safe guards
   const filteredAndSortedStudents = useMemo(() => {
-    let filtered = students;
+    // Safe guard: ensure students is an array
+    const safeStudents = Array.isArray(students) ? students : [];
+    
+    console.log("STUDENTS PAGE DATA:", safeStudents.length, "students");
+    console.log("FILTERING STUDENTS:", safeStudents.length, "total students");
 
-    console.log("FILTERING STUDENTS:", students.length, "total students");
+    let filtered = safeStudents;
 
-    // Apply search filter
+    // Apply search filter with safe guards
     if (searchTerm) {
-      filtered = filtered.filter(student =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.phone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.course.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter(student => {
+        if (!student) return false;
+        try {
+          return (
+            (student.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (student.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (student.phone || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (student.course || '').toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        } catch (error) {
+          console.error("SEARCH FILTER ERROR:", error, student);
+          return false;
+        }
+      });
     }
 
-    // Apply sorting
-    filtered = [...filtered].sort((a, b) => {
-      const aValue = a[sortColumn];
-      const bValue = b[sortColumn];
+    // Apply sorting with safe guards
+    try {
+      filtered = [...filtered].sort((a, b) => {
+        if (!a || !b) return 0;
+        const aValue = a[sortColumn];
+        const bValue = b[sortColumn];
 
-      if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
-    });
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1;
+        return 0;
+      });
+    } catch (error) {
+      console.error("SORTING ERROR:", error);
+      // If sorting fails, return unsorted filtered data
+    }
 
     console.log("FINAL FILTERED STUDENTS:", filtered.length, "students");
     return filtered;
@@ -582,7 +648,14 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {paginatedStudents.map((student, index) => (
+                {paginatedStudents.map((student, index) => {
+                  // Safe guard: ensure student exists
+                  if (!student || !student.id) {
+                    console.error("INVALID STUDENT IN TABLE:", student);
+                    return null;
+                  }
+                  
+                  return (
                   <motion.tr
                     key={student.id}
                     initial={{ opacity: 0, y: 10 }}
@@ -594,11 +667,11 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
                       <div className="flex items-center">
                         <div className="w-8 h-8 bg-[#5B3DF5]/10 rounded-full flex items-center justify-center mr-3">
                           <span className="text-[#5B3DF5] text-sm font-medium">
-                            {student.name.charAt(0).toUpperCase()}
+                            {(student.name || 'Unknown').charAt(0).toUpperCase()}
                           </span>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900">{student.name}</div>
+                          <div className="text-sm font-medium text-gray-900">{student.name || 'Unknown'}</div>
                           {student.phone && (
                             <div className="text-xs text-gray-500 flex items-center gap-1">
                               <Phone size={10} />
@@ -609,10 +682,10 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm text-gray-900">{student.email}</div>
+                      <div className="text-sm text-gray-900">{student.email || 'No email'}</div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="text-sm text-gray-900">{student.course}</div>
+                      <div className="text-sm text-gray-900">{student.course || 'N/A'}</div>
                     </td>
                     <td className="px-4 py-4">
                       <StatusBadge status={student.onboardingStatus} type="onboarding" />
@@ -678,7 +751,8 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
                     </td>
                   )}
                   </motion.tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
