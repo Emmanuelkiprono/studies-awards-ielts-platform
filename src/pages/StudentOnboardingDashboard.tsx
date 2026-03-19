@@ -52,6 +52,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
     timestamp?: number;
     reason?: string;
     message?: string;
+    paymentCompleted?: boolean;
   };
   const [currentStatus, setCurrentStatus] = useState<OnboardingStatus>('account_created');
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);

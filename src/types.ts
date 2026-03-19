@@ -94,6 +94,7 @@ export interface StudentData {
   approvedAt?: any;
   lastStatusUpdate?: any;
   onboardingCompletedAt?: any;    // When student completes full onboarding
+  accessUnlocked?: boolean;        // Whether course access has been unlocked
 }
 
 export interface Course {
