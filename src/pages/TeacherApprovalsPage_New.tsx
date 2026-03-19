@@ -1,29 +1,11 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { StudentTable } from '../components/StudentTable';
-import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
+import { useBatchManagement } from '../hooks/useBatchManagement';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, getDocs, doc, updateDoc, serverTimestamp, getDoc } from 'firebase/firestore';
-import {
-  Users,
-  Search,
-  Filter,
-  CheckCircle,
-  XCircle,
-  Clock,
-  AlertCircle,
-  Eye,
-  Mail,
-  Phone,
-  Calendar,
-  DollarSign,
-  FileText,
-  MoreVertical,
-  ChevronLeft,
-  ChevronRight
-} from 'lucide-react';
+import { collection, query, where, onSnapshot, getDocs, updateDoc, serverTimestamp, doc } from 'firebase/firestore';
+import { Mail, Phone, Calendar, DollarSign, FileText, MoreVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import { UserProfile, StudentData, Enrollment, OnboardingStatus } from '../types';
 
 interface PendingStudent extends UserProfile {

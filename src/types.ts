@@ -59,6 +59,125 @@ export interface RejectionInfo {
   resubmissionDeadline?: string;
 }
 
+// Batch / Cohort System
+export type BatchStatus = 'active' | 'completed' | 'suspended' | 'upcoming';
+
+export interface Batch {
+  id: string;
+  courseId: string;
+  name: string;
+  description?: string;
+  startDate: any; // Firestore Timestamp
+  endDate?: any; // Firestore Timestamp
+  weekNumber: number;
+  teacherId: string;
+  status: BatchStatus;
+  maxStudents?: number;
+  currentStudents: number;
+  createdAt: any; // Firestore Timestamp
+  updatedAt: any; // Firestore Timestamp
+  schedule?: {
+    weekdays: string[]; // ['monday', 'tuesday', etc.]
+    startTime: string; // '09:00'
+    endTime: string; // '11:00'
+  };
+}
+
+// Extended StudentData with batch information
+export interface StudentBatchInfo {
+  batchId: string;
+  joinedAt: any; // Firestore Timestamp
+  currentLessonId?: string;
+  currentWeek: number;
+  progressPercent: number;
+  attendanceRate?: number;
+  lastAttendanceDate?: any; // Firestore Timestamp
+}
+
+// Lesson System
+export type LessonStatus = 'draft' | 'published' | 'archived';
+
+export interface Lesson {
+  id: string;
+  courseId: string;
+  batchId: string;
+  weekNumber: number;
+  title: string;
+  description: string;
+  materials: LessonMaterial[];
+  order: number;
+  liveEnabled: boolean;
+  status: LessonStatus;
+  teacherId: string;
+  createdAt: any; // Firestore Timestamp
+  updatedAt: any; // Firestore Timestamp
+  scheduledDate?: any; // Firestore Timestamp
+  duration?: number; // minutes
+}
+
+export interface LessonMaterial {
+  id: string;
+  name: string;
+  type: 'document' | 'video' | 'image' | 'link' | 'assignment';
+  url: string;
+  size?: number;
+  uploadedAt: any; // Firestore Timestamp
+}
+
+// Live Session System
+export type LiveSessionStatus = 'scheduled' | 'live' | 'ended' | 'cancelled';
+
+export interface LiveSession {
+  id: string;
+  lessonId: string;
+  batchId: string;
+  teacherId: string;
+  title: string;
+  meetingLink?: string;
+  meetingId?: string; // For Daily.co or other video providers
+  startedAt?: any; // Firestore Timestamp
+  endedAt?: any; // Firestore Timestamp
+  status: LiveSessionStatus;
+  attendanceOpen: boolean;
+  attendanceClosed: boolean;
+  scheduledAt?: any; // Firestore Timestamp
+  duration?: number; // actual duration in minutes
+  participantsCount?: number;
+  createdAt: any; // Firestore Timestamp
+  notes?: string;
+}
+
+// Attendance System
+export type AttendanceStatus = 'present' | 'late' | 'absent' | 'excused';
+
+export interface Attendance {
+  id: string;
+  sessionId: string;
+  lessonId: string;
+  studentUid: string;
+  batchId: string;
+  status: AttendanceStatus;
+  markedAt: any; // Firestore Timestamp
+  markedBy?: string; // teacherId
+  lateMinutes?: number;
+  notes?: string;
+  autoMarked: boolean; // true if marked by system when student joins
+}
+
+// Attendance Summary for reporting
+export interface AttendanceSummary {
+  batchId: string;
+  lessonId: string;
+  sessionId: string;
+  totalStudents: number;
+  presentCount: number;
+  lateCount: number;
+  absentCount: number;
+  excusedCount: number;
+  attendanceRate: number;
+  date: any; // Firestore Timestamp
+}
+
 export interface StudentData {
   uid: string;
   // Identity fields (may also exist in users collection)
@@ -106,6 +225,10 @@ export interface StudentData {
   lastStatusUpdate?: any;
   onboardingCompletedAt?: any;    // When student completes full onboarding
   accessUnlocked?: boolean;        // Whether course access has been unlocked
+  
+  // Batch System Fields
+  batchId?: string;               // Current batch assignment
+  batchInfo?: StudentBatchInfo;   // Detailed batch information
 }
 
 export interface Course {

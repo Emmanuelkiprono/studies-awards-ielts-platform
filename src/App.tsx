@@ -30,10 +30,14 @@ import { TeacherAssignmentsPage } from './pages/TeacherAssignmentsPage';
 import { TeacherDashboard } from './pages/TeacherDashboard_New';
 import { TeacherCoursesPage } from './pages/TeacherCoursesPage';
 import { TeacherModulesPage } from './pages/TeacherModulesPage';
-import { TeacherApprovalsPage } from './pages/TeacherApprovalsPage_New';
+import { TeacherApprovalsPage_Batch } from './pages/TeacherApprovalsPage_Batch';
 import { TeacherTasksPage } from './pages/TeacherTasksPage';
 import { TeacherExamsPage } from './pages/TeacherExamsPage';
 import { StudentProfilePage } from './pages/StudentProfilePage';
+import { TeacherBatchesPage } from './pages/TeacherBatchesPage';
+import { TeacherBatchLessonsPage } from './pages/TeacherBatchLessonsPage';
+import { TeacherLiveSessionPage } from './pages/TeacherLiveSessionPage';
+import { StudentBatchView } from './pages/StudentBatchView';
 
 import { ForcePasswordChangePage } from './pages/ForcePasswordChangePage';
 import { seedInitialData } from './services/seedData';
@@ -114,11 +118,14 @@ const AppContent: React.FC = () => {
           <Route path="/teacher/*" element={
             <ProtectedRoute allowedRoles={['teacher', 'admin']}>
               <Routes>
-                <Route path="/" element={<TeacherDashboard onCreateAssignment={() => setIsCreatingAssignment(true)} />} />
+                <Route path="/" element={<TeacherDashboard />} />
                 <Route path="/courses" element={<TeacherCoursesPage />} />
                 <Route path="/modules" element={<TeacherModulesPage />} />
+                <Route path="/batches" element={<TeacherBatchesPage />} />
+                <Route path="/batches/:batchId/lessons" element={<TeacherBatchLessonsPage />} />
+                <Route path="/batches/:batchId/lessons/:lessonId/live" element={<TeacherLiveSessionPage />} />
                 <Route path="/lessons" element={<TeacherLessonsPage />} />
-                <Route path="/approvals" element={<TeacherApprovalsPage />} />
+                <Route path="/approvals" element={<TeacherApprovalsPage_Batch />} />
                 <Route path="/students" element={<TeacherStudentsPage />} />
                 <Route path="/tasks" element={<TeacherTasksPage onCreateAssignment={() => setIsCreatingAssignment(true)} />} />
                 <Route path="/exams" element={<TeacherExamsPage />} />
@@ -156,6 +163,20 @@ const AppContent: React.FC = () => {
               <ApprovalGuard>
                 <StudentDashboard />
               </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/batch" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <StudentBatchView />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/batch/:batchId/lessons/:lessonId/live" element={
+            <ProtectedRoute allowedRoles={['student', 'teacher']}>
+              <TeacherLiveSessionPage />
             </ProtectedRoute>
           } />
 
