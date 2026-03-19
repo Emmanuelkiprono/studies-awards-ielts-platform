@@ -61,15 +61,26 @@ export interface RejectionInfo {
 
 export interface StudentData {
   uid: string;
+  // Identity fields (may also exist in users collection)
+  name?: string;
+  email?: string;
+  phone?: string;
+  
+  // Training and payment fields
   trainingPaymentStatus: PaymentStatus;
   trainingStatus: TrainingStatus;
   examPaymentStatus: PaymentStatus;
   examStatus: ExamStatus;
+  
+  // Course and enrollment
   preferredLocation: string | null;
   idUploadUrl: string | null;
   courseId?: string;
   targetScore?: number;
   currentScore?: number;
+  enrollmentDate?: any;         // Firestore Timestamp
+  lastActive?: any;             // Firestore Timestamp
+  
   // Optional exam tracking fields for dashboard convenience
   registrationDate?: any;       // Firestore Timestamp
   eligibleExamDate?: string;    // ISO date

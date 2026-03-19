@@ -70,12 +70,114 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   const [lastVisible, setLastVisible] = useState<any>(null);
   const [hasMore, setHasMore] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout>();
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const itemsPerPage = initialLimit;
 
-  // Removed course fetching to avoid N+1 queries
-  // Using courseId directly for now for performance
+  // Helper functions for display names
+const getCourseDisplayName = useCallback((courseId: string): string => {
+  const courseMap: Record<string, string> = {
+    'ielts_academic': 'IELTS Academic',
+    'ielts_general': 'IELTS General',
+    'pte_academic': 'PTE Academic',
+    'pte_general': 'PTE General',
+    'toefl': 'TOEFL',
+    'duolingo': 'Duolingo'
+  };
+  return courseMap[courseId] || courseId;
+}, []);
+
+const getStatusDisplayName = useCallback((status: string): string => {
+  const statusMap: Record<string, string> = {
+    // Onboarding statuses
+    'account_created': 'Account Created',
+    'approval_pending': 'Approval Pending',
+    'payment_pending': 'Payment Pending',
+    'approved': 'Approved',
+    'rejected': 'Rejected',
+    // Training statuses
+    'inactive': 'Inactive',
+    'active': 'Active',
+    'completed': 'Completed',
+    'locked': 'Locked',
+    // Payment statuses
+    'paid': 'Paid',
+    'pending': 'Pending'
+  };
+  return statusMap[status] || status;
+}, []);
+
+// Merge users and students collections
+const mergeStudentData = useCallback(async (studentDocs: any[]) => {
+  console.log("MERGING STUDENT DATA FOR", studentDocs.length, "STUDENTS");
+  
+  const mergedStudents = [];
+  let missingNameCount = 0;
+  let missingEmailCount = 0;
+  
+  for (const studentDoc of studentDocs) {
+    const studentData = studentDoc.data();
+    const uid = studentDoc.id;
+    
+    try {
+      // Get user data for identity fields
+      const userDoc = await getDoc(doc(db, 'users', uid));
+      const userData = userDoc.exists() ? userDoc.data() : {};
+      
+      // Build merged student record
+      const mergedStudent = {
+        id: uid,
+        // Identity from users collection (source of truth)
+        name: userData.name || userData.fullName || userData.displayName || studentData.name || 'Unknown',
+        email: userData.email || studentData.email || '',
+        phone: userData.phone || studentData.phone,
+        avatarUrl: userData.avatarUrl || userData.photoURL || '',
+        
+        // Student state from students collection
+        course: getCourseDisplayName(studentData.courseId || 'N/A'),
+        courseId: studentData.courseId || 'N/A',
+        onboardingStatus: studentData.onboardingStatus || 'account_created',
+        trainingStatus: studentData.trainingStatus || 'inactive',
+        examStatus: studentData.examStatus || 'not_started',
+        paymentStatus: studentData.trainingPaymentStatus || 'pending',
+        progress: calculateProgress(studentData),
+        enrollmentDate: studentData.enrollmentDate?.toDate() || new Date(),
+        lastActive: studentData.lastActive?.toDate()
+      };
+      
+      if (mergedStudent.name === 'Unknown') missingNameCount++;
+      if (!mergedStudent.email) missingEmailCount++;
+      
+      mergedStudents.push(mergedStudent);
+    } catch (error) {
+      console.error("Error merging student data for", uid, ":", error);
+      // Fallback to student data only
+      mergedStudents.push({
+        id: uid,
+        name: studentData.name || 'Unknown',
+        email: studentData.email || '',
+        phone: studentData.phone,
+        avatarUrl: '',
+        course: getCourseDisplayName(studentData.courseId || 'N/A'),
+        courseId: studentData.courseId || 'N/A',
+        onboardingStatus: studentData.onboardingStatus || 'account_created',
+        trainingStatus: studentData.trainingStatus || 'inactive',
+        examStatus: studentData.examStatus || 'not_started',
+        paymentStatus: studentData.trainingPaymentStatus || 'pending',
+        progress: calculateProgress(studentData),
+        enrollmentDate: studentData.enrollmentDate?.toDate() || new Date(),
+        lastActive: studentData.lastActive?.toDate()
+      });
+    }
+  }
+  
+  console.log("MERGED STUDENTS:", mergedStudents.length);
+  console.log("SAMPLE MERGED STUDENT:", mergedStudents[0]);
+  console.log("MISSING NAME COUNT:", missingNameCount);
+  console.log("MISSING EMAIL COUNT:", missingEmailCount);
+  
+  return mergedStudents;
+}, [getCourseDisplayName, calculateProgress]);
 
   // Fetch students data with single query approach
   const fetchStudents = useCallback(async (isInitial = false) => {
@@ -121,28 +223,9 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         useFallback = true;
       }
       
-      // Direct mapping without async operations - no N+1 queries
-      studentsData = studentsSnapshot.docs.map(doc => {
-        const data = doc.data() as StudentData;
-        
-        return {
-          id: doc.id,
-          name: data.name || 'Unknown',
-          email: data.email || '',
-          phone: data.phone,
-          course: data.courseId || 'N/A', // Use courseId directly, avoid lookup
-          onboardingStatus: data.onboardingStatus || 'account_created',
-          trainingStatus: data.trainingStatus || 'inactive',
-          examStatus: data.examStatus || 'not_started',
-          paymentStatus: data.trainingPaymentStatus || 'pending',
-          progress: calculateProgress(data),
-          enrollmentDate: data.enrollmentDate?.toDate() || new Date(),
-          lastActive: data.lastActive?.toDate(),
-          courseName: data.courseId || 'N/A' // Use courseId as courseName for now
-        } as StudentTableRow;
-      });
-
-      console.log("FETCHED STUDENTS:", studentsData.length, "students");
+      // Use merged data from users + students collections
+      console.log("MERGING STUDENT DATA...");
+      studentsData = await mergeStudentData(studentsSnapshot.docs);
       
       // If using fallback and courseId filter, apply in memory
       if (useFallback && courseId) {
@@ -189,12 +272,12 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   }, [courseId, itemsPerPage, lastVisible, showToast]);
 
   // Calculate progress percentage
-  const calculateProgress = (student: StudentData): number => {
+  const calculateProgress = useCallback((student: StudentData): number => {
     if (student.trainingStatus === 'completed') return 100;
     if (student.trainingStatus === 'active') return 50;
     if (student.onboardingStatus === 'approved') return 25;
     return 0;
-  };
+  }, []);
 
   // Initial fetch - no dependency on courses
   useEffect(() => {
