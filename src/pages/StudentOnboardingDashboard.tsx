@@ -107,7 +107,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         current: currentStatus === 'payment_pending',
         action: isUnlocked ? {
           label: 'Go to Dashboard',
-          href: '/dashboard'
+          href: '/courses'
         } : currentStatus === 'payment_pending' ? {
           label: 'Complete Payment',
           href: '/payment'
@@ -130,7 +130,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         current: isUnlocked,
         action: isUnlocked ? {
           label: 'Go to Dashboard',
-          href: '/dashboard'
+          href: '/courses'
         } : undefined
       }
     ];
