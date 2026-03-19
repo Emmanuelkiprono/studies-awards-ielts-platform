@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
+import { useTeacherStudents } from '../hooks/useTeacherStudents';
 import { db } from '../services/firebase';
 import { collection, query, where, onSnapshot, getDocs, orderBy, limit } from 'firebase/firestore';
 import {
@@ -45,13 +46,7 @@ interface RecentActivity {
 export const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile: teacherData } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<QuickStats>({
-    totalStudents: 0,
-    pendingApprovals: 0,
-    activeStudents: 0,
-    completedStudents: 0
-  });
+  const { students, stats, loading } = useTeacherStudents();
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -62,7 +57,7 @@ export const TeacherDashboard: React.FC = () => {
       description: 'Review pending student applications',
       icon: UserCheck,
       color: 'bg-blue-500',
-      count: stats.pendingApprovals,
+      count: stats.pending,
       route: '/approvals'
     },
     {
@@ -70,7 +65,7 @@ export const TeacherDashboard: React.FC = () => {
       description: 'View and manage all students',
       icon: Users,
       color: 'bg-green-500',
-      count: stats.totalStudents,
+      count: stats.total,
       route: '/teacher/students'
     },
     {
@@ -103,63 +98,21 @@ export const TeacherDashboard: React.FC = () => {
     }
   ];
 
-  // Fetch dashboard data
+  // Create recent activity from shared students data
   useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        // Fetch students data
-        const studentsQuery = query(
-          collection(db, 'students'),
-          orderBy('enrollmentDate', 'desc'),
-          limit(50)
-        );
-        
-        const studentsSnapshot = await getDocs(studentsQuery);
-        const studentsData = studentsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        } as StudentData));
+    if (students.length > 0) {
+      const activity: RecentActivity[] = students.slice(0, 10).map(student => ({
+        id: student.uid,
+        type: student.onboardingStatus === 'approval_pending' ? 'enrollment' : 'payment',
+        studentName: student.name,
+        action: `Student enrolled`,
+        timestamp: student.createdAt?.toDate?.() || new Date(),
+        status: student.onboardingStatus === 'approval_pending' ? 'pending' : 'completed'
+      }));
 
-        // Calculate stats
-        const totalStudents = studentsData.length;
-        const pendingApprovals = studentsData.filter(s => 
-          s.onboardingStatus === 'approval_pending' || s.onboardingStatus === 'payment_pending'
-        ).length;
-        const activeStudents = studentsData.filter(s => 
-          s.trainingStatus === 'active'
-        ).length;
-        const completedStudents = studentsData.filter(s => 
-          s.trainingStatus === 'completed'
-        ).length;
-
-        setStats({
-          totalStudents,
-          pendingApprovals,
-          activeStudents,
-          completedStudents
-        });
-
-        // Create recent activity
-        const activity: RecentActivity[] = studentsData.slice(0, 10).map(student => ({
-          id: student.uid,
-          type: student.onboardingStatus === 'approval_pending' ? 'enrollment' : 'payment',
-          studentName: student.name || 'Unknown',
-          action: `Enrolled in ${student.courseId || 'course'}`,
-          timestamp: student.enrollmentDate?.toDate() || new Date(),
-          status: student.onboardingStatus === 'approval_pending' ? 'pending' : 'completed'
-        }));
-
-        setRecentActivity(activity);
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchDashboardData();
-  }, []);
+      setRecentActivity(activity);
+    }
+  }, [students]);
 
   // Filter recent activity based on search
   const filteredActivity = useMemo(() => {
@@ -197,7 +150,7 @@ export const TeacherDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[#6B7280]">Total Students</p>
-                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.totalStudents}</p>
+                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.total}</p>
               </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Users className="w-6 h-6 text-blue-600" />
@@ -209,7 +162,7 @@ export const TeacherDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[#6B7280]">Pending Approvals</p>
-                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.pendingApprovals}</p>
+                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.pending}</p>
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <UserCheck className="w-6 h-6 text-orange-600" />
@@ -221,7 +174,7 @@ export const TeacherDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[#6B7280]">Active Students</p>
-                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.activeStudents}</p>
+                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.active}</p>
               </div>
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <Activity className="w-6 h-6 text-green-600" />
@@ -233,7 +186,7 @@ export const TeacherDashboard: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-[#6B7280]">Completed</p>
-                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.completedStudents}</p>
+                <p className="text-2xl font-bold text-[#111827] mt-1">{stats.completed}</p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Award className="w-6 h-6 text-purple-600" />

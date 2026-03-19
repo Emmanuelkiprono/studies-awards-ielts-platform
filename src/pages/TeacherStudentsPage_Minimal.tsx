@@ -1,61 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion } from 'motion/react';
-import { useAuth } from '../hooks/useAuth';
-import { db } from '../services/firebase';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useTeacherStudents } from '../hooks/useTeacherStudents';
 import { Users, AlertCircle } from 'lucide-react';
 
-interface MinimalStudent {
-  uid: string;
-  name: string;
-  email: string;
-  role: string;
-}
-
 export const TeacherStudentsPage: React.FC = () => {
-  const { profile: teacherProfile } = useAuth();
-  const [students, setStudents] = useState<MinimalStudent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        
-        // Simple query: users with role='student'
-        const studentsQuery = query(
-          collection(db, 'users'),
-          where('role', '==', 'student')
-        );
-        
-        const studentsSnapshot = await getDocs(studentsQuery);
-        
-        // Direct mapping with safe fallbacks
-        const studentsData: MinimalStudent[] = studentsSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            uid: doc.id,
-            name: data.name ?? data.fullName ?? data.displayName ?? 'Unknown',
-            email: data.email ?? 'No email',
-            role: data.role ?? 'student'
-          };
-        });
-        
-        console.log('MINIMAL STUDENTS:', studentsData);
-        setStudents(studentsData);
-        
-      } catch (err) {
-        console.error('FETCH ERROR:', err);
-        setError('Failed to load students. Please refresh the page.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStudents();
-  }, []);
+  const { students, loading, error } = useTeacherStudents();
 
   if (loading) {
     return (
