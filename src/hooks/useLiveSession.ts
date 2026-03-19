@@ -201,6 +201,8 @@ export const useAttendance = (sessionId?: string) => {
   // Mark attendance for a student
   const markAttendance = useCallback(async (sessionId: string, lessonId: string, studentUid: string, batchId: string, status: AttendanceStatus, markedBy: string, lateMinutes?: number, notes?: string) => {
     try {
+      console.log(' STUDENT MARKING ATTENDANCE:', { sessionId, lessonId, studentUid, batchId, status, markedBy });
+      
       // Check if attendance already exists
       const existingQuery = query(
         collection(db, 'attendance'),
@@ -212,37 +214,30 @@ export const useAttendance = (sessionId?: string) => {
       const attendanceData = {
         sessionId,
         lessonId,
-        studentUid,
         batchId,
+        studentUid,
         status,
         markedAt: serverTimestamp(),
         markedBy,
-        lateMinutes,
-        notes,
-        autoMarked: false
+        lateMinutes: lateMinutes || 0,
+        notes: notes || ''
       };
 
-      if (!existingSnapshot.empty) {
-        // Update existing attendance
-        await updateDoc(doc(db, 'attendance', existingSnapshot.docs[0].id), attendanceData);
-      } else {
-        // Create new attendance record
-        await addDoc(collection(db, 'attendance'), attendanceData);
-      }
+      console.log(' ATTENDANCE DATA TO SAVE:', attendanceData);
 
-      // Update student's last attendance date
-      await updateDoc(doc(db, 'students', studentUid), {
-        'batchInfo.lastAttendanceDate': serverTimestamp()
-      });
-
-      // Update session participant count if this is new attendance
       if (existingSnapshot.empty) {
-        await updateDoc(doc(db, 'liveSessions', sessionId), {
-          participantsCount: increment(1)
-        });
+        // Create new attendance record
+        console.log(' CREATING NEW ATTENDANCE RECORD');
+        await addDoc(collection(db, 'attendance'), attendanceData);
+      } else {
+        // Update existing attendance record
+        console.log(' UPDATING EXISTING ATTENDANCE RECORD:', existingSnapshot.docs[0].id);
+        await updateDoc(doc(db, 'attendance', existingSnapshot.docs[0].id), attendanceData);
       }
+      
+      console.log('✅ STUDENT ATTENDANCE MARKED SUCCESSFULLY');
     } catch (err) {
-      console.error('Error marking attendance:', err);
+      console.error('❌ ERROR MARKING STUDENT ATTENDANCE:', err);
       throw new Error('Failed to mark attendance');
     }
   }, []);
@@ -268,7 +263,7 @@ export const useAttendance = (sessionId?: string) => {
       console.error('Error auto-marking attendance:', err);
       throw new Error('Failed to auto-mark attendance');
     }
-  }, [markAttendance]);
+  }, []);
 
   // Get attendance for a student
   const getStudentAttendance = useCallback(async (studentUid: string, batchId?: string) => {

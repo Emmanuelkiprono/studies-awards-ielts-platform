@@ -246,13 +246,18 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         createdAt: serverTimestamp()
       };
 
+      console.log('🔴 LIVE SESSION CREATION:', sessionData);
+
       if (liveSession) {
+        console.log('🔄 UPDATING EXISTING SESSION:', liveSession.id);
         await updateDoc(doc(db, 'liveSessions', liveSession.id), sessionData);
       } else {
-        await addDoc(collection(db, 'liveSessions'), sessionData);
+        console.log('➕ CREATING NEW LIVE SESSION');
+        const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
+        console.log('✅ LIVE SESSION CREATED WITH ID:', docRef.id);
       }
     } catch (error) {
-      console.error('Error starting live class:', error);
+      console.error('❌ ERROR STARTING LIVE CLASS:', error);
     } finally {
       setActionLoading(null);
     }
@@ -263,12 +268,14 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     setActionLoading('end');
     try {
+      console.log('🛑 ENDING LIVE SESSION:', liveSession.id);
       await updateDoc(doc(db, 'liveSessions', liveSession.id), {
         status: 'ended',
         endedAt: serverTimestamp()
       });
+      console.log('✅ LIVE SESSION ENDED SUCCESSFULLY');
     } catch (error) {
-      console.error('Error ending live class:', error);
+      console.error('❌ ERROR ENDING LIVE CLASS:', error);
     } finally {
       setActionLoading(null);
     }
@@ -279,12 +286,14 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     setActionLoading('attendance');
     try {
+      console.log('📝 OPENING ATTENDANCE FOR SESSION:', liveSession.id);
       await updateDoc(doc(db, 'liveSessions', liveSession.id), {
         attendanceOpen: true,
         attendanceClosed: false
       });
+      console.log('✅ ATTENDANCE OPENED SUCCESSFULLY');
     } catch (error) {
-      console.error('Error opening attendance:', error);
+      console.error('❌ ERROR OPENING ATTENDANCE:', error);
     } finally {
       setActionLoading(null);
     }
@@ -295,12 +304,14 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     setActionLoading('attendance');
     try {
+      console.log('📝 CLOSING ATTENDANCE FOR SESSION:', liveSession.id);
       await updateDoc(doc(db, 'liveSessions', liveSession.id), {
         attendanceOpen: false,
         attendanceClosed: true
       });
+      console.log('✅ ATTENDANCE CLOSED SUCCESSFULLY');
     } catch (error) {
-      console.error('Error closing attendance:', error);
+      console.error('❌ ERROR CLOSING ATTENDANCE:', error);
     } finally {
       setActionLoading(null);
     }
@@ -311,7 +322,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     try {
       const attendanceRef = doc(db, 'attendance', `${liveSession.id}-${studentUid}`);
-      await setDoc(attendanceRef, {
+      const attendanceData = {
         sessionId: liveSession.id,
         lessonId: lesson!.id,
         batchId: lesson!.batchId,
@@ -319,9 +330,13 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         status,
         markedAt: serverTimestamp(),
         markedBy: teacherProfile!.uid
-      });
+      };
+      
+      console.log('📝 MARKING ATTENDANCE:', { studentUid, status, sessionId: liveSession.id });
+      await setDoc(attendanceRef, attendanceData);
+      console.log('✅ ATTENDANCE MARKED SUCCESSFULLY');
     } catch (error) {
-      console.error('Error marking attendance:', error);
+      console.error('❌ ERROR MARKING ATTENDANCE:', error);
     }
   };
 
