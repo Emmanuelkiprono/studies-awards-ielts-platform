@@ -92,7 +92,7 @@ export const TeacherApprovalsPage: React.FC = () => {
     const handleApprove = async (student: PendingStudent) => {
         console.log('TEACHER APPROVAL DEBUG:');
         console.log('student.uid:', student.uid);
-        console.log('Firestore path:', `students/${student.uid}`);
+        console.log('before approve:', (await getDoc(doc(db, 'students', student.uid))).data());
         
         if (!student.uid) return;
         setProcessingId(student.uid);
@@ -100,11 +100,12 @@ export const TeacherApprovalsPage: React.FC = () => {
             await setDoc(doc(db, 'students', student.uid), {
                 onboardingStatus: 'approved',
                 accessUnlocked: true,
-                approvedAt: serverTimestamp()
+                approvedAt: serverTimestamp(),
+                trainingStatus: 'active'
             }, { merge: true });
 
             const verifySnap = await getDoc(doc(db, 'students', student.uid));
-            console.log('TEACHER APPROVAL VERIFY:', verifySnap.data());
+            console.log('after approve:', verifySnap.data());
 
             if (verifySnap.data()?.onboardingStatus !== 'approved') {
                 throw new Error('Approval failed to update Firestore');
