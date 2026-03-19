@@ -32,26 +32,30 @@ interface NavItemProps {
   active?: boolean;
   onClick: () => void;
   badge?: boolean;
+  disabled?: boolean;
 }
 
-const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, onClick, badge }) => (
+const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active, onClick, badge, disabled }) => (
   <button
     onClick={onClick}
+    disabled={disabled}
     className={cn(
       "flex flex-col items-center gap-1 p-2 transition-colors relative",
-      active ? "text-[var(--ui-accent)]" : "text-[var(--ui-muted)] hover:text-[var(--ui-heading)]"
+      active ? "text-[var(--ui-accent)]" : 
+      disabled ? "text-[var(--ui-muted)]/50 cursor-not-allowed" : 
+      "text-[var(--ui-muted)] hover:text-[var(--ui-heading)]"
     )}
   >
     <div className="relative">
-      <Icon size={24} className={active ? "fill-current" : ""} />
-      {badge && (
+      <Icon size={24} className={cn(active ? "fill-current" : "", disabled && "opacity-50")} />
+      {badge && !disabled && (
         <span className="absolute -top-1 -right-1 flex h-2 w-2">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--ui-accent)] opacity-75"></span>
           <span className="relative inline-flex rounded-full h-2 w-2 bg-[var(--ui-accent)]"></span>
         </span>
       )}
     </div>
-    <span className={cn("text-[10px]", active ? "font-bold" : "font-medium")}>{label}</span>
+    <span className={cn("text-[10px]", active ? "font-bold" : "font-medium", disabled && "opacity-50")}>{label}</span>
   </button>
 );
 
@@ -164,6 +168,31 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   const isTeacher = role === 'teacher';
   const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
 
+  // Check if student is approved
+  const isApproved = studentData?.onboardingStatus === 'approved';
+
+  // Handle navigation with access control
+  const handleNavigate = (path: string, requiresApproval = false) => {
+    if (isTeacher) {
+      navigate(path);
+      return;
+    }
+
+    // For students, check approval status if required
+    if (requiresApproval && !isApproved) {
+      // Show friendly message and redirect to onboarding
+      navigate('/onboarding', { 
+        state: { 
+          reason: 'approval_required',
+          message: 'Your course access will unlock after approval.'
+        } 
+      });
+      return;
+    }
+
+    navigate(path);
+  };
+
   useEffect(() => {
     if (isTeacher || !studentData?.courseId) return;
     const now = new Date().toISOString();
@@ -228,32 +257,36 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
           icon={LayoutDashboard}
           label="Dashboard"
           active={isActive('/dashboard')}
-          onClick={() => navigate('/dashboard')}
+          onClick={() => handleNavigate('/dashboard', false)}
         />
         <NavItem
           icon={Video}
           label="Live"
           active={isActive('/live')}
-          onClick={() => navigate('/live')}
+          onClick={() => handleNavigate('/live', true)}
           badge={hasUpcomingSession}
+          disabled={!isApproved}
         />
         <NavItem
           icon={ClipboardList}
           label="Tasks"
           active={isActive('/tasks')}
-          onClick={() => navigate('/tasks')}
+          onClick={() => handleNavigate('/tasks', true)}
+          disabled={!isApproved}
         />
         <NavItem
           icon={FolderOpen}
           label="Resources"
           active={isActive('/resources')}
-          onClick={() => navigate('/resources')}
+          onClick={() => handleNavigate('/resources', true)}
+          disabled={!isApproved}
         />
         <NavItem
           icon={TrendingUp}
           label="Progress"
           active={isActive('/progress')}
-          onClick={() => navigate('/progress')}
+          onClick={() => handleNavigate('/progress', true)}
+          disabled={!isApproved}
         />
       </div>
     </nav>

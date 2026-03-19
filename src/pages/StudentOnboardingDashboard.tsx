@@ -43,10 +43,16 @@ interface StatusStep {
 }
 
 export const StudentOnboardingDashboard: React.FC = () => {
-  const { user, profile, studentData, loading } = useAuth();
+  const { user, studentData, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as any;
+  const state = location.state as { 
+    enrollmentCompleted?: boolean; 
+    newStatus?: string; 
+    timestamp?: number;
+    reason?: string;
+    message?: string;
+  };
   const [currentStatus, setCurrentStatus] = useState<OnboardingStatus>('account_created');
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [rejectionInfo, setRejectionInfo] = useState<RejectionInfo | null>(null);
@@ -238,6 +244,38 @@ export const StudentOnboardingDashboard: React.FC = () => {
           </motion.p>
         </div>
         
+        {/* Access Control Message */}
+        {state?.reason === 'approval_required' && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="max-w-2xl mx-auto px-6 mb-6"
+          >
+            <div className="bg-gradient-to-br from-orange-100 to-amber-100 dark:from-orange-500/20 dark:to-amber-500/20 backdrop-blur-sm rounded-3xl p-6 border border-orange-300 dark:border-orange-500/30">
+              <div className="flex items-start gap-4">
+                <div className="flex-shrink-0">
+                  <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-amber-600 rounded-2xl flex items-center justify-center">
+                    <Lock className="w-6 h-6 text-white" />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
+                    Access Locked
+                  </h3>
+                  <p className="text-slate-700 dark:text-slate-300 mb-4">
+                    {state.message || 'Your course access will unlock after approval.'}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+                    <AlertCircle className="w-4 h-4" />
+                    <span>Current Status: <strong className="text-slate-900 dark:text-white">{currentStatus}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Success Message for Enrollment Completion */}
         {state?.enrollmentCompleted && (
           <motion.div
@@ -286,7 +324,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 {currentStatus === 'account_created' && 'Complete Enrollment Form'}
                 {currentStatus === 'payment_pending' && 'Proceed to Payment'}
                 {currentStatus === 'approval_pending' && 'Waiting for Approval'}
-                {currentStatus === 'approved' && 'Access Your Courses'}
+                {currentStatus === 'approved' && 'Start Learning'}
                 {currentStatus === 'rejected' && 'Resubmit Enrollment'}
                 {currentStatus === 'suspended' && 'Contact Support'}
               </h2>
@@ -363,20 +401,20 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  setActionLoading('dashboard');
-                  navigate('/dashboard');
+                  setActionLoading('learning');
+                  navigate('/courses');
                 }}
-                disabled={actionLoading === 'dashboard'}
+                disabled={actionLoading === 'learning'}
                 className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-green-600 text-white font-medium rounded-2xl transition-all duration-300 shadow-lg shadow-green-500/25 hover:shadow-green-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {actionLoading === 'dashboard' ? (
+                {actionLoading === 'learning' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Processing...
                   </>
                 ) : (
                   <>
-                    Access Courses
+                    Start Learning
                     <BookOpen className="w-5 h-5" />
                   </>
                 )}

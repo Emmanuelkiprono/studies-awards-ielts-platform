@@ -146,6 +146,12 @@ const AppContent: React.FC = () => {
           {/* Student Routes */}
           <Route path="/dashboard" element={
             <ProtectedRoute allowedRoles={['student']}>
+              <StudentOnboardingDashboard />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/courses" element={
+            <ProtectedRoute allowedRoles={['student']}>
               <ApprovalGuard>
                 <StudentDashboard />
               </ApprovalGuard>

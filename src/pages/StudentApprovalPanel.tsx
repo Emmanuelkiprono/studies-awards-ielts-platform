@@ -145,11 +145,23 @@ export const StudentApprovalPanel: React.FC = () => {
   const handleApprove = async (student: StudentWithEnrollment) => {
     setActionLoading(true);
     try {
+      // Update users collection
       await updateDoc(doc(db, 'users', student.uid), {
         onboardingStatus: 'approved',
         approvedBy: user?.uid,
         approvedAt: serverTimestamp(),
         lastStatusUpdate: serverTimestamp(),
+        trainingStatus: 'active',
+        trainingPaymentStatus: 'paid'
+      });
+
+      // Also update students collection for consistency
+      await updateDoc(doc(db, 'students', student.uid), {
+        onboardingStatus: 'approved',
+        approvedBy: user?.uid,
+        approvedAt: serverTimestamp(),
+        lastStatusUpdate: serverTimestamp(),
+        accessUnlocked: true,
         trainingStatus: 'active',
         trainingPaymentStatus: 'paid'
       });

@@ -2,6 +2,7 @@ import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { OnboardingStatus } from '../types';
+import { AccessControlMessage } from './AccessControlMessage';
 
 interface ApprovalGuardProps {
   children: React.ReactNode;
@@ -27,6 +28,12 @@ export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({
 
   // Check if student has the required approval status
   if (studentData && !allowedStatuses.includes(studentData.onboardingStatus)) {
+    // If we're coming from a navigation attempt, show the access control message
+    if (location.state?.reason === 'approval_required') {
+      return <AccessControlMessage />;
+    }
+    
+    // Otherwise, redirect to onboarding with state
     return (
       <Navigate 
         to={fallbackPath} 
