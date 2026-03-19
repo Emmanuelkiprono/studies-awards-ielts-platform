@@ -4,7 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
 import { useBatchManagement } from '../hooks/useBatchManagement';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, getDocs, getDoc, updateDoc, serverTimestamp, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs, getDoc, updateDoc, setDoc, serverTimestamp, doc } from 'firebase/firestore';
 import { Mail, Phone, Calendar, DollarSign, FileText, Users, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { UserProfile, StudentData, Enrollment, OnboardingStatus, Batch } from '../types';
 import { GlassCard, PrimaryButton, StatusBadge } from '../components/UI';
@@ -87,35 +87,67 @@ export const TeacherApprovalsPage_Batch: React.FC = () => {
 
   // Handle approve with batch assignment
   const handleApprove = async (student: PendingStudent) => {
+    console.log('APPROVE BUTTON CLICKED', student.uid);
+    
+    const batchId = selectedBatch[student.uid];
+    console.log('SELECTED BATCH', batchId);
+    
     setActionLoading(student.uid);
+    
     try {
-      const studentRef = doc(db, 'students', student.uid);
-      const batchId = selectedBatch[student.uid];
-      
+      // Validate batch selection
       if (!batchId) {
-        showToast('Please select a batch for this student', 'error');
+        showToast('Please select a batch before approving this student', 'error');
         return;
       }
 
-      // Update student status
-      await updateDoc(studentRef, {
+      // Update students collection
+      const studentRef = doc(db, 'students', student.uid);
+      await setDoc(studentRef, {
         onboardingStatus: 'approved',
         accessUnlocked: true,
         trainingStatus: 'active',
+        batchId: batchId,
         approvedAt: serverTimestamp(),
         lastStatusUpdate: serverTimestamp()
+      }, { merge: true });
+
+      // Also update users collection for consistency
+      const userRef = doc(db, 'users', student.uid);
+      await updateDoc(userRef, {
+        batchId: batchId,
+        onboardingStatus: 'approved'
       });
 
-      // Assign to batch
-      await assignStudentToBatch(student.uid, batchId, student.studentData?.courseId!);
-
-      showToast('Student approved and assigned to batch', 'success');
+      // Verify the write
+      const verifySnap = await getDoc(studentRef);
+      console.log('APPROVAL VERIFY:', verifySnap.data());
       
-      // Update local state
+      if (verifySnap.data()?.onboardingStatus !== 'approved') {
+        throw new Error('Approval verification failed');
+      }
+
+      // Update batch student count
+      const batchRef = doc(db, 'batches', batchId);
+      await updateDoc(batchRef, {
+        currentStudents: serverTimestamp()
+      });
+
+      showToast('Student approved successfully', 'success');
+      
+      // Remove from pending list
       setStudents(prev => prev.filter(s => s.uid !== student.uid));
+      
+      // Clear selected batch for this student
+      setSelectedBatch(prev => {
+        const newState = { ...prev };
+        delete newState[student.uid];
+        return newState;
+      });
+      
     } catch (error) {
       console.error('Error approving student:', error);
-      showToast('Error approving student', 'error');
+      showToast('Failed to approve student. Please try again.', 'error');
     } finally {
       setActionLoading(null);
     }
@@ -288,6 +320,7 @@ export const TeacherApprovalsPage_Batch: React.FC = () => {
                     onClick={() => handleApprove(student)}
                     disabled={actionLoading === student.uid || !selectedBatch[student.uid]}
                     className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={!selectedBatch[student.uid] ? "Please select a batch before approving" : "Approve student"}
                   >
                     {actionLoading === student.uid ? (
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
