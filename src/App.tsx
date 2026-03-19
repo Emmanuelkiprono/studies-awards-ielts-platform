@@ -85,7 +85,7 @@ const AppContent: React.FC = () => {
 
   // Deduced UI structure
   const isTeacherRoute = location.pathname.startsWith('/teacher');
-  const showBottomNav = !isCreatingAssignment && (userRole === 'teacher' || (userRole === 'student' && studentData?.trainingPaymentStatus === 'paid'));
+  const showBottomNav = !isCreatingAssignment && (userRole === 'teacher' || (userRole === 'student' && (studentData?.trainingPaymentStatus === 'paid' || studentData?.onboardingStatus === 'approved')));
 
   return (
     <div className="min-h-screen flex flex-col bg-[var(--ui-bg)]">

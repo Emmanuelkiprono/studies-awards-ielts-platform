@@ -322,7 +322,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
             <div className="mb-6">
               <h2 className="text-2xl font-light text-slate-900 dark:text-white mb-2">
                 {currentStatus === 'account_created' && 'Complete Enrollment Form'}
-                {currentStatus === 'payment_pending' && 'Proceed to Payment'}
+                {currentStatus === 'payment_pending' && 'Complete Enrollment or Await Review'}
                 {currentStatus === 'approval_pending' && 'Waiting for Approval'}
                 {currentStatus === 'approved' && 'Start Learning'}
                 {currentStatus === 'rejected' && 'Resubmit Enrollment'}
@@ -330,7 +330,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
               </h2>
               <p className="text-slate-600 dark:text-slate-400 leading-relaxed">
                 {currentStatus === 'account_created' && 'Fill out your enrollment details to begin your IELTS preparation journey.'}
-                {currentStatus === 'payment_pending' && 'Complete your payment to secure your spot in the training program.'}
+                {currentStatus === 'payment_pending' && 'You can complete enrollment details or wait for admin review. Payment can be completed later.'}
                 {currentStatus === 'approval_pending' && 'Your enrollment is under review. We\'ll notify you once approved.'}
                 {currentStatus === 'approved' && 'Congratulations! You now have full access to your course materials.'}
                 {currentStatus === 'rejected' && 'Please update your information and resubmit your enrollment.'}
@@ -369,21 +369,21 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  setActionLoading('payment');
-                  navigate('/payment');
+                  setActionLoading('enrollment');
+                  navigate('/breemic-enrollment');
                 }}
-                disabled={actionLoading === 'payment'}
+                disabled={actionLoading === 'enrollment'}
                 className="w-full inline-flex items-center justify-center gap-3 px-8 py-4 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-medium rounded-2xl transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {actionLoading === 'payment' ? (
+                {actionLoading === 'enrollment' ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Processing...
                   </>
                 ) : (
                   <>
-                    Proceed to Payment
-                    <CreditCard className="w-5 h-5" />
+                    Complete Enrollment Details
+                    <FileText className="w-5 h-5" />
                   </>
                 )}
               </motion.button>

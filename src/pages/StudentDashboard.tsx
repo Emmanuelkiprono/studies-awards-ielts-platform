@@ -13,12 +13,12 @@ import {
   PlayCircle,
   CheckCircle2,
   Zap,
+  Clock,
   Trophy,
   ShieldCheck,
   Lock,
   ChevronRight,
   ChevronDown,
-  Clock,
   FileIcon,
   AlertCircle,
   Video,
@@ -345,7 +345,7 @@ export const StudentDashboard: React.FC = () => {
             <p className="text-[var(--ui-body)] max-w-md leading-relaxed">
               {isActive
                 ? "Your training is currently active. Keep up the great work and complete your daily modules."
-                : "Your enrollment is pending activation. Please complete your payment to unlock all modules."}
+                : "Your enrollment is pending activation. Please wait for admin approval to unlock all modules."}
             </p>
             <div className="flex flex-wrap gap-3 pt-4">
               {isActive ? (
@@ -353,8 +353,8 @@ export const StudentDashboard: React.FC = () => {
                   Continue Learning <ArrowRight size={16} />
                 </PrimaryButton>
               ) : (
-                <PrimaryButton>
-                  Complete Payment <Zap size={16} />
+                <PrimaryButton disabled>
+                  Awaiting Approval <Clock size={16} />
                 </PrimaryButton>
               )}
             </div>
