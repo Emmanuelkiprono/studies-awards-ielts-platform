@@ -46,11 +46,14 @@ export const TeacherApprovalsPage: React.FC = () => {
             const pending: PendingStudent[] = [];
 
             for (const studentDoc of snapshot.docs) {
+                console.log('PROCESSING STUDENT DOC:', studentDoc.id);
                 const profile = { ...studentDoc.data(), uid: studentDoc.id } as UserProfile;
+                console.log('BUILT PROFILE:', { uid: profile.uid, name: profile.name, email: profile.email });
 
                 // Fetch student data
                 const sDataDoc = await getDoc(doc(db, 'students', studentDoc.id));
                 const sData = sDataDoc.exists() ? sDataDoc.data() as StudentData : undefined;
+                console.log('STUDENT DATA EXISTS:', sDataDoc.exists());
 
                 // Fetch enrollment
                 const enrollmentsQ = query(collection(db, 'enrollments'), where('userId', '==', studentDoc.id));
@@ -65,11 +68,18 @@ export const TeacherApprovalsPage: React.FC = () => {
                     (sData && sData.trainingStatus === 'locked');
 
                 if (isPending) {
-                    pending.push({
+                    const pendingStudent = {
                         ...profile,
                         studentData: sData,
                         enrollment: firstEnroll ? { ...firstEnroll, id: enrollId } : undefined
+                    };
+                    console.log('ADDING PENDING STUDENT:', {
+                        uid: pendingStudent.uid,
+                        id: (pendingStudent as any).id,
+                        name: pendingStudent.name,
+                        hasStudentData: !!pendingStudent.studentData
                     });
+                    pending.push(pendingStudent);
                 }
             }
 
