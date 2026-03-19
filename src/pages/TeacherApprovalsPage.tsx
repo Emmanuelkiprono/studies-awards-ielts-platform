@@ -84,18 +84,28 @@ export const TeacherApprovalsPage: React.FC = () => {
         if (!student.uid) return;
         setProcessingId(student.uid);
         try {
-            // Update student data with approval status
-            await setDoc(doc(db, 'students', student.uid), {
+            // FORCE WRITE using setDoc
+            const studentRef = doc(db, 'students', student.uid);
+
+            await setDoc(studentRef, {
                 onboardingStatus: 'approved',
                 accessUnlocked: true,
-                approvedAt: serverTimestamp(),
+                approvedAt: serverTimestamp()
+            }, { merge: true });
+
+            // VERIFY IMMEDIATELY
+            const verifySnap = await getDoc(studentRef);
+            console.log('AFTER APPROVAL:', verifySnap.data());
+
+            if (verifySnap.data()?.onboardingStatus !== 'approved') {
+                throw new Error('Approval failed to update Firestore');
+            }
+
+            // Also update payment and training status
+            await setDoc(studentRef, {
                 trainingPaymentStatus: 'paid',
                 trainingStatus: 'active'
             }, { merge: true });
-
-            // Verify the write immediately
-            const verifySnap = await getDoc(doc(db, 'students', student.uid));
-            console.log('TEACHER APPROVAL VERIFIED:', verifySnap.data());
 
             // Update enrollment if exists
             if (student.enrollment?.id) {
