@@ -326,11 +326,16 @@ export const StudentDashboard: React.FC = () => {
   ];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-4 space-y-6 max-w-5xl mx-auto w-full pb-24"
-    >
+    <>
+      {/* TEMPORARY DEBUG PROOF */}
+      <div className="fixed top-4 left-4 bg-red-500 text-white p-4 rounded-lg text-xs z-50">
+        DESTINATION PAGE: StudentDashboard (/courses)
+      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="p-4 space-y-6 max-w-5xl mx-auto w-full pb-24"
+      >
       {/* Hero Section */}
       <GlassCard gradient className="p-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
@@ -1004,5 +1009,6 @@ export const StudentDashboard: React.FC = () => {
         )}
       </AnimatePresence>
     </motion.div>
+    </>
   );
 };

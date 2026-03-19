@@ -189,6 +189,7 @@ export interface LiveSession {
   title: string;
   startTime: string;
   endTime: string;
+  meetingUrl?: string;
 }
 
 export interface BreemicEnrollment {
