@@ -137,10 +137,16 @@ export const TeacherStudentsPage: React.FC = () => {
         await updateDoc(enrollmentRef, updates);
       }
 
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', studentId));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const safeTrainingStatus = existingStatus === 'approved' ? 'active' : 'active';
+
       // Update student data
       await updateDoc(doc(db, 'students', studentId), {
         trainingPaymentStatus: 'paid',
-        trainingStatus: 'active'
+        trainingStatus: safeTrainingStatus
       });
 
       await NotificationService.create(
@@ -167,9 +173,15 @@ export const TeacherStudentsPage: React.FC = () => {
         });
       }
 
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', studentId));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const safeTrainingStatus = existingStatus === 'approved' ? 'active' : 'locked';
+
       await updateDoc(doc(db, 'students', studentId), {
         trainingPaymentStatus: 'unpaid',
-        trainingStatus: 'locked'
+        trainingStatus: safeTrainingStatus
       });
 
       await NotificationService.create(
@@ -196,9 +208,15 @@ export const TeacherStudentsPage: React.FC = () => {
           paymentStatus: 'paid',
         });
       }
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', studentId));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const safeTrainingStatus = existingStatus === 'approved' ? 'active' : 'active';
+
       await updateDoc(doc(db, 'students', studentId), {
         trainingPaymentStatus: 'paid',
-        trainingStatus: 'active',
+        trainingStatus: safeTrainingStatus,
       });
       await NotificationService.create(
         studentId,
@@ -248,9 +266,15 @@ export const TeacherStudentsPage: React.FC = () => {
         currentScore: editCurrentScore
       });
 
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', selectedStudent.uid));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const safeTrainingStatus = existingStatus === 'approved' ? 'active' : editTrainingStatus;
+
       // Also update student data
       await updateDoc(doc(db, 'students', selectedStudent.uid), {
-        trainingStatus: editTrainingStatus,
+        trainingStatus: safeTrainingStatus,
         examStatus: editExamStatus,
         targetScore: editTargetScore,
         currentScore: editCurrentScore

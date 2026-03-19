@@ -91,24 +91,34 @@ export const TeacherApprovalsPage: React.FC = () => {
 
     const handleApprove = async (student: PendingStudent) => {
         console.log('APPROVE CLICKED');
-        
+        console.log('APPROVING UID:', student.uid);
+
         try {
-            if (!student.uid) return;
-            setProcessingId(student.uid);
-            
-            await setDoc(doc(db, 'students', student.uid), {
+            if (!student.uid) throw new Error('Missing student.uid');
+
+            const studentRef = doc(db, 'students', student.uid);
+
+            const beforeSnap = await getDoc(studentRef);
+            console.log('BEFORE APPROVE:', beforeSnap.data());
+
+            await setDoc(studentRef, {
                 onboardingStatus: 'approved',
                 accessUnlocked: true,
-                trainingStatus: 'active'
+                trainingStatus: 'active',
+                approvedAt: serverTimestamp()
             }, { merge: true });
-            
+
             console.log('SET DOC COMPLETED');
-            
+
+            const afterSnap = await getDoc(studentRef);
+            console.log('AFTER APPROVE:', afterSnap.data());
+
+            if (afterSnap.data()?.onboardingStatus !== 'approved') {
+                throw new Error('Firestore write failed');
+            }
+
         } catch (error) {
             console.error('APPROVAL ERROR:', error);
-            alert("Failed to approve student.");
-        } finally {
-            setProcessingId(null);
         }
     };
 

@@ -232,8 +232,8 @@ export const BreemicEnrollmentPage: React.FC = () => {
         
         // Verify the update was successful
         const verifySnap = await getDoc(doc(db, 'students', user.uid));
-        if (verifySnap.data().onboardingStatus !== nextStatus) {
-          throw new Error(`Verification failed: Expected onboardingStatus=${nextStatus} but got ${verifySnap.data().onboardingStatus}`);
+        if (verifySnap.data().onboardingStatus !== safeStatus) {
+          throw new Error(`Verification failed: Expected onboardingStatus=${safeStatus} but got ${verifySnap.data().onboardingStatus}`);
         }
         
         // Redirect to onboarding after successful submission

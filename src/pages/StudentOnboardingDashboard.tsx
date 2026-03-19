@@ -60,6 +60,12 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Unified unlock logic
+  const isUnlocked =
+    studentData?.onboardingStatus === 'approved' ||
+    studentData?.accessUnlocked === true ||
+    studentData?.trainingStatus === 'active';
+
   useEffect(() => {
     if (studentData) {
       // Handle existing students who don't have onboardingStatus yet
@@ -99,7 +105,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
         icon: CreditCard,
         completed: ['approval_pending', 'approved', 'suspended'].includes(currentStatus),
         current: currentStatus === 'payment_pending',
-        action: currentStatus === 'payment_pending' ? {
+        action: isUnlocked ? {
+          label: 'Go to Dashboard',
+          href: '/dashboard'
+        } : currentStatus === 'payment_pending' ? {
           label: 'Complete Payment',
           href: '/payment'
         } : undefined
@@ -109,17 +118,17 @@ export const StudentOnboardingDashboard: React.FC = () => {
         title: 'Approval Pending',
         description: 'Your enrollment is being reviewed by our team',
         icon: Clock,
-        completed: ['approved', 'suspended'].includes(currentStatus),
-        current: currentStatus === 'approval_pending'
+        completed: isUnlocked || currentStatus === 'suspended',
+        current: currentStatus === 'approval_pending' && !isUnlocked
       },
       {
         id: 'approved',
         title: 'Approved',
         description: 'Your enrollment has been approved! You can now access courses.',
         icon: CheckCircle2,
-        completed: currentStatus === 'approved',
-        current: currentStatus === 'approved',
-        action: currentStatus === 'approved' ? {
+        completed: isUnlocked,
+        current: isUnlocked,
+        action: isUnlocked ? {
           label: 'Go to Dashboard',
           href: '/dashboard'
         } : undefined
@@ -209,17 +218,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
       animate={{ opacity: 1, y: 0 }}
       className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"
     >
-      {/* DEBUG INFO - TEMPORARY */}
-      <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
-        <div className="font-bold mb-2">DEBUG INFO:</div>
-        <div>onboardingStatus: {studentData?.onboardingStatus || 'undefined'}</div>
-        <div>accessUnlocked: {studentData?.accessUnlocked?.toString() || 'undefined'}</div>
-        <div>currentStatus: {currentStatus}</div>
-        <div>dashboard access: {currentStatus === 'approved' ? 'UNLOCKED' : 'LOCKED'}</div>
-        <div>trainingStatus: {studentData?.trainingStatus || 'undefined'}</div>
-        <div>trainingPaymentStatus: {studentData?.trainingPaymentStatus || 'undefined'}</div>
-      </div>
-
+      
       {/* Subtle ambient gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-slate-500/10 dark:from-blue-900/5 dark:via-purple-900/5 dark:to-slate-900/10 pointer-events-none" />
       

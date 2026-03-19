@@ -176,16 +176,8 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   const isTeacher = role === 'teacher';
   const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
 
-  // Check if student is approved or has access unlocked
-  const isApproved = studentData?.onboardingStatus === 'approved' || studentData?.accessUnlocked === true;
-  
-  // DEBUG: Log navigation state
-  console.log('🔍 NAV DEBUG:', {
-    onboardingStatus: studentData?.onboardingStatus,
-    accessUnlocked: studentData?.accessUnlocked,
-    isApproved,
-    hasUpcomingSession
-  });
+  // Force navigation unlock
+  const canAccess = studentData?.onboardingStatus === 'approved';
 
   // Handle navigation with access control
   const handleNavigate = (path: string, requiresApproval = false) => {
@@ -195,7 +187,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
     }
 
     // For students, check approval status if required
-    if (requiresApproval && !isApproved) {
+    if (requiresApproval && !canAccess) {
       // Show toast message
       showToast('Available after approval', 'info', 2000);
       return;
@@ -276,28 +268,28 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
           active={isActive('/live')}
           onClick={() => handleNavigate('/live', true)}
           badge={hasUpcomingSession}
-          disabled={!isApproved}
+          disabled={!canAccess}
         />
         <NavItem
           icon={ClipboardList}
           label="Tasks"
           active={isActive('/tasks')}
           onClick={() => handleNavigate('/tasks', true)}
-          disabled={!isApproved}
+          disabled={!canAccess}
         />
         <NavItem
           icon={FolderOpen}
           label="Resources"
           active={isActive('/resources')}
           onClick={() => handleNavigate('/resources', true)}
-          disabled={!isApproved}
+          disabled={!canAccess}
         />
         <NavItem
           icon={TrendingUp}
           label="Progress"
           active={isActive('/progress')}
           onClick={() => handleNavigate('/progress', true)}
-          disabled={!isApproved}
+          disabled={!canAccess}
         />
       </div>
     </nav>
@@ -325,7 +317,7 @@ export const TopBar: React.FC<{ title?: string; subtitle?: string; avatarUrl?: s
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 bg-[var(--ui-bg)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
+    <header className="sticky top-0 z-50 bg-[var(--ui-bg)]/80 backdrop-blur-xl border-b border-[var(--ui-border)]">
       <div className="flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[var(--ui-accent)] to-[var(--ui-accent)]/60 flex items-center justify-center">

@@ -55,10 +55,16 @@ export const EnrollmentPage: React.FC<{ onEnrolled: () => void }> = ({ onEnrolle
 
     setLoading(true);
     try {
+      // Preserve approval if already approved
+      const existingSnap = await getDoc(doc(db, 'students', user.uid));
+      const existingStatus = existingSnap.data()?.onboardingStatus;
+      
+      const safeTrainingStatus = existingStatus === 'approved' ? 'active' : 'locked';
+
       const studentRef = doc(db, 'students', user.uid);
       await updateDoc(studentRef, {
         trainingPaymentStatus: 'pending',
-        trainingStatus: 'locked',
+        trainingStatus: safeTrainingStatus,
         examStatus: 'not_eligible',
       });
 
