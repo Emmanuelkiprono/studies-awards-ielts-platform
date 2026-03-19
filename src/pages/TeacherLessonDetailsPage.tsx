@@ -134,15 +134,16 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         console.log('LESSON DATA:', lessonData);
         setLesson(lessonData);
         setError(null);
+        setLoading(false); // Always set loading to false when lesson loads
       } else {
         console.error('❌ LESSON NOT FOUND:', lessonId);
         setError('Lesson not found');
-        setLoading(false);
+        setLoading(false); // Always set loading to false on error
       }
     }, (err) => {
       console.error('❌ ERROR LOADING LESSON:', err);
       setError('Failed to load lesson');
-      setLoading(false);
+      setLoading(false); // Always set loading to false on error
     });
 
     return () => unsubscribeLesson();
@@ -190,8 +191,8 @@ export const TeacherLessonDetailsPage: React.FC = () => {
   useEffect(() => {
     if (!lessonId) return;
 
-    console.log('LOADING LESSON:', lessonId);
-    setLoading(true);
+    console.log('LESSON PAGE lessonId:', lessonId);
+    console.log('LIVE SESSION QUERY RUNNING');
 
     const liveSessionQuery = query(
       collection(db, 'liveSessions'),
@@ -199,36 +200,27 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     );
 
     const unsubscribeLiveSession = onSnapshot(liveSessionQuery, (snapshot) => {
-      console.log('LOADING SESSION:', snapshot.docs.length === 0 ? 'NO SESSIONS' : 'SESSIONS FOUND');
+      console.log('LIVE SESSION SNAPSHOT EMPTY:', snapshot.empty);
+      console.log('LIVE SESSION DOCS:', snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
       
       if (!snapshot.empty) {
         const sessionData = {
           id: snapshot.docs[0].id,
           ...snapshot.docs[0].data()
         } as LiveSession;
-        console.log('LIVE SESSION:', sessionData);
+        console.log('LIVE SESSION FOUND:', sessionData);
         setLiveSession(sessionData);
       } else {
-        console.log('NO LIVE SESSION FOUND');
+        console.log('NO LIVE SESSION FOUND - RENDERING LESSON DETAILS');
         setLiveSession(null);
       }
-      setLoading(false);
+      // DO NOT set loading here - lesson loading handles page loading state
     }, (error) => {
       console.error('ERROR LOADING LIVE SESSION:', error);
       setError('Failed to load live class session');
-      setLoading(false);
     });
 
-    // Fallback timeout to prevent infinite loading
-    const timeout = setTimeout(() => {
-      console.log('⏰ LOADING TIMEOUT - SETTING LOADING TO FALSE');
-      setLoading(false);
-    }, 5000);
-
-    return () => {
-      unsubscribeLiveSession();
-      clearTimeout(timeout);
-    };
+    return () => unsubscribeLiveSession();
   }, [lessonId]);
 
   // Load attendance for this lesson
