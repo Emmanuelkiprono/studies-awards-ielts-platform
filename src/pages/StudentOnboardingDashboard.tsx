@@ -205,11 +205,21 @@ export const StudentOnboardingDashboard: React.FC = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.6 }}
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"
     >
+      {/* DEBUG INFO - TEMPORARY */}
+      <div className="fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg text-xs z-50 max-w-xs">
+        <div className="font-bold mb-2">DEBUG INFO:</div>
+        <div>onboardingStatus: {studentData?.onboardingStatus || 'undefined'}</div>
+        <div>accessUnlocked: {studentData?.accessUnlocked?.toString() || 'undefined'}</div>
+        <div>currentStatus: {currentStatus}</div>
+        <div>dashboard access: {currentStatus === 'approved' ? 'UNLOCKED' : 'LOCKED'}</div>
+        <div>trainingStatus: {studentData?.trainingStatus || 'undefined'}</div>
+        <div>trainingPaymentStatus: {studentData?.trainingPaymentStatus || 'undefined'}</div>
+      </div>
+
       {/* Subtle ambient gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-slate-500/10 dark:from-blue-900/5 dark:via-purple-900/5 dark:to-slate-900/10 pointer-events-none" />
       

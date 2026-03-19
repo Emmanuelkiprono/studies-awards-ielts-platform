@@ -178,6 +178,14 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
 
   // Check if student is approved or has access unlocked
   const isApproved = studentData?.onboardingStatus === 'approved' || studentData?.accessUnlocked === true;
+  
+  // DEBUG: Log navigation state
+  console.log('🔍 NAV DEBUG:', {
+    onboardingStatus: studentData?.onboardingStatus,
+    accessUnlocked: studentData?.accessUnlocked,
+    isApproved,
+    hasUpcomingSession
+  });
 
   // Handle navigation with access control
   const handleNavigate = (path: string, requiresApproval = false) => {
