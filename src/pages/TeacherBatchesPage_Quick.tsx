@@ -82,11 +82,14 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
         weekNumber: formData.weekNumber,
         maxStudents: formData.maxStudents,
         currentStudents: 0,
-        status: formData.status,
+        status: 'active',
         startDate: serverTimestamp(),
         createdAt: serverTimestamp()
       };
 
+      console.log('CREATED BATCH PAYLOAD:', newBatch);
+      console.log('CREATED BATCH COLLECTION PATH: collection(db, "batches")');
+      
       await addDoc(collection(db, 'batches'), newBatch);
       setShowCreateForm(false);
       setFormData({

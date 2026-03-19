@@ -24,7 +24,11 @@ interface PendingStudent extends UserProfile {
 export const TeacherApprovalsPage_Batch: React.FC = () => {
   const { profile: teacherProfile } = useAuth();
   const { showToast } = useToast();
-  const { batches, suggestBatch, assignStudentToBatch } = useBatchManagement(teacherProfile?.assignedCourseId);
+  
+  console.log('APPROVALS PAGE - teacherProfile.uid:', teacherProfile?.uid);
+  console.log('APPROVALS PAGE - teacherProfile.assignedCourseId:', teacherProfile?.assignedCourseId);
+  
+  const { batches, suggestBatch, assignStudentToBatch } = useBatchManagement(teacherProfile?.uid, teacherProfile?.assignedCourseId);
   
   const [students, setStudents] = useState<PendingStudent[]>([]);
   const [loading, setLoading] = useState(true);

@@ -17,29 +17,65 @@ import {
 import { db } from '../services/firebase';
 import { Batch, StudentData, StudentBatchInfo, Course } from '../types';
 
-export const useBatchManagement = (courseId?: string) => {
+export const useBatchManagement = (teacherId?: string, courseId?: string) => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch batches for a course
+  // Fetch batches for a teacher (primary), optionally filtered by course
   useEffect(() => {
-    if (!courseId) return;
+    if (!teacherId) return;
 
     setLoading(true);
-    const q = query(
+    
+    // Primary query: filter by teacherId
+    let q = query(
       collection(db, 'batches'),
-      where('courseId', '==', courseId),
+      where('teacherId', '==', teacherId),
       orderBy('startDate', 'desc')
     );
+
+    // Optional secondary filter by courseId if provided
+    if (courseId) {
+      q = query(
+        collection(db, 'batches'),
+        where('teacherId', '==', teacherId),
+        where('courseId', '==', courseId),
+        orderBy('startDate', 'desc')
+      );
+    }
+
+    console.log('LOADING BATCHES QUERY:', q);
+    console.log('FILTERING BY teacherId:', teacherId);
+    if (courseId) {
+      console.log('ALSO FILTERING BY courseId:', courseId);
+    }
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const batchesData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       } as Batch));
+      
+      console.log('LOADED BATCHES COUNT:', batchesData.length);
+      console.log('LOADED BATCHES DATA:', batchesData);
+      
       setBatches(batchesData);
       setLoading(false);
+      
+      // Fallback: if teacher-filtered query returns 0, load all batches
+      if (batchesData.length === 0) {
+        console.log('NO BATCHES FOUND WITH TEACHER FILTER, LOADING ALL BATCHES...');
+        const allBatchesQuery = query(collection(db, 'batches'));
+        getDocs(allBatchesQuery).then((allSnapshot) => {
+          const allBatches = allSnapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          } as Batch));
+          console.log('ALL BATCHES IN COLLECTION:', allBatches);
+          console.log('ALL BATCHES COUNT:', allBatches.length);
+        });
+      }
     }, (err) => {
       console.error('Error fetching batches:', err);
       setError('Failed to load batches');
@@ -47,7 +83,7 @@ export const useBatchManagement = (courseId?: string) => {
     });
 
     return () => unsubscribe();
-  }, [courseId]);
+  }, [teacherId, courseId]);
 
   // Create a new batch
   const createBatch = useCallback(async (batchData: Omit<Batch, 'id' | 'createdAt' | 'updatedAt' | 'currentStudents'>) => {
