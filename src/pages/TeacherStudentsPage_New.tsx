@@ -178,7 +178,11 @@ export const TeacherStudentsPage: React.FC = () => {
         </div>
 
         {/* Student Table */}
-        <StudentTable courseId={selectedCourseId || undefined} />
+        <StudentTable 
+          courseId={selectedCourseId || undefined} 
+          showActions={true}
+          showApproveReject={false}
+        />
       </div>
     </div>
   );

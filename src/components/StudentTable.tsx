@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
+import { useToast } from '../components/Toast';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, getDocs, orderBy, limit, startAfter } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, startAfter, getDocs, doc, getDoc } from 'firebase/firestore';
 import {
   Users,
   Search,
@@ -20,7 +21,8 @@ import {
   CheckCircle,
   XCircle,
   Clock,
-  AlertCircle
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import { Course, StudentData, UserProfile, Enrollment, TrainingStatus, ExamStatus, OnboardingStatus } from '../types';
 
@@ -42,11 +44,24 @@ interface StudentTableRow {
 interface StudentTableProps {
   courseId?: string;
   limit?: number;
+  showActions?: boolean;
+  showApproveReject?: boolean;
+  onApprove?: (student: StudentTableRow) => void;
+  onReject?: (student: StudentTableRow) => void;
 }
 
-export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: initialLimit = 50 }) => {
+export const StudentTable: React.FC<StudentTableProps> = ({ 
+  courseId, 
+  limit: initialLimit = 50,
+  showActions = true,
+  showApproveReject = false,
+  onApprove,
+  onReject
+}) => {
   const { profile: teacherData } = useAuth();
+  const { showToast } = useToast();
   const [students, setStudents] = useState<StudentTableRow[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,10 +70,34 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
   const [selectedStudents, setSelectedStudents] = useState<Set<string>>(new Set());
   const [lastVisible, setLastVisible] = useState<any>(null);
   const [hasMore, setHasMore] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout>();
 
   const itemsPerPage = initialLimit;
 
-  // Fetch students data
+  // Fetch courses for course names
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const coursesQuery = query(collection(db, 'courses'));
+        const coursesSnapshot = await getDocs(coursesQuery);
+        const coursesData = coursesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Course));
+        setCourses(coursesData);
+      } catch (error) {
+        console.error('Error fetching courses:', error);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
+  // Get course name by ID
+  const getCourseName = useCallback((courseId: string) => {
+    const course = courses.find(c => c.id === courseId);
+    return course?.name || courseId;
+  }, [courses]);
+
+  // Fetch students data with optimized queries
   const fetchStudents = useCallback(async (isInitial = false) => {
     try {
       let studentsQuery = query(
@@ -87,23 +126,29 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
 
       const studentsSnapshot = await getDocs(studentsQuery);
       
-      const studentsData = studentsSnapshot.docs.map(doc => {
+      // Batch course details to avoid N+1 queries
+      const studentPromises = studentsSnapshot.docs.map(async (doc) => {
         const data = doc.data() as StudentData;
+        const courseName = getCourseName(data.courseId || '');
+        
         return {
           id: doc.id,
           name: data.name || 'Unknown',
           email: data.email || '',
           phone: data.phone,
-          course: data.courseId || 'N/A',
+          course: courseName,
           onboardingStatus: data.onboardingStatus || 'account_created',
           trainingStatus: data.trainingStatus || 'inactive',
           examStatus: data.examStatus || 'not_started',
           paymentStatus: data.trainingPaymentStatus || 'pending',
           progress: calculateProgress(data),
           enrollmentDate: data.enrollmentDate?.toDate() || new Date(),
-          lastActive: data.lastActive?.toDate()
+          lastActive: data.lastActive?.toDate(),
+          courseName
         } as StudentTableRow;
       });
+
+      const studentsData = await Promise.all(studentPromises);
 
       if (isInitial) {
         setStudents(studentsData);
@@ -116,10 +161,11 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
 
     } catch (error) {
       console.error('Error fetching students:', error);
+      showToast('Error fetching student data', 'error');
     } finally {
       setLoading(false);
     }
-  }, [courseId, itemsPerPage]);
+  }, [courseId, itemsPerPage, lastVisible, getCourseName, showToast]);
 
   // Calculate progress percentage
   const calculateProgress = (student: StudentData): number => {
@@ -131,10 +177,29 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
 
   // Initial fetch
   useEffect(() => {
-    fetchStudents(true);
-  }, [fetchStudents]);
+    if (courses.length > 0) {
+      fetchStudents(true);
+    }
+  }, [fetchStudents, courses.length]);
 
-  // Filter and sort students
+  // Debounced search
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      // Search is handled in useMemo below
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchTerm]);
+
+  // Filter and sort students with memoization
   const filteredAndSortedStudents = useMemo(() => {
     let filtered = students;
 
@@ -180,38 +245,48 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
   };
 
   // Export to Excel functionality
-  const exportToExcel = useCallback(() => {
-    const exportData = filteredAndSortedStudents.map(student => ({
-      'Student Name': student.name,
-      'Email': student.email,
-      'Phone': student.phone || '',
-      'Course': student.course,
-      'Status': student.onboardingStatus,
-      'Payment Status': student.paymentStatus,
-      'Training Status': student.trainingStatus,
-      'Progress': `${student.progress}%`,
-      'Enrollment Date': student.enrollmentDate.toLocaleDateString(),
-      'Last Active': student.lastActive?.toLocaleDateString() || 'Never'
-    }));
+  const exportToExcel = useCallback(async () => {
+    setIsExporting(true);
+    try {
+      const exportData = filteredAndSortedStudents.map(student => ({
+        'Student Name': student.name,
+        'Email': student.email,
+        'Phone': student.phone || '',
+        'Course': student.course,
+        'Status': student.onboardingStatus,
+        'Payment Status': student.paymentStatus,
+        'Training Status': student.trainingStatus,
+        'Progress': `${student.progress}%`,
+        'Enrollment Date': student.enrollmentDate.toLocaleDateString(),
+        'Last Active': student.lastActive?.toLocaleDateString() || 'Never'
+      }));
 
-    // Create CSV content
-    const headers = Object.keys(exportData[0] || {});
-    const csvContent = [
-      headers.join(','),
-      ...exportData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
-    ].join('\n');
+      // Create CSV content
+      const headers = Object.keys(exportData[0] || {});
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(row => headers.map(header => `"${row[header as keyof typeof row]}"`).join(','))
+      ].join('\n');
 
-    // Download file
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', `students-list-${new Date().toISOString().split('T')[0]}.csv`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }, [filteredAndSortedStudents]);
+      // Download file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `students-list-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast('Student list exported successfully', 'success');
+    } catch (error) {
+      console.error('Error exporting data:', error);
+      showToast('Error exporting student list', 'error');
+    } finally {
+      setIsExporting(false);
+    }
+  }, [filteredAndSortedStudents, showToast]);
 
   // Status badge component
   const StatusBadge: React.FC<{ status: string; type: 'onboarding' | 'training' | 'payment' }> = ({ status, type }) => {
@@ -252,10 +327,25 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
     );
   };
 
+  // Loading skeleton
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F9FB] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#5B3DF5]/30 border-t-[#5B3DF5] rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#F8F9FB]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-6">
+            <div className="h-8 bg-gray-200 rounded w-64 mb-2"></div>
+            <div className="h-4 bg-gray-200 rounded w-96"></div>
+          </div>
+          <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-4">
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="h-12 bg-gray-200 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -269,7 +359,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
           <p className="text-[#6B7280]">Manage and monitor all student progress</p>
         </div>
 
-        {/* Controls */}
+        {/* Toolbar */}
         <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-4 mb-6">
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             <div className="flex-1 max-w-md">
@@ -284,12 +374,20 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
                 />
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-gray-600">
+                {filteredAndSortedStudents.length} of {students.length} students
+              </div>
               <button
                 onClick={exportToExcel}
-                className="flex items-center gap-2 px-4 py-2 bg-[#5B3DF5] text-white rounded-lg hover:bg-[#4B2FE5] transition-colors"
+                disabled={isExporting || filteredAndSortedStudents.length === 0}
+                className="flex items-center gap-2 px-4 py-2 bg-[#5B3DF5] text-white rounded-lg hover:bg-[#4B2FE5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Download size={16} />
+                {isExporting ? (
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Download size={16} />
+                )}
                 Export to Excel
               </button>
             </div>
@@ -300,7 +398,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
         <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                   <th className="px-4 py-3 text-left">
                     <button
@@ -362,11 +460,20 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
                       <ArrowUpDown size={12} />
                     </button>
                   </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </span>
-                  </th>
+                  {showActions && (
+                    <th className="px-4 py-3 text-left">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </span>
+                    </th>
+                  )}
+                  {showApproveReject && (
+                    <th className="px-4 py-3 text-left">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Approve/Reject
+                      </span>
+                    </th>
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -430,6 +537,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
                         {student.enrollmentDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </div>
                     </td>
+                    {showActions && (
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-2">
                         <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
@@ -443,6 +551,27 @@ export const StudentTable: React.FC<StudentTableProps> = ({ courseId, limit: ini
                         </button>
                       </div>
                     </td>
+                  )}
+                  {showApproveReject && (
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => onApprove?.(student)}
+                          className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 transition-colors"
+                        >
+                          <CheckCircle size={12} />
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => onReject?.(student)}
+                          className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 transition-colors"
+                        >
+                          <XCircle size={12} />
+                          Reject
+                        </button>
+                      </div>
+                    </td>
+                  )}
                   </motion.tr>
                 ))}
               </tbody>

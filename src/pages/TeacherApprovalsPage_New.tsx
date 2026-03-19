@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
+import { StudentTable } from '../components/StudentTable';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import { useToast } from '../components/Toast';
@@ -335,159 +336,13 @@ export const TeacherApprovalsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Student</span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Course</span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Status</span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Applied</span>
-                  </th>
-                  <th className="px-4 py-3 text-left">
-                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {paginatedStudents.map((student, index) => (
-                  <motion.tr
-                    key={student.uid}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    className="hover:bg-gray-50 transition-colors"
-                  >
-                    <td className="px-4 py-4">
-                      <div className="flex items-center">
-                        <div className="w-8 h-8 bg-[#5B3DF5]/10 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-[#5B3DF5] text-sm font-medium">
-                            {student.name?.charAt(0).toUpperCase() || 'S'}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{student.name || 'Unknown'}</div>
-                          <div className="text-xs text-gray-500">ID: {student.uid.slice(-8)}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-gray-900">{student.email}</div>
-                      {student.phone && (
-                        <div className="text-xs text-gray-500 flex items-center gap-1">
-                          <Phone size={10} />
-                          {student.phone}
-                        </div>
-                      )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-gray-900">{student.courseId || 'N/A'}</div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <StatusBadge status={student.onboardingStatus} />
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="text-sm text-gray-900">
-                        {student.enrollmentDate?.toDate()?.toLocaleDateString() || 'N/A'}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-2">
-                        {student.onboardingStatus === 'approval_pending' && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(student)}
-                              disabled={actionLoading === student.uid}
-                              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white text-xs rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              {actionLoading === student.uid ? (
-                                <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                              ) : (
-                                <>
-                                  <CheckCircle size={12} />
-                                  Approve
-                                </>
-                              )}
-                            </button>
-                            <button
-                              onClick={() => handleReject(student)}
-                              disabled={actionLoading === student.uid}
-                              className="flex items-center gap-1 px-3 py-1 bg-red-600 text-white text-xs rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                              <XCircle size={12} />
-                              Reject
-                            </button>
-                          </>
-                        )}
-                        {student.paymentProofUrl && (
-                          <button
-                            onClick={() => window.open(student.paymentProofUrl, '_blank')}
-                            className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                            title="View Payment Proof"
-                          >
-                            <Eye size={16} />
-                          </button>
-                        )}
-                        <button className="p-1 text-gray-400 hover:text-gray-600 transition-colors">
-                          <Mail size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} results
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <span className="text-sm text-gray-700">
-                Page {currentPage} of {totalPages}
-              </span>
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Empty State */}
-        {filteredStudents.length === 0 && !loading && (
-          <div className="bg-white rounded-xl shadow-sm border border-[#E5E7EB] p-8 text-center">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No students found</h3>
-            <p className="text-gray-500">
-              {searchTerm || filterStatus !== 'all' ? 'Try adjusting your filters' : 'No student applications yet'}
-            </p>
-          </div>
-        )}
+        {/* Student Table */}
+        <StudentTable 
+          showActions={false}
+          showApproveReject={true}
+          onApprove={handleApprove}
+          onReject={handleReject}
+        />
       </div>
     </div>
   );
