@@ -410,8 +410,6 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={() => {
-                  console.log('START LEARNING CLICKED');
-                  console.log('navigating to:', '/courses');
                   setActionLoading('learning');
                   navigate('/courses');
                 }}

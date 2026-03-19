@@ -24,12 +24,7 @@ export const PaymentPage: React.FC = () => {
   const { user, studentData, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Debug: Log when component mounts
-  useEffect(() => {
-    console.log('PaymentPage mounted');
-    console.log('Student data:', studentData);
-  }, [studentData]);
-
+  
   const [paymentData, setPaymentData] = useState({
     amountPaid: 0,
     balance: 0,

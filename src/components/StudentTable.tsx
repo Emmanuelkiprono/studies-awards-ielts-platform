@@ -109,11 +109,8 @@ const getStatusDisplayName = useCallback((status: string): string => {
 
 // Merge users and students collections with safe guards
 const mergeStudentData = useCallback(async (studentDocs: any[]) => {
-  console.log("MERGING STUDENT DATA FOR", studentDocs?.length || 0, "STUDENTS");
-  
   // Safe guard: if no docs, return empty array
   if (!Array.isArray(studentDocs) || studentDocs.length === 0) {
-    console.log("NO STUDENT DOCS TO MERGE");
     return [];
   }
   
@@ -193,11 +190,6 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
     }
   }
   
-  console.log("MERGED STUDENTS:", mergedStudents.length);
-  console.log("SAMPLE MERGED STUDENT:", mergedStudents[0]);
-  console.log("MISSING NAME COUNT:", missingNameCount);
-  console.log("MISSING EMAIL COUNT:", missingEmailCount);
-  
   return mergedStudents;
 }, [getCourseDisplayName, calculateProgress]);
 
@@ -234,24 +226,17 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
       
       try {
         studentsSnapshot = await getDocs(studentsQuery);
-        console.log("ORIGINAL QUERY SUCCESS");
       } catch (indexError) {
-        console.log("STUDENT TABLE INDEX ERROR:", indexError?.message);
-        console.log("FALLING BACK TO PLAIN QUERY...");
-        
         // FALLBACK: Plain collection query without orderBy/limit
         studentsSnapshot = await getDocs(collection(db, 'students'));
-        console.log("FALLBACK QUERY SUCCESS");
         useFallback = true;
       }
       
       // Use merged data from users + students collections with error handling
-      console.log("MERGING STUDENT DATA...");
       try {
         studentsData = await mergeStudentData(studentsSnapshot.docs);
       } catch (mergeError) {
-        console.error("MERGE ERROR:", mergeError);
-        console.log("FALLING BACK TO DIRECT MAPPING...");
+        console.error('Error merging student data:', mergeError);
         
         // Fallback: Direct mapping without merge
         studentsData = studentsSnapshot.docs.map(doc => {
@@ -277,14 +262,11 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
       
       // If using fallback and courseId filter, apply in memory
       if (useFallback && courseId) {
-        console.log("APPLYING COURSE FILTER IN MEMORY...");
         studentsData = studentsData.filter(student => student.course === courseId);
-        console.log("FILTERED STUDENTS:", studentsData.length, "students");
       }
       
       // If using fallback, apply sorting in memory
       if (useFallback) {
-        console.log("APPLYING SORTING IN MEMORY...");
         studentsData.sort((a, b) => {
           const aValue = a.enrollmentDate;
           const bValue = b.enrollmentDate;
@@ -353,9 +335,6 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
   const filteredAndSortedStudents = useMemo(() => {
     // Safe guard: ensure students is an array
     const safeStudents = Array.isArray(students) ? students : [];
-    
-    console.log("STUDENTS PAGE DATA:", safeStudents.length, "students");
-    console.log("FILTERING STUDENTS:", safeStudents.length, "total students");
 
     let filtered = safeStudents;
 
@@ -393,7 +372,6 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
       // If sorting fails, return unsorted filtered data
     }
 
-    console.log("FINAL FILTERED STUDENTS:", filtered.length, "students");
     return filtered;
   }, [students, searchTerm, sortColumn, sortDirection]);
 

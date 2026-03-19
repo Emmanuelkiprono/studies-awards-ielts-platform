@@ -46,14 +46,11 @@ export const TeacherApprovalsPage: React.FC = () => {
             const pending: PendingStudent[] = [];
 
             for (const studentDoc of snapshot.docs) {
-                console.log('PROCESSING STUDENT DOC:', studentDoc.id);
                 const profile = { ...studentDoc.data(), uid: studentDoc.id } as UserProfile;
-                console.log('BUILT PROFILE:', { uid: profile.uid, name: profile.name, email: profile.email });
 
                 // Fetch student data
                 const sDataDoc = await getDoc(doc(db, 'students', studentDoc.id));
                 const sData = sDataDoc.exists() ? sDataDoc.data() as StudentData : undefined;
-                console.log('STUDENT DATA EXISTS:', sDataDoc.exists());
 
                 // Fetch enrollment
                 const enrollmentsQ = query(collection(db, 'enrollments'), where('userId', '==', studentDoc.id));
@@ -73,12 +70,7 @@ export const TeacherApprovalsPage: React.FC = () => {
                         studentData: sData,
                         enrollment: firstEnroll ? { ...firstEnroll, id: enrollId } : undefined
                     };
-                    console.log('ADDING PENDING STUDENT:', {
-                        uid: pendingStudent.uid,
-                        name: pendingStudent.name,
-                        hasStudentData: !!pendingStudent.studentData
-                    });
-                    pending.push(pendingStudent);
+                                        pending.push(pendingStudent);
                 }
             }
 
@@ -90,30 +82,21 @@ export const TeacherApprovalsPage: React.FC = () => {
     }, []);
 
     const handleApprove = async (student: PendingStudent) => {
-        console.log('APPROVE CLICKED');
-        console.log('APPROVING UID:', student.uid);
-
         try {
             if (!student.uid) throw new Error('Missing student.uid');
 
             const studentRef = doc(db, 'students', student.uid);
 
-            const beforeSnap = await getDoc(studentRef);
-            console.log('BEFORE APPROVE:', beforeSnap.data());
-
             await setDoc(studentRef, {
                 onboardingStatus: 'approved',
                 accessUnlocked: true,
-                trainingStatus: 'active',
+                trainingStatus: 'inactive',
                 approvedAt: serverTimestamp()
             }, { merge: true });
 
-            console.log('SET DOC COMPLETED');
-
-            const afterSnap = await getDoc(studentRef);
-            console.log('AFTER APPROVE:', afterSnap.data());
-
-            if (afterSnap.data()?.onboardingStatus !== 'approved') {
+            // Verify the update was successful
+            const updatedSnap = await getDoc(studentRef);
+            if (updatedSnap.data()?.onboardingStatus !== 'approved') {
                 throw new Error('Firestore write failed');
             }
 

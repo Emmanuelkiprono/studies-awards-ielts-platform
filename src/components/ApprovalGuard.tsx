@@ -40,7 +40,6 @@ export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({
     } : null,
     allowedStatuses,
     isApproved,
-    hasRequiredStatus,
     pathname: location.pathname
   });
   

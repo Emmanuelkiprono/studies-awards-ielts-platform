@@ -68,12 +68,7 @@ export const TeacherLessonsPage: React.FC = () => {
   const [scheduledTime, setScheduledTime] = useState('');
   const [isCreatingLive, setIsCreatingLive] = useState(false);
 
-  // Debug: Log when component mounts
-  useEffect(() => {
-    console.log('TeacherLessonsPage mounted - Live class features should be visible');
-    console.log('isAdding state:', isAdding);
-  }, [isAdding]);
-  const [order, setOrder] = useState(1);
+    const [order, setOrder] = useState(1);
 
   // Fetch Courses
   useEffect(() => {

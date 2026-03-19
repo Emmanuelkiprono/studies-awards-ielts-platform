@@ -346,10 +346,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
       createdBy: teacherUser.uid,
     };
     
-    console.log('Creating instant live session:', sessionData);
-    
     const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
-    console.log('Instant live session created with ID:', docRef.id);
     
     // Create Daily.co room immediately (using mock URL for server-side compatibility)
     const slug = sessionData.title.toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
@@ -403,8 +400,6 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
       )
     ));
     
-    console.log(`Notified ${enrollSnap.docs.length} students about live session`);
-    
     // Navigate directly to live classes with the active room
     navigate('/live', { state: { activeRoom: { session: { ...sessionData, id: docRef.id, roomUrl }, roomUrl } } });
     
@@ -418,9 +413,7 @@ const handleScheduleSession = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teacherUser) return;
     
-    console.log('Scheduling session with data:', liveForm);
-    console.log('Selected course ID:', selectedCourseId);
-    
+        
     setLiveLoading(true);
     try {
       const liveCourseId = liveForm.courseId || selectedCourseId;
@@ -439,10 +432,7 @@ const handleScheduleSession = async (e: React.FormEvent) => {
         createdBy: teacherUser.uid,
       };
       
-      console.log('Creating session with data:', sessionData);
-      
       const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
-      console.log('Session created with ID:', docRef.id);
 
       if (liveCourseId) {
         const enrollSnap = await getDocs(query(
@@ -462,8 +452,7 @@ const handleScheduleSession = async (e: React.FormEvent) => {
           )
         ));
         
-        console.log(`Notified ${enrollSnap.docs.length} students about scheduled live session`);
-      }
+              }
 
       setShowLiveModal(false);
       setLiveForm({ title: '', courseId: '', date: '', startTime: '', endTime: '', meetingUrl: '' });

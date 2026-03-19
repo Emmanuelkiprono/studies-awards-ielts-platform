@@ -178,11 +178,6 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <>
-      {/* TEMPORARY DEBUG PROOF */}
-      <div className="fixed top-4 left-4 bg-red-500 text-white p-4 rounded-lg text-xs z-40">
-        DESTINATION PAGE: StudentDashboard (/courses)
-      </div>
-      
       {/* Premium Apple-style Dashboard */}
       <div className="min-h-screen bg-[#F8F9FB] pb-20">
         <motion.div

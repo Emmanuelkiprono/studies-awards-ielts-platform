@@ -59,11 +59,10 @@ export const useTeacherStudents = () => {
           };
         });
         
-        console.log("SHARED STUDENTS FETCHED:", studentsData.length);
         setStudents(studentsData);
         
       } catch (err) {
-        console.error('SHARED STUDENTS FETCH ERROR:', err);
+        console.error('Failed to load students:', err);
         setError('Failed to load students');
       } finally {
         setLoading(false);
@@ -90,11 +89,6 @@ export const useTeacherStudents = () => {
       student.trainingStatus === 'completed'
     ).length
   };
-
-  console.log("DASHBOARD STUDENT COUNT:", stats.total);
-  console.log("DASHBOARD PENDING COUNT:", stats.pending);
-  console.log("DASHBOARD ACTIVE COUNT:", stats.active);
-  console.log("DASHBOARD COMPLETED COUNT:", stats.completed);
 
   return {
     students,
