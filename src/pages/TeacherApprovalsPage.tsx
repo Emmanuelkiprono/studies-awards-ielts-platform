@@ -75,7 +75,6 @@ export const TeacherApprovalsPage: React.FC = () => {
                     };
                     console.log('ADDING PENDING STUDENT:', {
                         uid: pendingStudent.uid,
-                        id: (pendingStudent as any).id,
                         name: pendingStudent.name,
                         hasStudentData: !!pendingStudent.studentData
                     });
@@ -93,7 +92,6 @@ export const TeacherApprovalsPage: React.FC = () => {
     const handleApprove = async (student: PendingStudent) => {
         console.log('TEACHER APPROVAL DEBUG:');
         console.log('student.uid:', student.uid);
-        console.log('student.id:', student.id);
         console.log('Firestore path:', `students/${student.uid}`);
         
         if (!student.uid) return;
