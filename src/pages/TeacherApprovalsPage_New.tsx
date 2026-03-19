@@ -69,17 +69,42 @@ export const TeacherApprovalsPage: React.FC = () => {
   useEffect(() => {
     const fetchStudents = async () => {
       try {
+        console.log("TEACHER APPROVALS: Starting fetch...");
+        
+        // STEP 1: Plain query without filters
+        console.log("TEACHER APPROVALS: Trying plain collection query...");
+        const plainSnapshot = await getDocs(collection(db, 'students'));
+        console.log("RAW STUDENT DOC COUNT:", plainSnapshot.size);
+        console.log("RAW STUDENT DOC SAMPLE:", plainSnapshot.docs[0]?.data());
+        
+        // STEP 2: Try with simple where clause
+        console.log("TEACHER APPROVALS: Trying simple where clause...");
+        const simpleQuery = query(
+          collection(db, 'students'),
+          where('onboardingStatus', '==', 'approval_pending')
+        );
+        const simpleSnapshot = await getDocs(simpleQuery);
+        console.log("SIMPLE QUERY DOC COUNT:", simpleSnapshot.size);
+        
+        // STEP 3: Try the original query
+        console.log("TEACHER APPROVALS: Trying original complex query...");
+        console.log("COLLECTION:", 'students');
+        console.log("WHERE CLAUSE:", "onboardingStatus IN ['approval_pending', 'payment_pending', 'approved', 'rejected']");
+        
         const studentsQuery = query(
           collection(db, 'students'),
           where('onboardingStatus', 'in', ['approval_pending', 'payment_pending', 'approved', 'rejected'])
         );
         
         const studentsSnapshot = await getDocs(studentsQuery);
+        console.log("ORIGINAL QUERY DOC COUNT:", studentsSnapshot.size);
+        
         const studentsData = studentsSnapshot.docs.map(doc => ({
           uid: doc.id,
           ...doc.data()
         } as PendingStudent));
 
+        console.log("MAPPED STUDENTS COUNT:", studentsData.length);
         setStudents(studentsData);
 
         // Calculate stats
@@ -103,17 +128,22 @@ export const TeacherApprovalsPage: React.FC = () => {
         }, { total: 0, pending: 0, approved: 0, rejected: 0, paymentPending: 0 });
 
         setStats(approvalStats);
+        console.log("APPROVAL STATS:", approvalStats);
 
       } catch (error) {
-        console.error('Error fetching students:', error);
-        showToast('Error fetching student data', 'error');
+        console.error("TEACHER APPROVALS FETCH ERROR:", error);
+        console.error("ERROR CODE:", error?.code);
+        console.error("ERROR MESSAGE:", error?.message);
+        console.error("ERROR DETAILS:", error);
+        showToast(`STUDENT TABLE FETCH ERROR: ${error?.message || error}`, 'error');
+        setStudents([]); // Clear on error
       } finally {
         setLoading(false);
       }
     };
 
     fetchStudents();
-  }, [showToast]);
+  }, []);
 
   // Filter students
   const filteredStudents = useMemo(() => {

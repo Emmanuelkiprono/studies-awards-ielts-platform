@@ -139,9 +139,11 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       setHasMore(studentsSnapshot.docs.length === itemsPerPage);
 
     } catch (error) {
-      console.error("FETCH ERROR:", error);
-      // Show error only once, not in loops
-      showToast('Failed to load students. Please refresh.', 'error');
+      console.error("STUDENT TABLE FETCH ERROR:", error);
+      console.error("ERROR CODE:", error?.code);
+      console.error("ERROR MESSAGE:", error?.message);
+      console.error("QUERY DETAILS:", { courseId, itemsPerPage });
+      showToast(`STUDENT TABLE ERROR: ${error?.message || error}`, 'error');
       setStudents([]); // Clear students on error
     } finally {
       setLoading(false);
