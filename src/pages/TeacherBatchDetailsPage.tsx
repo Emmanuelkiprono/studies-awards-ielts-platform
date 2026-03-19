@@ -371,7 +371,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => navigate(`/teacher/batches/${batchId}/lessons/${lesson.id}`)}
+                      onClick={() => navigate(`/teacher/lessons/${lesson.id}`)}
                       className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
                       title="View Lesson"
                     >
