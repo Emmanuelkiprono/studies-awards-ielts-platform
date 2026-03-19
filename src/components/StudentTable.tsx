@@ -104,10 +104,25 @@ export const StudentTable: React.FC<StudentTableProps> = ({
         );
       }
 
-      const studentsSnapshot = await getDocs(studentsQuery);
+      let studentsSnapshot;
+      let studentsData;
+      let useFallback = false;
+      
+      try {
+        studentsSnapshot = await getDocs(studentsQuery);
+        console.log("ORIGINAL QUERY SUCCESS");
+      } catch (indexError) {
+        console.log("STUDENT TABLE INDEX ERROR:", indexError?.message);
+        console.log("FALLING BACK TO PLAIN QUERY...");
+        
+        // FALLBACK: Plain collection query without orderBy/limit
+        studentsSnapshot = await getDocs(collection(db, 'students'));
+        console.log("FALLBACK QUERY SUCCESS");
+        useFallback = true;
+      }
       
       // Direct mapping without async operations - no N+1 queries
-      const studentsData = studentsSnapshot.docs.map(doc => {
+      studentsData = studentsSnapshot.docs.map(doc => {
         const data = doc.data() as StudentData;
         
         return {
@@ -128,6 +143,29 @@ export const StudentTable: React.FC<StudentTableProps> = ({
       });
 
       console.log("FETCHED STUDENTS:", studentsData.length, "students");
+      
+      // If using fallback and courseId filter, apply in memory
+      if (useFallback && courseId) {
+        console.log("APPLYING COURSE FILTER IN MEMORY...");
+        studentsData = studentsData.filter(student => student.course === courseId);
+        console.log("FILTERED STUDENTS:", studentsData.length, "students");
+      }
+      
+      // If using fallback, apply sorting in memory
+      if (useFallback) {
+        console.log("APPLYING SORTING IN MEMORY...");
+        studentsData.sort((a, b) => {
+          const aValue = a.enrollmentDate;
+          const bValue = b.enrollmentDate;
+          return bValue.getTime() - aValue.getTime(); // desc order
+        });
+      }
+      
+      // Show fallback message only once
+      if (useFallback && !localStorage.getItem('studentTableIndexWarningShown')) {
+        showToast('Student table needs a Firestore index. Using fallback mode.', 'info');
+        localStorage.setItem('studentTableIndexWarningShown', 'true');
+      }
 
       if (isInitial) {
         setStudents(studentsData);

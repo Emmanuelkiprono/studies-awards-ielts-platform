@@ -86,25 +86,50 @@ export const TeacherApprovalsPage: React.FC = () => {
         const simpleSnapshot = await getDocs(simpleQuery);
         console.log("SIMPLE QUERY DOC COUNT:", simpleSnapshot.size);
         
-        // STEP 3: Try the original query
+        // STEP 3: Try the original query with fallback
         console.log("TEACHER APPROVALS: Trying original complex query...");
-        console.log("COLLECTION:", 'students');
-        console.log("WHERE CLAUSE:", "onboardingStatus IN ['approval_pending', 'payment_pending', 'approved', 'rejected']");
-        
-        const studentsQuery = query(
+        console.log("FAILING QUERY:", query(
           collection(db, 'students'),
           where('onboardingStatus', 'in', ['approval_pending', 'payment_pending', 'approved', 'rejected'])
-        );
+        ));
         
-        const studentsSnapshot = await getDocs(studentsQuery);
-        console.log("ORIGINAL QUERY DOC COUNT:", studentsSnapshot.size);
+        let studentsSnapshot;
+        let studentsData;
+        let useFallback = false;
         
-        const studentsData = studentsSnapshot.docs.map(doc => ({
+        try {
+          const studentsQuery = query(
+            collection(db, 'students'),
+            where('onboardingStatus', 'in', ['approval_pending', 'payment_pending', 'approved', 'rejected'])
+          );
+          studentsSnapshot = await getDocs(studentsQuery);
+          console.log("ORIGINAL QUERY DOC COUNT:", studentsSnapshot.size);
+        } catch (indexError) {
+          console.log("INDEX ERROR DETECTED:", indexError?.message);
+          console.log("FALLING BACK TO SIMPLER QUERY...");
+          
+          // FALLBACK: Plain collection query
+          studentsSnapshot = await getDocs(collection(db, 'students'));
+          console.log("FALLBACK QUERY DOC COUNT:", studentsSnapshot.size);
+          useFallback = true;
+        }
+        
+        studentsData = studentsSnapshot.docs.map(doc => ({
           uid: doc.id,
           ...doc.data()
         } as PendingStudent));
 
         console.log("MAPPED STUDENTS COUNT:", studentsData.length);
+        
+        // If using fallback, filter in memory
+        if (useFallback) {
+          console.log("FILTERING IN MEMORY (FALLBACK MODE)...");
+          studentsData = studentsData.filter(student => 
+            ['approval_pending', 'payment_pending', 'approved', 'rejected'].includes(student.onboardingStatus)
+          );
+          console.log("FILTERED STUDENTS COUNT:", studentsData.length);
+        }
+        
         setStudents(studentsData);
 
         // Calculate stats
@@ -129,6 +154,12 @@ export const TeacherApprovalsPage: React.FC = () => {
 
         setStats(approvalStats);
         console.log("APPROVAL STATS:", approvalStats);
+        
+        // Show fallback message only once
+        if (useFallback && !localStorage.getItem('indexWarningShown')) {
+          showToast('Student table needs a Firestore index. Using fallback mode.', 'info');
+          localStorage.setItem('indexWarningShown', 'true');
+        }
 
       } catch (error) {
         console.error("TEACHER APPROVALS FETCH ERROR:", error);
