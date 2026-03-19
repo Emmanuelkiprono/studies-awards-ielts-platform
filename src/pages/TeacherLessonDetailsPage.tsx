@@ -120,6 +120,9 @@ export const TeacherLessonDetailsPage: React.FC = () => {
   useEffect(() => {
     if (!lessonId) return;
 
+    console.log('LOADING LESSON DETAILS:', lessonId);
+    setLoading(true);
+
     const lessonRef = doc(db, 'lessons', lessonId);
     const unsubscribeLesson = onSnapshot(lessonRef, (docSnapshot) => {
       if (docSnapshot.exists()) {
@@ -132,11 +135,12 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         setLesson(lessonData);
         setError(null);
       } else {
+        console.error('❌ LESSON NOT FOUND:', lessonId);
         setError('Lesson not found');
         setLoading(false);
       }
     }, (err) => {
-      console.error('Error loading lesson:', err);
+      console.error('❌ ERROR LOADING LESSON:', err);
       setError('Failed to load lesson');
       setLoading(false);
     });
@@ -186,12 +190,17 @@ export const TeacherLessonDetailsPage: React.FC = () => {
   useEffect(() => {
     if (!lessonId) return;
 
+    console.log('LOADING LESSON:', lessonId);
+    setLoading(true);
+
     const liveSessionQuery = query(
       collection(db, 'liveSessions'),
       where('lessonId', '==', lessonId)
     );
 
     const unsubscribeLiveSession = onSnapshot(liveSessionQuery, (snapshot) => {
+      console.log('LOADING SESSION:', snapshot.docs.length === 0 ? 'NO SESSIONS' : 'SESSIONS FOUND');
+      
       if (!snapshot.empty) {
         const sessionData = {
           id: snapshot.docs[0].id,
@@ -200,12 +209,26 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         console.log('LIVE SESSION:', sessionData);
         setLiveSession(sessionData);
       } else {
+        console.log('NO LIVE SESSION FOUND');
         setLiveSession(null);
       }
       setLoading(false);
+    }, (error) => {
+      console.error('ERROR LOADING LIVE SESSION:', error);
+      setError('Failed to load live class session');
+      setLoading(false);
     });
 
-    return () => unsubscribeLiveSession();
+    // Fallback timeout to prevent infinite loading
+    const timeout = setTimeout(() => {
+      console.log('⏰ LOADING TIMEOUT - SETTING LOADING TO FALSE');
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      unsubscribeLiveSession();
+      clearTimeout(timeout);
+    };
   }, [lessonId]);
 
   // Load attendance for this lesson
@@ -230,15 +253,24 @@ export const TeacherLessonDetailsPage: React.FC = () => {
   }, [liveSession?.id]);
 
   const startLiveClass = async () => {
-    if (!lesson || !teacherProfile) return;
+    console.log('START LIVE CLICKED');
+    console.log('SELECTED LESSON:', lesson?.id);
+    
+    if (!lesson || !teacherProfile) {
+      console.error('❌ MISSING LESSON OR TEACHER:', { lesson: !!lesson, teacherProfile: !!teacherProfile });
+      return;
+    }
     
     setActionLoading('start');
     try {
+      const meetingLink = `https://meet.jit.si/${lesson.id}-${Date.now()}`;
+      console.log('MEETING LINK:', meetingLink);
+      
       const sessionData = {
         lessonId: lesson.id,
         batchId: lesson.batchId,
         teacherId: teacherProfile.uid,
-        meetingLink: `https://meet.jit.si/${lesson.id}-${Date.now()}`,
+        meetingLink,
         status: 'live',
         startedAt: serverTimestamp(),
         attendanceOpen: false,
@@ -248,16 +280,22 @@ export const TeacherLessonDetailsPage: React.FC = () => {
 
       console.log('🔴 LIVE SESSION CREATION:', sessionData);
 
+      let sessionId: string;
       if (liveSession) {
         console.log('🔄 UPDATING EXISTING SESSION:', liveSession.id);
         await updateDoc(doc(db, 'liveSessions', liveSession.id), sessionData);
+        sessionId = liveSession.id;
       } else {
         console.log('➕ CREATING NEW LIVE SESSION');
         const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
-        console.log('✅ LIVE SESSION CREATED WITH ID:', docRef.id);
+        sessionId = docRef.id;
+        console.log('✅ LIVE SESSION CREATED WITH ID:', sessionId);
       }
+      
+      console.log('LIVE SESSION CREATED:', sessionId);
     } catch (error) {
-      console.error('❌ ERROR STARTING LIVE CLASS:', error);
+      console.error('LIVE CLASS ERROR:', error);
+      setError('Failed to start live class');
     } finally {
       setActionLoading(null);
     }
