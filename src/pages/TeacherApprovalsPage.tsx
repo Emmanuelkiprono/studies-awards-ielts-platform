@@ -90,62 +90,22 @@ export const TeacherApprovalsPage: React.FC = () => {
     }, []);
 
     const handleApprove = async (student: PendingStudent) => {
-        console.log('TEACHER APPROVAL DEBUG:');
-        console.log('student.uid:', student.uid);
-        console.log('before approve:', (await getDoc(doc(db, 'students', student.uid))).data());
+        console.log('APPROVE CLICKED');
         
-        if (!student.uid) return;
-        setProcessingId(student.uid);
         try {
+            if (!student.uid) return;
+            setProcessingId(student.uid);
+            
             await setDoc(doc(db, 'students', student.uid), {
                 onboardingStatus: 'approved',
                 accessUnlocked: true,
-                approvedAt: serverTimestamp(),
                 trainingStatus: 'active'
             }, { merge: true });
-
-            const verifySnap = await getDoc(doc(db, 'students', student.uid));
-            console.log('after approve:', verifySnap.data());
-
-            if (verifySnap.data()?.onboardingStatus !== 'approved') {
-                throw new Error('Approval failed to update Firestore');
-            }
-
-            // Update enrollment if exists
-            if (student.enrollment?.id) {
-                const enrollmentRef = doc(db, 'enrollments', student.enrollment.id);
-
-                // Use existing registration date if present; otherwise treat "now" as registration.
-                const baseRegistrationDate = student.enrollment.registeredAt?.toDate
-                    ? student.enrollment.registeredAt.toDate()
-                    : new Date();
-                const eligibleDate = new Date(baseRegistrationDate.getTime() + (28 * 24 * 60 * 60 * 1000)); // registrationDate + 28 days
-
-                const enrollmentUpdates: any = {
-                    paymentStatus: 'paid',
-                    trainingStatus: 'active',
-                    examFeeStatus: 'unpaid',
-                    programWeeks: 4,
-                    eligibleAt: eligibleDate.toISOString()
-                };
-
-                // Only set registeredAt if it doesn't exist (server authoritative timestamp)
-                if (!student.enrollment.registeredAt) {
-                    enrollmentUpdates.registeredAt = serverTimestamp();
-                }
-
-                await updateDoc(enrollmentRef, enrollmentUpdates);
-            }
-
-            await NotificationService.create(
-                student.uid,
-                'Enrollment Approved',
-                'Your payment has been approved and your training has started. Welcome!',
-                'success',
-                '/dashboard'
-            );
+            
+            console.log('SET DOC COMPLETED');
+            
         } catch (error) {
-            console.error("Error approving student:", error);
+            console.error('APPROVAL ERROR:', error);
             alert("Failed to approve student.");
         } finally {
             setProcessingId(null);
