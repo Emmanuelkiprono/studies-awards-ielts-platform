@@ -23,7 +23,7 @@ import { ExamBookingPage } from './pages/ExamBookingPage';
 import { CreateAssignmentPage } from './pages/CreateAssignmentPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { ProfilePage } from './pages/ProfilePage';
-import { TeacherStudentsPage } from './pages/TeacherStudentsPage_New';
+import { TeacherStudentsPage } from './pages/TeacherStudentsPage_Minimal';
 import { TeacherLessonsPage } from './pages/TeacherLessonsPage';
 import { TeacherAttendancePage } from './pages/TeacherAttendancePage';
 import { TeacherAssignmentsPage } from './pages/TeacherAssignmentsPage';
