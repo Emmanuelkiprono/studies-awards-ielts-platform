@@ -18,6 +18,7 @@ import {
     onSnapshot,
     getDocs,
     updateDoc,
+    setDoc,
     doc,
     getDoc,
     serverTimestamp
@@ -83,11 +84,18 @@ export const TeacherApprovalsPage: React.FC = () => {
         if (!student.uid) return;
         setProcessingId(student.uid);
         try {
-            // Update student data
-            await updateDoc(doc(db, 'students', student.uid), {
+            // Update student data with approval status
+            await setDoc(doc(db, 'students', student.uid), {
+                onboardingStatus: 'approved',
+                accessUnlocked: true,
+                approvedAt: serverTimestamp(),
                 trainingPaymentStatus: 'paid',
                 trainingStatus: 'active'
-            });
+            }, { merge: true });
+
+            // Verify the write immediately
+            const verifySnap = await getDoc(doc(db, 'students', student.uid));
+            console.log('TEACHER APPROVAL VERIFIED:', verifySnap.data());
 
             // Update enrollment if exists
             if (student.enrollment?.id) {
