@@ -406,7 +406,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
               </div>
             )}
             
-            {currentStatus === 'approved' && (
+            {isUnlocked && (
               <motion.button
                 whileHover={{ scale: 1.02, y: -1 }}
                 whileTap={{ scale: 0.98 }}
@@ -563,7 +563,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
             {statusSteps.map((step, index) => {
               if (step.id === 'rejected' || step.id === 'suspended') return null;
               
-              const isClickable = step.action && step.current;
+              const isClickable = step.action && (step.current || (step.id === 'approved' && isUnlocked));
               const isCompleted = step.completed;
               
               return (
