@@ -186,13 +186,15 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
 
   // Handle navigation with access control
   const handleNavigate = (path: string, requiresApproval = false) => {
+    console.log('BOTTOM NAV CLICK:', path, { hasLearningAccess, requiresApproval });
+    
     if (isTeacher) {
       navigate(path);
       return;
     }
 
     // For students, check approval status if required
-    if (requiresApproval && !canAccess) {
+    if (requiresApproval && !hasLearningAccess) {
       // Show toast message
       showToast('Available after approval', 'info', 2000);
       return;
@@ -259,7 +261,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] z-50">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E5E7EB] z-[60] pointer-events-auto">
       <div className="grid grid-cols-5 max-w-md mx-auto">
         <NavItem
           icon={LayoutDashboard}
