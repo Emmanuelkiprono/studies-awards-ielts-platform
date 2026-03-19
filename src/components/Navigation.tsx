@@ -178,8 +178,8 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   const isTeacher = role === 'teacher';
   const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
 
-  // Single source of truth for navigation access
-  const canAccess = 
+  // Single source of truth for learning access
+  const hasLearningAccess = 
     studentData?.onboardingStatus === 'approved' ||
     studentData?.accessUnlocked === true ||
     studentData?.trainingStatus === 'active';
@@ -264,8 +264,8 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
         <NavItem
           icon={LayoutDashboard}
           label="Dashboard"
-          active={isActive('/dashboard')}
-          onClick={() => handleNavigate('/dashboard', false)}
+          active={isActive('/dashboard') || isActive('/courses')}
+          onClick={() => hasLearningAccess ? navigate('/courses') : navigate('/dashboard')}
         />
         <NavItem
           icon={Video}
@@ -273,28 +273,28 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
           active={isActive('/live')}
           onClick={() => handleNavigate('/live', true)}
           badge={hasUpcomingSession}
-          disabled={!canAccess}
+          disabled={!hasLearningAccess}
         />
         <NavItem
           icon={ClipboardList}
           label="Tasks"
           active={isActive('/tasks')}
           onClick={() => handleNavigate('/tasks', true)}
-          disabled={!canAccess}
+          disabled={!hasLearningAccess}
         />
         <NavItem
           icon={FolderOpen}
           label="Resources"
           active={isActive('/resources')}
           onClick={() => handleNavigate('/resources', true)}
-          disabled={!canAccess}
+          disabled={!hasLearningAccess}
         />
         <NavItem
           icon={TrendingUp}
           label="Progress"
           active={isActive('/progress')}
           onClick={() => handleNavigate('/progress', true)}
-          disabled={!canAccess}
+          disabled={!hasLearningAccess}
         />
       </div>
     </nav>
