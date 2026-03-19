@@ -23,7 +23,10 @@ import {
   Filter,
   Download,
   Plus,
-  Activity
+  Activity,
+  Layers,
+  UserCheck as AttendanceIcon,
+  PlayCircle
 } from 'lucide-react';
 import { Course, UserProfile, StudentData, Enrollment, Assignment } from '../types';
 
@@ -53,48 +56,48 @@ export const TeacherDashboard: React.FC = () => {
   // Quick actions data
   const quickActions = [
     {
-      title: 'Student Approvals',
-      description: 'Review pending student applications',
-      icon: UserCheck,
-      color: 'bg-blue-500',
-      count: stats.pending,
-      route: '/approvals'
-    },
-    {
-      title: 'My Students',
-      description: 'View and manage all students',
-      icon: Users,
-      color: 'bg-green-500',
-      count: stats.total,
-      route: '/teacher/students'
-    },
-    {
-      title: 'Courses',
-      description: 'Manage course content and modules',
-      icon: BookOpen,
+      title: 'Manage Batches',
+      description: 'Create and manage student cohorts',
+      icon: Layers,
       color: 'bg-purple-500',
-      route: '/teacher/courses'
+      route: '/teacher/batches'
+    },
+    {
+      title: 'Manage Lessons',
+      description: 'Create and organize lesson content',
+      icon: BookOpen,
+      color: 'bg-blue-500',
+      route: '/teacher/lessons'
     },
     {
       title: 'Live Classes',
-      description: 'Schedule and manage live sessions',
-      icon: Video,
+      description: 'Start and manage live sessions',
+      icon: PlayCircle,
       color: 'bg-red-500',
       route: '/teacher/live'
     },
     {
-      title: 'Assignments',
-      description: 'Create and grade assignments',
-      icon: ClipboardList,
-      color: 'bg-orange-500',
-      route: '/teacher/assignments'
+      title: 'Attendance',
+      description: 'Track and manage student attendance',
+      icon: AttendanceIcon,
+      color: 'bg-green-500',
+      route: '/teacher/attendance'
     },
     {
-      title: 'Reports',
-      description: 'View performance analytics',
-      icon: TrendingUp,
+      title: 'Students',
+      description: 'View and manage students',
+      icon: Users,
       color: 'bg-indigo-500',
-      route: '/teacher/reports'
+      route: '/teacher/students',
+      count: stats.total
+    },
+    {
+      title: 'Approvals',
+      description: 'Review pending applications',
+      icon: UserCheck,
+      color: 'bg-orange-500',
+      route: '/teacher/approvals',
+      count: stats.pending
     }
   ];
 

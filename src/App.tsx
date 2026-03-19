@@ -38,6 +38,10 @@ import { TeacherBatchesPage } from './pages/TeacherBatchesPage';
 import { TeacherBatchLessonsPage } from './pages/TeacherBatchLessonsPage';
 import { TeacherLiveSessionPage } from './pages/TeacherLiveSessionPage';
 import { StudentBatchView } from './pages/StudentBatchView';
+import { TeacherBatchesPage_Simple } from './pages/TeacherBatchesPage_Simple';
+import { TeacherLessonsPage_Simple } from './pages/TeacherLessonsPage_Simple';
+import { TeacherLiveClassesPage_Simple } from './pages/TeacherLiveClassesPage_Simple';
+import { TeacherAttendancePage_Simple } from './pages/TeacherAttendancePage_Simple';
 
 import { ForcePasswordChangePage } from './pages/ForcePasswordChangePage';
 import { seedInitialData } from './services/seedData';
@@ -121,16 +125,18 @@ const AppContent: React.FC = () => {
                 <Route path="/" element={<TeacherDashboard />} />
                 <Route path="/courses" element={<TeacherCoursesPage />} />
                 <Route path="/modules" element={<TeacherModulesPage />} />
-                <Route path="/batches" element={<TeacherBatchesPage />} />
+                <Route path="/batches" element={<TeacherBatchesPage_Simple />} />
                 <Route path="/batches/:batchId/lessons" element={<TeacherBatchLessonsPage />} />
                 <Route path="/batches/:batchId/lessons/:lessonId/live" element={<TeacherLiveSessionPage />} />
-                <Route path="/lessons" element={<TeacherLessonsPage />} />
+                <Route path="/lessons" element={<TeacherLessonsPage_Simple />} />
+                <Route path="/live" element={<TeacherLiveClassesPage_Simple />} />
+                <Route path="/live-session/:sessionId" element={<TeacherLiveSessionPage />} />
+                <Route path="/attendance" element={<TeacherAttendancePage_Simple />} />
                 <Route path="/approvals" element={<TeacherApprovalsPage_Batch />} />
                 <Route path="/students" element={<TeacherStudentsPage />} />
                 <Route path="/tasks" element={<TeacherTasksPage onCreateAssignment={() => setIsCreatingAssignment(true)} />} />
                 <Route path="/exams" element={<TeacherExamsPage />} />
-                <Route path="/attendance" element={<TeacherAttendancePage />} />
-                <Route path="/students/:studentId" element={<StudentProfilePage />} />
+                                <Route path="/students/:studentId" element={<StudentProfilePage />} />
                 <Route path="/profile" element={<ProfilePage />} />
               </Routes>
             </ProtectedRoute>
