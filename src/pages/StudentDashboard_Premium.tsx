@@ -84,14 +84,15 @@ interface LiveSession {
 }
 
 export const StudentDashboard_Premium: React.FC = () => {
+  console.log(' STUDENT DASHBOARD PREMIUM MOUNTING');
   const navigate = useNavigate();
-  const { profile, studentData, signOut } = useAuth();
+  const { profile, user, studentData, loading, signOut } = useAuth();
   const [course, setCourse] = useState<any>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({});
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [dataLoading, setDataLoading] = useState(true);
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   
   // Header state
@@ -183,7 +184,7 @@ export const StudentDashboard_Premium: React.FC = () => {
 
   const fetchCourseData = useCallback(async () => {
     if (!studentData?.courseId || !user) {
-      setLoading(false);
+      setDataLoading(false);
       return;
     }
 
@@ -235,7 +236,7 @@ export const StudentDashboard_Premium: React.FC = () => {
     } catch (error) {
       console.error('Error fetching course data:', error);
     } finally {
-      setLoading(false);
+      setDataLoading(false);
     }
   }, [studentData?.courseId, user]);
 
@@ -244,7 +245,7 @@ export const StudentDashboard_Premium: React.FC = () => {
   }, [fetchCourseData]);
 
   // SAFETY CHECK: Prevent white screen crashes
-  if (loading || !profile) {
+  if (loading || dataLoading || !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
         <div className="text-center">

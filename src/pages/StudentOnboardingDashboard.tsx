@@ -43,7 +43,8 @@ interface StatusStep {
 }
 
 export const StudentOnboardingDashboard: React.FC = () => {
-  const { user, studentData, loading } = useAuth();
+  console.log(' /DASHBOARD PAGE MOUNTING - StudentOnboardingDashboard');
+  const { profile, user, studentData, loading, loadingStatus } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as { 
@@ -57,7 +58,6 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const [currentStatus, setCurrentStatus] = useState<OnboardingStatus>('account_created');
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [rejectionInfo, setRejectionInfo] = useState<RejectionInfo | null>(null);
-  const [loadingStatus, setLoadingStatus] = useState(false);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // Single source of truth for access
@@ -214,6 +214,25 @@ export const StudentOnboardingDashboard: React.FC = () => {
   }
 
   const statusSteps = getStatusSteps();
+
+  // TEMPORARY SIMPLE TEST: Isolate the issue
+  console.log('🔍 RENDERING SIMPLE DASHBOARD TEST');
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
+        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <span className="text-blue-600 text-xl">🏠</span>
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 mb-2">Home Dashboard</h3>
+        <p className="text-gray-600 text-sm mb-4">Dashboard route is working!</p>
+        <div className="text-xs text-gray-500">
+          <p>Profile: {profile?.name || 'Loading...'}</p>
+          <p>Loading: {loading ? 'Yes' : 'No'}</p>
+          <p>Student Data: {studentData ? 'Yes' : 'No'}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   // FINAL SAFETY WRAPPER: Prevent any remaining white screen crashes
   try {

@@ -15,6 +15,7 @@ export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({
   allowedStatuses = ['approved'], 
   fallbackPath = '/onboarding' 
 }) => {
+  console.log('🔍 APPROVAL GUARD MOUNTING - pathname:', location.pathname);
   const { studentData, loading } = useAuth();
   const location = useLocation();
 
