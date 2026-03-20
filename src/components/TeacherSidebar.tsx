@@ -96,16 +96,20 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
           icon: FileText
         }
       ]
+    },
+    {
+      title: 'Settings',
+      items: [
+        {
+          path: '/teacher/profile',
+          label: 'Profile Settings',
+          icon: Settings
+        }
+      ]
     }
   ];
 
   const bottomMenuItems = [
-    {
-      path: '/teacher/profile',
-      label: 'Profile Settings',
-      icon: Settings,
-      action: () => navigate('/teacher/profile')
-    },
     {
       path: '#',
       label: 'Sign Out',

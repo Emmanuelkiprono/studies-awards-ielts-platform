@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { TeacherSidebar } from './TeacherSidebar';
+import { ProfileDropdown } from './ProfileDropdown';
 import { useAuth } from '../hooks/useAuth';
 
 interface TeacherLayoutProps {
@@ -28,10 +29,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
               <p className="text-sm text-gray-500">Manage your classes and students</p>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-900">{profile?.name}</p>
-                <p className="text-xs text-gray-500">{profile?.role}</p>
-              </div>
+              <ProfileDropdown />
             </div>
           </div>
         </header>

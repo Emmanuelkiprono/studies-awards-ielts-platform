@@ -48,6 +48,14 @@ interface UpcomingSession {
   studentsCount: number;
 }
 
+interface LiveSession {
+  id: string;
+  lessonTitle: string;
+  batchName: string;
+  studentsCount: number;
+  meetingLink?: string;
+}
+
 export const TeacherDashboard: React.FC = () => {
   const navigate = useNavigate();
   const { profile } = useAuth();
@@ -63,6 +71,7 @@ export const TeacherDashboard: React.FC = () => {
   });
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [upcomingSessions, setUpcomingSessions] = useState<UpcomingSession[]>([]);
+  const [liveSession, setLiveSession] = useState<LiveSession | null>(null);
 
   useEffect(() => {
     if (!profile?.uid) return;
@@ -106,6 +115,20 @@ export const TeacherDashboard: React.FC = () => {
     );
     const unsubscribeLiveSessions = onSnapshot(liveSessionsQuery, (snapshot) => {
       setStats(prev => ({ ...prev, liveClassesRunning: snapshot.docs.length }));
+      
+      // Set live session data
+      if (!snapshot.empty) {
+        const sessionData = snapshot.docs[0].data();
+        setLiveSession({
+          id: snapshot.docs[0].id,
+          lessonTitle: sessionData.lessonTitle || 'Live Session',
+          batchName: sessionData.batchName || 'Batch',
+          studentsCount: sessionData.studentsCount || 0,
+          meetingLink: sessionData.meetingLink
+        });
+      } else {
+        setLiveSession(null);
+      }
     });
 
     // Mock recent activity
@@ -165,6 +188,26 @@ export const TeacherDashboard: React.FC = () => {
       unsubscribeLiveSessions();
     };
   }, [profile?.uid]);
+
+  // Helper function to format timestamps
+  const formatTimeAgo = (timestamp: Date): string => {
+    const now = new Date();
+    const diff = now.getTime() - timestamp.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes} min ago`;
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return timestamp.toLocaleDateString();
+  };
+
+  const formatTime = (timestamp: Date): string => {
+    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const statCards = [
     {
@@ -316,7 +359,10 @@ export const TeacherDashboard: React.FC = () => {
           <div className="bg-white border border-gray-200 rounded-xl p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Today's Focus</h2>
             <div className="space-y-3">
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              <button
+                onClick={() => navigate('/teacher/approvals')}
+                className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+              >
                 <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
                   <UserCheck size={20} className="text-yellow-600" />
                 </div>
@@ -325,9 +371,12 @@ export const TeacherDashboard: React.FC = () => {
                   <p className="text-sm text-gray-600">{stats.pendingApprovals} students waiting</p>
                 </div>
                 <ArrowRight size={20} className="text-gray-400" />
-              </div>
+              </button>
 
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              <button
+                onClick={() => navigate('/teacher/live-classes')}
+                className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+              >
                 <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Video size={20} className="text-purple-600" />
                 </div>
@@ -336,9 +385,12 @@ export const TeacherDashboard: React.FC = () => {
                   <p className="text-sm text-gray-600">Grammar Fundamentals at 2:00 PM</p>
                 </div>
                 <ArrowRight size={20} className="text-gray-400" />
-              </div>
+              </button>
 
-              <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              <button
+                onClick={() => navigate('/teacher/attendance')}
+                className="w-full flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors text-left"
+              >
                 <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                   <Calendar size={20} className="text-green-600" />
                 </div>
@@ -347,7 +399,7 @@ export const TeacherDashboard: React.FC = () => {
                   <p className="text-sm text-gray-600">3 classes need review</p>
                 </div>
                 <ArrowRight size={20} className="text-gray-400" />
-              </div>
+              </button>
             </div>
           </div>
         </div>
@@ -381,7 +433,7 @@ export const TeacherDashboard: React.FC = () => {
       </div>
 
       {/* Live Now Section */}
-      {stats.liveClassesRunning > 0 && (
+      {liveSession && (
         <div className="bg-white border border-gray-200 rounded-xl p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Live Now</h2>
           <div className="flex items-center gap-4 p-4 bg-purple-50 border border-purple-200 rounded-lg">
@@ -389,12 +441,40 @@ export const TeacherDashboard: React.FC = () => {
               <Video size={24} className="text-white" />
             </div>
             <div className="flex-1">
-              <h3 className="font-medium text-gray-900">Grammar Fundamentals</h3>
-              <p className="text-sm text-gray-600">IELTS Batch A • 15 students</p>
+              <h3 className="font-medium text-gray-900">{liveSession.lessonTitle}</h3>
+              <p className="text-sm text-gray-600">{liveSession.batchName} • {liveSession.studentsCount} students</p>
             </div>
-            <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
+            <button 
+              onClick={() => window.open(liveSession.meetingLink, '_blank')}
+              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+            >
               Join Session
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Upcoming Classes Today */}
+      {upcomingSessions.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Upcoming Classes Today</h2>
+          <div className="space-y-3">
+            {upcomingSessions.map((session, index) => (
+              <div key={session.id} className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Video size={20} className="text-blue-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">{session.lessonTitle}</p>
+                  <p className="text-xs text-gray-600">{session.batchName} • {session.studentsCount} students</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-blue-600 font-medium">
+                    {formatTime(session.scheduledTime)}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
@@ -416,7 +496,7 @@ export const TeacherDashboard: React.FC = () => {
                 <p className="text-xs text-gray-600">{activity.studentName}</p>
               </div>
               <span className="text-xs text-gray-500">
-                {activity.timestamp.toLocaleTimeString()}
+                {formatTimeAgo(activity.timestamp)}
               </span>
             </div>
           ))}
