@@ -270,22 +270,26 @@ export const StudentOnboardingDashboard: React.FC = () => {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-1">
-                  Welcome back, {safeUserName}!
+                  Today's Learning
                 </h2>
                 <p className="text-gray-500 text-sm">
-                  {hasAccess ? "Your training journey continues" : "Your enrollment is pending activation"}
+                  Pick up where you left off and complete today's tasks.
                 </p>
               </div>
               <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center">
-                <span className="text-purple-600 text-xl">✨</span>
+                <span className="text-purple-600 text-xl">📚</span>
               </div>
             </div>
             
-            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-              {hasAccess
-                ? "Keep up the momentum and unlock your full potential."
-                : "We'll notify you as soon as your access is ready."}
-            </p>
+            {/* Primary CTA */}
+            <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg mb-3">
+              Continue Learning
+            </button>
+            
+            {/* Secondary CTA */}
+            <button className="w-full bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-2xl hover:bg-gray-200 transition-colors">
+              Practice
+            </button>
           </div>
 
           {/* Quick Actions */}
@@ -308,34 +312,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
             </button>
           </div>
 
-          {/* Status Card */}
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Your Status</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-blue-600">📚</span>
-                  <span className="text-sm font-medium text-gray-900">Training</span>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  hasAccess ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {hasAccess ? 'Active' : 'Pending'}
-                </span>
-              </div>
-              
-              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <span className="text-purple-600">🎓</span>
-                  <span className="text-sm font-medium text-gray-900">Enrollment</span>
-                </div>
-                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
-                  {studentData?.onboardingStatus || 'Processing'}
-                </span>
-              </div>
-            </div>
-          </div>
-
+          
           {/* Today's Tasks */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Today's Tasks</h3>
