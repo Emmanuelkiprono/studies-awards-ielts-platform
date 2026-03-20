@@ -14,18 +14,10 @@ import {
   Zap,
   ShieldCheck,
   Trophy,
-  Clock,
   ChevronRight,
-  FileIcon,
   Video,
-  ArrowRight,
-  Lock,
-  X,
-  FileText,
-  Flame,
-  Target,
+  FileIcon,
   Award,
-  Users,
   Headphones,
   Book,
   Star,
@@ -36,10 +28,17 @@ import {
   Coffee,
   Search,
   MoreVertical,
-  User,
   Settings,
   LogOut,
-  Camera
+  Camera,
+  Bell,
+  User,
+  X,
+  ArrowRight,
+  FileText,
+  Clock,
+  Flame,
+  Target
 } from 'lucide-react';
 import { doc, collection, query, where, getDocs, getDoc, updateDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -312,12 +311,12 @@ export const StudentDashboard_Premium: React.FC = () => {
               
               {/* Right Side Actions */}
               <div className="flex items-center gap-2">
-                {/* Search Button */}
+                {/* Notifications Button */}
                 <button
-                  onClick={() => setShowMoreOptions(!showMoreOptions)}
+                  onClick={() => navigate('/notifications')}
                   className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  🔍
+                  <Bell size={16} className="text-gray-600" />
                 </button>
                 
                 {/* Menu Button */}
@@ -325,7 +324,7 @@ export const StudentDashboard_Premium: React.FC = () => {
                   onClick={() => setShowMoreOptions(!showMoreOptions)}
                   className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  ⋯
+                  <MoreVertical size={16} className="text-gray-600" />
                 </button>
               </div>
             </div>

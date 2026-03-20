@@ -11,6 +11,7 @@ import { LiveClassesPage } from './pages/LiveClassesPage';
 import { AssignmentsPage } from './pages/AssignmentsPage';
 import { ResourcesPage } from './pages/ResourcesPage';
 import { ProgressPage } from './pages/ProgressPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 
 import { EnrollmentPage } from './pages/EnrollmentPage';
 import { BreemicEnrollmentPage } from './pages/BreemicEnrollmentPage';
@@ -204,6 +205,13 @@ const AppContent: React.FC = () => {
             <ProtectedRoute allowedRoles={['student']}>
               <ApprovalGuard>
                 <ProgressPage />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          <Route path="/notifications" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <NotificationsPage />
               </ApprovalGuard>
             </ProtectedRoute>
           } />
