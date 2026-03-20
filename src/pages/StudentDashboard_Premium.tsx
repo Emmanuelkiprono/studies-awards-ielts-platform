@@ -113,13 +113,18 @@ export const StudentDashboard_Premium: React.FC = () => {
   const trainingStatus = studentData?.trainingStatus || 'inactive';
   const examStatus = studentData?.examStatus || 'not_started';
 
-  // Header functions
+  // Safe Header functions
   const handleSignOut = async () => {
     try {
-      await signOut();
+      // Safe sign out - try multiple methods
+      if (signOut) {
+        await signOut();
+      }
       navigate('/auth');
     } catch (error) {
       console.error('Error signing out:', error);
+      // Fallback navigation even if sign out fails
+      navigate('/auth');
     }
   };
 
@@ -238,12 +243,16 @@ export const StudentDashboard_Premium: React.FC = () => {
     fetchCourseData();
   }, [fetchCourseData]);
 
-  if (loading) {
+  // SAFETY CHECK: Prevent white screen crashes
+  if (loading || !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="relative">
-          <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-          <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-400 rounded-full animate-spin animation-delay-150" />
+        <div className="text-center">
+          <div className="relative mb-4">
+            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-400 rounded-full animate-spin animation-delay-150" />
+          </div>
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -271,32 +280,23 @@ export const StudentDashboard_Premium: React.FC = () => {
     <>
       {/* Premium Mobile Dashboard */}
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
-        {/* Premium Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-white shadow-sm border-b border-gray-100"
-        >
+        {/* Simple Safe Header */}
+        <div className="bg-white shadow-sm border-b border-gray-100">
           <div className="px-4 py-4">
             <div className="flex items-center justify-between">
               {/* User Profile Section */}
               <div className="flex items-center gap-3">
                 {/* User Avatar */}
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-sm">
-                  {profile?.name ? (
-                    <span className="text-white font-semibold text-sm">
-                      {profile.name.charAt(0).toUpperCase()}
-                    </span>
-                  ) : (
-                    <User size={18} className="text-white" />
-                  )}
+                  <span className="text-white font-semibold text-sm">
+                    {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
                 </div>
                 
                 {/* Greeting Text */}
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Hello, {profile?.name || 'User'}!
+                    Hello, {profile?.name || 'User'}
                   </h2>
                   <p className="text-sm text-gray-500">Welcome back</p>
                 </div>
@@ -305,68 +305,49 @@ export const StudentDashboard_Premium: React.FC = () => {
               {/* Right Side Actions */}
               <div className="flex items-center gap-2">
                 {/* Search Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                <button
+                  onClick={() => setShowMoreOptions(!showMoreOptions)}
                   className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <Search size={16} className="text-gray-600" />
-                </motion.button>
+                  🔍
+                </button>
                 
-                {/* More Options Button */}
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                {/* Menu Button */}
+                <button
                   onClick={() => setShowMoreOptions(!showMoreOptions)}
-                  className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors relative"
+                  className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <MoreVertical size={16} className="text-gray-600" />
-                </motion.button>
+                  ⋯
+                </button>
               </div>
             </div>
           </div>
           
-          {/* More Options Dropdown */}
-          <AnimatePresence>
-            {showMoreOptions && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="absolute top-16 right-4 z-50"
+          {/* Simple Menu Dropdown */}
+          {showMoreOptions && (
+            <div className="absolute top-16 right-4 z-50 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden min-w-[180px]">
+              <button
+                onClick={() => {
+                  setShowMoreOptions(false);
+                  setShowProfileSettings(true);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100"
               >
-                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden min-w-[180px]">
-                  <motion.button
-                    whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setShowMoreOptions(false);
-                      setShowProfileSettings(true);
-                    }}
-                    className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
-                  >
-                    <Settings size={16} className="text-gray-600" />
-                    <span className="text-sm font-medium text-gray-900">Profile Settings</span>
-                  </motion.button>
-                  
-                  <motion.button
-                    whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                      setShowMoreOptions(false);
-                      setShowSignOutConfirm(true);
-                    }}
-                    className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100"
-                  >
-                    <LogOut size={16} className="text-red-600" />
-                    <span className="text-sm font-medium text-red-600">Sign Out</span>
-                  </motion.button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                <span className="text-sm font-medium text-gray-900">Profile Settings</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowMoreOptions(false);
+                  setShowSignOutConfirm(true);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-sm font-medium text-red-600">Sign Out</span>
+              </button>
+            </div>
+          )}
+        </div>
         
         {/* Profile Settings Modal */}
         <AnimatePresence>
@@ -501,55 +482,35 @@ export const StudentDashboard_Premium: React.FC = () => {
           )}
         </AnimatePresence>
         
-        {/* Sign Out Confirmation */}
-        <AnimatePresence>
-          {showSignOutConfirm && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
-              onClick={() => setShowSignOutConfirm(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="bg-white rounded-2xl p-6 max-w-sm w-full"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <div className="text-center mb-6">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <LogOut size={20} className="text-red-600" />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">Sign Out</h3>
-                  <p className="text-gray-600 text-sm">Are you sure you want to sign out?</p>
+        {/* Simple Sign Out Confirmation */}
+        {showSignOutConfirm && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+              <div className="text-center mb-6">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-red-600 text-xl">🚪</span>
                 </div>
-                
-                <div className="flex gap-3">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowSignOutConfirm(false)}
-                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
-                  >
-                    Cancel
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleSignOut}
-                    className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
-                  >
-                    Sign Out
-                  </motion.button>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Sign Out</h3>
+                <p className="text-gray-600 text-sm">Are you sure you want to sign out?</p>
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowSignOutConfirm(false)}
+                  className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSignOut}
+                  className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+                >
+                  Sign Out
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Main Content */}
         <motion.div
