@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 
 export function TodaysLearning() {
+  console.log('🔍 TODAYS LEARNING MOUNTED - Step A test (no wrappers)');
   const navigate = useNavigate();
 
   return (

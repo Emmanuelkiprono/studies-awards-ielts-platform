@@ -157,13 +157,7 @@ const AppContent: React.FC = () => {
             </ProtectedRoute>
           } />
           
-          <Route path="/student/todays-learning" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <TodaysLearning />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
+          <Route path="/student/todays-learning" element={<TodaysLearning />} />
           
           <Route path="/batch" element={
             <ProtectedRoute allowedRoles={['student']}>
