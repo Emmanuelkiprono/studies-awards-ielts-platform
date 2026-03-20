@@ -454,37 +454,105 @@ export const StudentDashboard: React.FC = () => {
                 </motion.button>
               </div>
               
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="space-y-3">
                 {[
-                  { type: 'lesson', title: 'Speaking Basics', time: '45 min', status: 'in-progress', color: 'from-blue-100 to-blue-200' },
-                  { type: 'live', title: 'Live Practice', time: '2:00 PM', status: 'upcoming', color: 'from-purple-100 to-purple-200' },
-                  { type: 'assignment', title: 'Voice Recording', time: '30 min', status: 'pending', color: 'from-green-100 to-green-200' }
+                  { 
+                    type: 'lesson', 
+                    title: 'Speaking Basics', 
+                    time: '45 min', 
+                    status: 'in-progress', 
+                    bgColor: 'bg-blue-50',
+                    borderColor: 'border-blue-200',
+                    iconBg: 'bg-blue-100',
+                    iconColor: 'text-blue-600',
+                    statusColor: 'bg-blue-100 text-blue-700'
+                  },
+                  { 
+                    type: 'live', 
+                    title: 'Live Practice', 
+                    time: '2:00 PM', 
+                    status: 'upcoming',
+                    bgColor: 'bg-purple-50',
+                    borderColor: 'border-purple-200',
+                    iconBg: 'bg-purple-100',
+                    iconColor: 'text-purple-600',
+                    statusColor: 'bg-purple-100 text-purple-700'
+                  },
+                  { 
+                    type: 'assignment', 
+                    title: 'Voice Recording', 
+                    time: '30 min', 
+                    status: 'pending',
+                    bgColor: 'bg-green-50',
+                    borderColor: 'border-green-200',
+                    iconBg: 'bg-green-100',
+                    iconColor: 'text-green-600',
+                    statusColor: 'bg-gray-100 text-gray-700'
+                  }
                 ].map((task, index) => (
                   <motion.div
                     key={index}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className={`flex items-center gap-3 p-3 ${index !== 2 ? 'border-b border-gray-100' : ''}`}
+                    whileHover={{ scale: 1.01 }}
+                    className={`${task.bgColor} ${task.borderColor} rounded-2xl border p-4 shadow-sm hover:shadow-md transition-all duration-300`}
                   >
-                    <div className={`w-8 h-8 bg-gradient-to-br ${task.color} rounded-xl flex items-center justify-center flex-shrink-0`}>
-                      {task.type === 'lesson' && <PlayCircle size={14} className="text-blue-600" />}
-                      {task.type === 'live' && <Video size={14} className="text-purple-600" />}
-                      {task.type === 'assignment' && <FileText size={14} className="text-green-600" />}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 text-sm truncate">{task.title}</p>
-                      <p className="text-xs text-gray-500">{task.time}</p>
-                    </div>
-                    
-                    <div className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      task.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
-                      task.status === 'upcoming' ? 'bg-purple-100 text-purple-700' :
-                      'bg-gray-100 text-gray-700'
-                    }`}>
-                      {task.status === 'in-progress' ? 'In Progress' :
-                       task.status === 'upcoming' ? 'Upcoming' : 'Pending'}
+                    <div className="flex items-start gap-3">
+                      {/* Time indicator */}
+                      <div className="flex flex-col items-center">
+                        <div className={`w-10 h-10 ${task.iconBg} rounded-xl flex items-center justify-center flex-shrink-0`}>
+                          {task.type === 'lesson' && <PlayCircle size={16} className={task.iconColor} />}
+                          {task.type === 'live' && <Video size={16} className={task.iconColor} />}
+                          {task.type === 'assignment' && <FileText size={16} className={task.iconColor} />}
+                        </div>
+                        <div className="text-xs font-medium text-gray-600 mt-1">
+                          {task.type === 'lesson' ? '45m' : 
+                           task.type === 'live' ? '2PM' : '30m'}
+                        </div>
+                      </div>
+                      
+                      {/* Task content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 text-sm mb-1">{task.title}</h4>
+                            <p className="text-xs text-gray-600">
+                              {task.type === 'lesson' ? 'Self-paced lesson' :
+                               task.type === 'live' ? 'Live session with instructor' :
+                               'Submit assignment'}
+                            </p>
+                          </div>
+                          
+                          {/* Status indicator */}
+                          <div className={`px-2 py-1 rounded-full text-xs font-medium ${task.statusColor}`}>
+                            {task.status === 'in-progress' ? 'Active' :
+                             task.status === 'upcoming' ? 'Scheduled' : 'Pending'}
+                          </div>
+                        </div>
+                        
+                        {/* Action buttons */}
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-medium ${task.iconBg} ${task.iconColor} hover:opacity-80 transition-opacity`}
+                          >
+                            {task.type === 'lesson' ? 'Start' :
+                             task.type === 'live' ? 'Join' : 'Begin'}
+                          </motion.button>
+                          
+                          {task.status === 'in-progress' && (
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+                            >
+                              Resume
+                            </motion.button>
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
                 ))}
