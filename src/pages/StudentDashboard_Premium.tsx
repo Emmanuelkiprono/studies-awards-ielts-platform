@@ -258,6 +258,11 @@ export const StudentDashboard_Premium: React.FC = () => {
     );
   }
 
+  // ADDITIONAL SAFETY: Safe data defaults
+  const safeUserName = profile?.name || user?.user_metadata?.full_name || "Student";
+  const safeModulesList = Array.isArray(modules) ? modules : [];
+  const safeTasksList = []; // Tasks are static mock data, safe to use empty array
+
   if (!isEnrolled && profile?.role === 'student') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-8">
@@ -276,10 +281,12 @@ export const StudentDashboard_Premium: React.FC = () => {
     );
   }
 
-  return (
-    <>
-      {/* Premium Mobile Dashboard */}
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+  // FINAL SAFETY WRAPPER: Prevent any remaining white screen crashes
+  try {
+    return (
+      <>
+        {/* Premium Mobile Dashboard */}
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
         {/* Simple Safe Header */}
         <div className="bg-white shadow-sm border-b border-gray-100">
           <div className="px-4 py-4">
@@ -854,4 +861,24 @@ export const StudentDashboard_Premium: React.FC = () => {
         </div>
       </>
     );
+  } catch (error) {
+    console.error('Dashboard render error:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-600 text-xl">⚠️</span>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Home content unavailable</h3>
+          <p className="text-gray-600 text-sm mb-4">Please try refreshing the page</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
+    );
+  }
 };

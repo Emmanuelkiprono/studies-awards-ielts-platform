@@ -269,7 +269,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
           active={isActive('/dashboard') || isActive('/courses')}
           onClick={() => {
             const dashboardRoute = hasLearningAccess ? '/courses' : '/dashboard';
-            console.log('HOME TAB CLICK', { hasLearningAccess, dashboardRoute, studentData });
+            console.log('HOME TAB CLICK - DEBUG:', { hasLearningAccess, dashboardRoute, studentData, currentPath: window.location.pathname });
             navigate(dashboardRoute);
           }}
         />
