@@ -215,12 +215,14 @@ export const StudentOnboardingDashboard: React.FC = () => {
 
   const statusSteps = getStatusSteps();
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"
-    >
+  // FINAL SAFETY WRAPPER: Prevent any remaining white screen crashes
+  try {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"
+      >
       
       {/* Subtle ambient gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-slate-500/10 dark:from-blue-900/5 dark:via-purple-900/5 dark:to-slate-900/10 pointer-events-none" />
@@ -699,5 +701,25 @@ export const StudentOnboardingDashboard: React.FC = () => {
         </motion.div>
       )}
     </motion.div>
-  );
+    );
+  } catch (error) {
+    console.error('Onboarding Dashboard render error:', error);
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
+          <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-600 text-xl">⚠️</span>
+          </div>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">Home content unavailable</h3>
+          <p className="text-gray-600 text-sm mb-4">Please try refreshing the page</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+          >
+            Refresh
+          </button>
+        </div>
+      </div>
+    );
+  }
 };

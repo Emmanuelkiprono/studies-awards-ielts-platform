@@ -268,9 +268,9 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
           label="Home"
           active={isActive('/dashboard') || isActive('/courses')}
           onClick={() => {
-            const dashboardRoute = hasLearningAccess ? '/courses' : '/dashboard';
-            console.log('HOME TAB CLICK - DEBUG:', { hasLearningAccess, dashboardRoute, studentData, currentPath: window.location.pathname });
-            navigate(dashboardRoute);
+            // SAFE FIX: Always navigate to /dashboard first to avoid ApprovalGuard issues
+            console.log('HOME TAB CLICK - DEBUG:', { hasLearningAccess, studentData, currentPath: window.location.pathname, navigatingTo: '/dashboard' });
+            navigate('/dashboard');
           }}
         />
         <NavItem
