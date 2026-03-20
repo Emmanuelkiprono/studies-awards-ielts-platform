@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { TopBar, BottomNav } from './components/Navigation';
 import { RoleBasedLayout } from './components/RoleBasedLayout';
 import { StudentDashboard } from './pages/StudentDashboard_Premium';
+import { TodaysLearning } from './pages/TodaysLearning';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AuthPage } from './pages/AuthPage';
 
@@ -152,6 +153,14 @@ const AppContent: React.FC = () => {
             <ProtectedRoute allowedRoles={['student']}>
               <ApprovalGuard>
                 <StudentDashboard />
+              </ApprovalGuard>
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/student/todays-learning" element={
+            <ProtectedRoute allowedRoles={['student']}>
+              <ApprovalGuard>
+                <TodaysLearning />
               </ApprovalGuard>
             </ProtectedRoute>
           } />

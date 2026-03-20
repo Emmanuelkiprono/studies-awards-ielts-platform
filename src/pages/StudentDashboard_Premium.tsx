@@ -266,7 +266,7 @@ export const StudentDashboard: React.FC = () => {
                     <motion.button
                       whileHover={{ scale: 1.05, y: -2 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => navigate('/student/lessons')}
+                      onClick={() => navigate('/student/todays-learning')}
                       className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-4 rounded-2xl font-semibold hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl"
                     >
                       Continue Learning
@@ -298,7 +298,7 @@ export const StudentDashboard: React.FC = () => {
             <div className="bg-white/60 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-xl">
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { icon: PlayCircle, label: 'Continue Learning', color: 'from-blue-500 to-indigo-600', action: () => navigate('/student/lessons') },
+                  { icon: PlayCircle, label: 'Continue Learning', color: 'from-blue-500 to-indigo-600', action: () => navigate('/student/todays-learning') },
                   { icon: FileText, label: 'Practice Test', color: 'from-green-500 to-emerald-600', action: () => navigate('/student/tests') },
                   { icon: Video, label: 'Live Class', color: 'from-purple-500 to-pink-600', action: () => navigate('/student/live') },
                   { icon: BookOpen, label: 'Resources', color: 'from-orange-500 to-red-600', action: () => navigate('/student/resources') }
