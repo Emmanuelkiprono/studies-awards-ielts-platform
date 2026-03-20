@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { TopBar, BottomNav } from './components/Navigation';
+import { RoleBasedLayout } from './components/RoleBasedLayout';
 import { StudentDashboard } from './pages/StudentDashboard';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AuthPage } from './pages/AuthPage';
@@ -94,26 +95,9 @@ const AppContent: React.FC = () => {
 
   const userRole = profile.role;
 
-  // Deduced UI structure
-  const isTeacherRoute = location.pathname.startsWith('/teacher');
-  const showBottomNav = !isCreatingAssignment && (userRole === 'teacher' || (userRole === 'student' && (studentData?.trainingPaymentStatus === 'paid' || studentData?.onboardingStatus === 'approved')));
-
   return (
-    <div className="min-h-screen flex flex-col bg-[var(--ui-bg)]">
-      <TopBar
-        title={profile.name}
-        subtitle={
-          userRole === 'student'
-            ? (studentData?.trainingStatus === 'active' ? 'Active Student' : 'Student')
-            : userRole === 'teacher' ? 'Faculty Member'
-            : 'Administrator'
-        }
-        avatarUrl={profile.avatarUrl || `https://picsum.photos/seed/${profile.uid}/100/100`}
-        onProfileClick={() => navigate('/profile')}
-      />
-
-      <main className="flex-1 overflow-x-hidden no-scrollbar">
-        <Routes>
+    <RoleBasedLayout>
+      <Routes>
           {/* Base Redirects */}
           <Route path="/" element={
             userRole === 'admin' ? <Navigate to="/admin" replace /> :
@@ -122,30 +106,24 @@ const AppContent: React.FC = () => {
           } />
 
           {/* Teacher Routes */}
-          <Route path="/teacher/*" element={
-            <ProtectedRoute allowedRoles={['teacher', 'admin']}>
-              <Routes>
-                <Route path="/" element={<TeacherDashboard />} />
-                <Route path="/courses" element={<TeacherCoursesPage />} />
-                <Route path="/modules" element={<TeacherModulesPage />} />
-                <Route path="/batches" element={<TeacherBatchesPage_Quick />} />
-                <Route path="/batches/:batchId" element={<TeacherBatchDetailsPage />} />
-                <Route path="/batches/:batchId/lessons" element={<TeacherBatchLessonsPage />} />
-                <Route path="/lessons/:lessonId" element={<TeacherLessonDetailsPage />} />
-                <Route path="/batches/:batchId/lessons/:lessonId/live" element={<TeacherLiveSessionPage />} />
-                <Route path="/lessons" element={<TeacherLessonsPage_Simple />} />
-                <Route path="/live" element={<TeacherLiveClassesPage_Simple />} />
-                <Route path="/live-session/:sessionId" element={<TeacherLiveSessionPage />} />
-                <Route path="/attendance" element={<TeacherAttendancePage_Simple />} />
-                <Route path="/approvals" element={<TeacherApprovalsPage_Batch />} />
-                <Route path="/students" element={<TeacherStudentsPage />} />
-                <Route path="/tasks" element={<TeacherTasksPage onCreateAssignment={() => setIsCreatingAssignment(true)} />} />
-                <Route path="/exams" element={<TeacherExamsPage />} />
-                                <Route path="/students/:studentId" element={<StudentProfilePage />} />
-                <Route path="/profile" element={<ProfilePage />} />
-              </Routes>
-            </ProtectedRoute>
-          } />
+          <Route path="/teacher" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherDashboard /></ProtectedRoute>} />
+          <Route path="/teacher/courses" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherCoursesPage /></ProtectedRoute>} />
+          <Route path="/teacher/modules" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherModulesPage /></ProtectedRoute>} />
+          <Route path="/teacher/batches" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherBatchesPage_Quick /></ProtectedRoute>} />
+          <Route path="/teacher/batches/:batchId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherBatchDetailsPage /></ProtectedRoute>} />
+          <Route path="/teacher/batches/:batchId/lessons" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherBatchLessonsPage /></ProtectedRoute>} />
+          <Route path="/teacher/lessons/:lessonId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLessonDetailsPage /></ProtectedRoute>} />
+          <Route path="/teacher/batches/:batchId/lessons/:lessonId/live" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLiveSessionPage /></ProtectedRoute>} />
+          <Route path="/teacher/lessons" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLessonsPage_Simple /></ProtectedRoute>} />
+          <Route path="/teacher/live-classes" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLiveClassesPage_Simple /></ProtectedRoute>} />
+          <Route path="/teacher/live-session/:sessionId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLiveSessionPage /></ProtectedRoute>} />
+          <Route path="/teacher/attendance" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherAttendancePage_Simple /></ProtectedRoute>} />
+          <Route path="/teacher/approvals" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherApprovalsPage_Batch /></ProtectedRoute>} />
+          <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherStudentsPage /></ProtectedRoute>} />
+          <Route path="/teacher/tasks" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherTasksPage onCreateAssignment={() => setIsCreatingAssignment(true)} /></ProtectedRoute>} />
+          <Route path="/teacher/exams" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherExamsPage /></ProtectedRoute>} />
+          <Route path="/teacher/students/:studentId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentProfilePage /></ProtectedRoute>} />
+          <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><ProfilePage /></ProtectedRoute>} />
 
           {/* Shared Routes - Live Classes for both teachers and students */}
           <Route path="/live" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><LiveClassesPage /></ProtectedRoute>} />
@@ -232,12 +210,7 @@ const AppContent: React.FC = () => {
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </main>
-
-      {showBottomNav && (
-        <BottomNav role={userRole} />
-      )}
-    </div>
+    </RoleBasedLayout>
   );
 };
 
