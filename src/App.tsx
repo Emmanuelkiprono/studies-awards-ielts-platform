@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { TopBar, BottomNav } from './components/Navigation';
 import { RoleBasedLayout } from './components/RoleBasedLayout';
-import { StudentDashboard } from './pages/StudentDashboard';
+import { StudentDashboard } from './pages/StudentDashboard_Premium';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { AuthPage } from './pages/AuthPage';
 
