@@ -157,8 +157,15 @@ export function TodaysLearning() {
                 <span className="text-yellow-500 text-sm mr-1">🏆</span>
                 <span className="text-gray-600 text-sm">Progress</span>
               </div>
-              <div className="text-xl font-bold text-gray-900">{Math.round(progressPercentage)}%</div>
-              <div className="text-xs text-gray-500">completion</div>
+              <div className="mt-2">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-500 ease-out"
+                    style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                  />
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">{Math.round(progressPercentage)}% complete</div>
             </div>
             
             <div>
