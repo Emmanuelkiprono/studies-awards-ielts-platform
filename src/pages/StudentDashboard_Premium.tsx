@@ -105,7 +105,7 @@ export const StudentDashboard: React.FC = () => {
     const totalLessons = Object.values(lessons).flat().length;
     const completedLessons = Object.values(lessons).flat().filter(lesson => lesson.completed).length;
     const overallProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-    const weeklyStreak = studentData?.weeklyStreak || 0;
+    const weeklyStreak = (studentData as any)?.weeklyStreak || 0;
     const nextMilestone = overallProgress < 25 ? '25%' : overallProgress < 50 ? '50%' : overallProgress < 75 ? '75%' : '100%';
     
     return {
@@ -310,9 +310,9 @@ export const StudentDashboard: React.FC = () => {
                     onClick={item.action}
                     className="relative group"
                   >
-                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 border border-gray-200 hover:border-gray-300 transition-all duration-300">
-                      <div className={`w-12 h-12 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300`}>
-                        <item.icon size={24} className="text-white" />
+                    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-5 border border-gray-200 hover:border-gray-300 transition-all duration-300">
+                      <div className={`w-10 h-10 bg-gradient-to-br ${item.color} rounded-xl flex items-center justify-center mb-3 shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105`}>
+                        <item.icon size={20} className="text-white" />
                       </div>
                       <p className="text-sm font-medium text-gray-900">{item.label}</p>
                     </div>
@@ -355,22 +355,22 @@ export const StudentDashboard: React.FC = () => {
                       {/* Glass morphism card */}
                       <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
                         <div
-                          className="p-6 cursor-pointer"
+                          className="p-5 cursor-pointer"
                           onClick={() => hasLearningAccess && setExpandedModule(isExpanded ? null : mod.id)}
                         >
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-4">
+                            <div className="flex items-center gap-3">
                               {/* Module number with gradient */}
-                              <div className="w-14 h-14 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg">
-                                <span className="text-white font-bold text-lg">{mod.order}</span>
+                              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform duration-300">
+                                <span className="text-white font-bold text-sm">{mod.order}</span>
                               </div>
                               
                               <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-bold text-gray-900 text-xl">{mod.name}</h3>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <h3 className="font-bold text-gray-900 text-lg">{mod.name}</h3>
                                   {progress === 100 && (
-                                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
-                                      <CheckCircle2 size={16} className="text-green-600" />
+                                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center">
+                                      <CheckCircle2 size={14} className="text-green-600" />
                                     </div>
                                   )}
                                 </div>
@@ -386,13 +386,13 @@ export const StudentDashboard: React.FC = () => {
                                   />
                                 </div>
                                 
-                                <div className="flex items-center gap-4 text-sm text-gray-500">
+                                <div className="flex items-center gap-3 text-sm text-gray-500">
                                   <span className="flex items-center gap-1">
-                                    <BookOpen size={14} />
+                                    <BookOpen size={12} />
                                     {moduleLessons.length} lessons
                                   </span>
                                   <span className="flex items-center gap-1">
-                                    <Clock size={14} />
+                                    <Clock size={12} />
                                     {moduleLessons.reduce((acc, lesson) => acc + (lesson.durationMinutes || 0), 0)} min
                                   </span>
                                   <span className="font-medium text-indigo-600">{progress}% complete</span>
@@ -434,15 +434,15 @@ export const StudentDashboard: React.FC = () => {
                                     transition={{ duration: 0.3, delay: lessonIndex * 0.05 }}
                                     className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
                                   >
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center ${
                                       lesson.completed 
                                         ? 'bg-green-100' 
                                         : 'bg-gray-200'
                                     }`}>
                                       {lesson.completed ? (
-                                        <CheckCircle2 size={16} className="text-green-600" />
+                                        <CheckCircle2 size={14} className="text-green-600" />
                                       ) : (
-                                        <PlayCircle size={16} className="text-gray-500" />
+                                        <PlayCircle size={14} className="text-gray-500" />
                                       )}
                                     </div>
                                     <div className="flex-1">
@@ -513,29 +513,29 @@ export const StudentDashboard: React.FC = () => {
                   </div>
                   
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Flame className="text-orange-500" size={20} />
-                        <span className="text-gray-600">Weekly Streak</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-orange-100 to-red-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+                        <Flame size={16} className="text-orange-600" />
                       </div>
-                      <span className="font-bold text-gray-900">{progressMetrics.weeklyStreak} days</span>
+                      <p className="text-xl font-bold text-gray-900">{progressMetrics.weeklyStreak}</p>
+                      <p className="text-xs text-gray-600">Day Streak</p>
                     </div>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="text-green-500" size={20} />
-                        <span className="text-gray-600">Lessons Completed</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-green-100 rounded-xl flex items-center justify-center shadow-lg">
+                        <CheckCircle2 size={16} className="text-green-500" />
                       </div>
-                      <span className="font-bold text-gray-900">{progressMetrics.completedLessons}/{progressMetrics.totalLessons}</span>
+                      <span className="text-gray-600">Lessons Completed</span>
                     </div>
+                    <span className="font-bold text-gray-900">{progressMetrics.completedLessons}/{progressMetrics.totalLessons}</span>
                     
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Target className="text-indigo-500" size={20} />
-                        <span className="text-gray-600">Next Milestone</span>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-indigo-100 rounded-xl flex items-center justify-center shadow-lg">
+                        <Target size={16} className="text-indigo-500" />
                       </div>
-                      <span className="font-bold text-indigo-600">{progressMetrics.nextMilestone}</span>
+                      <span className="text-gray-600">Next Milestone</span>
                     </div>
+                    <span className="font-bold text-indigo-600">{progressMetrics.nextMilestone}</span>
                   </div>
                 </div>
               </motion.div>

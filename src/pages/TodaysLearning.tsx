@@ -77,7 +77,7 @@ export const TodaysLearning: React.FC = () => {
 
     setTasks(mockTasks);
     setCompletedCount(0);
-    setStreak(studentData?.weeklyStreak || 5);
+    setStreak((studentData as any)?.weeklyStreak || 5);
     setLoading(false);
   }, [studentData]);
 
@@ -178,9 +178,9 @@ export const TodaysLearning: React.FC = () => {
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate('/student/dashboard')}
-            className="w-10 h-10 bg-white/60 backdrop-blur-xl rounded-xl flex items-center justify-center border border-white/20 shadow-lg"
+            className="w-10 h-10 bg-white/60 backdrop-blur-xl rounded-lg flex items-center justify-center border border-white/20 shadow-lg"
           >
-            <ArrowLeft size={20} className="text-gray-700" />
+            <ArrowLeft size={16} className="text-gray-700" />
           </motion.button>
           
           <div className="flex-1">
@@ -202,8 +202,8 @@ export const TodaysLearning: React.FC = () => {
             {/* Daily Progress */}
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Target size={20} className="text-white" />
+                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Target size={16} className="text-white" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900">Daily Progress</h2>
@@ -238,10 +238,10 @@ export const TodaysLearning: React.FC = () => {
             {/* Streak Indicator */}
             <div className="flex items-center gap-6">
               <div className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-100 to-red-100 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
-                  <Flame size={32} className="text-orange-600" />
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-100 to-red-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+                  <Flame size={24} className="text-orange-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{streak}</p>
+                <p className="text-xl font-bold text-gray-900">{streak}</p>
                 <p className="text-xs text-gray-600">Day Streak</p>
               </div>
               
@@ -252,8 +252,8 @@ export const TodaysLearning: React.FC = () => {
                   transition={{ duration: 0.5, delay: 0.8 }}
                   className="text-center"
                 >
-                  <div className="w-16 h-16 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-2xl flex items-center justify-center mb-2 shadow-lg">
-                    <Trophy size={32} className="text-yellow-600" />
+                  <div className="w-12 h-12 bg-gradient-to-br from-yellow-100 to-amber-100 rounded-xl flex items-center justify-center mb-2 shadow-lg">
+                    <Trophy size={24} className="text-yellow-600" />
                   </div>
                   <p className="text-sm font-bold text-gray-900">Perfect!</p>
                   <p className="text-xs text-gray-600">Daily Goal</p>
@@ -282,10 +282,10 @@ export const TodaysLearning: React.FC = () => {
                 {/* Glass morphism card */}
                 <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300">
                   <div className="p-6">
-                    <div className="flex items-start gap-4">
+                    <div className="flex items-start gap-3">
                       {/* Task Icon */}
-                      <div className={`w-12 h-12 bg-gradient-to-br ${color} rounded-xl flex items-center justify-center shadow-lg ${isCompleted ? 'opacity-50' : ''}`}>
-                        <Icon size={24} className="text-white" />
+                      <div className={`w-9 h-9 bg-gradient-to-br ${color} rounded-lg flex items-center justify-center shadow-lg ${isCompleted ? 'opacity-50' : ''} hover:scale-105 transition-transform duration-300`}>
+                        <Icon size={18} className="text-white" />
                       </div>
                       
                       {/* Task Content */}
@@ -297,21 +297,21 @@ export const TodaysLearning: React.FC = () => {
                             </h3>
                             <p className="text-gray-600 text-sm mb-2">{task.description}</p>
                             
-                            <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="flex items-center gap-3 text-xs text-gray-500">
                               {task.duration && (
                                 <span className="flex items-center gap-1">
-                                  <Clock size={12} />
+                                  <Clock size={10} />
                                   {task.duration} min
                                 </span>
                               )}
                               {task.time && (
                                 <span className="flex items-center gap-1">
-                                  <Calendar size={12} />
+                                  <Calendar size={10} />
                                   {task.time}
                                 </span>
                               )}
                               <span className="flex items-center gap-1">
-                                <BookOpen size={12} />
+                                <BookOpen size={10} />
                                 {task.module}
                               </span>
                             </div>
@@ -330,20 +330,20 @@ export const TodaysLearning: React.FC = () => {
                         </div>
                         
                         {/* Action Buttons */}
-                        <div className="flex items-center gap-3 mt-4">
+                        <div className="flex items-center gap-2 mt-3">
                           <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handlePrimaryAction(task)}
                             disabled={isCompleted}
-                            className={`px-6 py-2 rounded-xl font-medium transition-all duration-300 ${
+                            className={`px-5 py-2 rounded-lg font-medium transition-all duration-300 ${
                               isCompleted
                                 ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
                                 : `bg-gradient-to-r ${color} text-white shadow-lg hover:shadow-xl`
                             }`}
                           >
                             {getPrimaryActionText(task)}
-                            <ChevronRight size={16} className="inline ml-1" />
+                            <ChevronRight size={14} className="inline ml-1" />
                           </motion.button>
                           
                           {!isCompleted && (
@@ -351,7 +351,7 @@ export const TodaysLearning: React.FC = () => {
                               whileHover={{ scale: 1.05 }}
                               whileTap={{ scale: 0.98 }}
                               onClick={() => handleMarkAsComplete(task.id)}
-                              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors duration-300"
+                              className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors duration-300"
                             >
                               Mark as Complete
                             </motion.button>
@@ -359,7 +359,7 @@ export const TodaysLearning: React.FC = () => {
                           
                           {isCompleted && (
                             <div className="flex items-center gap-2 text-green-600">
-                              <CheckCircle2 size={20} />
+                              <CheckCircle2 size={16} />
                               <span className="font-medium">Completed</span>
                             </div>
                           )}
@@ -382,8 +382,8 @@ export const TodaysLearning: React.FC = () => {
             className="mt-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-200"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Trophy size={24} className="text-white" />
+              <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center shadow-lg">
+                <Trophy size={18} className="text-white" />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 text-lg">Congratulations! 🎉</h3>
