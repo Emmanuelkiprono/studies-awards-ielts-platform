@@ -265,7 +265,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
       <div className="grid grid-cols-5 max-w-md mx-auto">
         <NavItem
           icon={LayoutDashboard}
-          label="Dashboard"
+          label="Home"
           active={isActive('/dashboard') || isActive('/courses')}
           onClick={() => {
             const dashboardRoute = hasLearningAccess ? '/courses' : '/onboarding';
@@ -290,7 +290,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
         />
         <NavItem
           icon={FolderOpen}
-          label="Resources"
+          label="Practice"
           active={isActive('/resources')}
           onClick={() => handleNavigate('/resources', true)}
           disabled={!hasLearningAccess}

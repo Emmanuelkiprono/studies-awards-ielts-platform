@@ -33,7 +33,13 @@ import {
   Activity,
   BarChart3,
   Timer,
-  Coffee
+  Coffee,
+  Search,
+  MoreVertical,
+  User,
+  Settings,
+  LogOut,
+  Camera
 } from 'lucide-react';
 import { doc, collection, query, where, getDocs, getDoc, updateDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { db } from '../services/firebase';
@@ -77,16 +83,24 @@ interface LiveSession {
   meetingUrl?: string;
 }
 
-export const StudentDashboard: React.FC = () => {
-  const { user, profile, studentData } = useAuth();
+export const StudentDashboard_Premium: React.FC = () => {
   const navigate = useNavigate();
-  const [course, setCourse] = useState<Course | null>(null);
+  const { profile, studentData, signOut } = useAuth();
+  const [course, setCourse] = useState<any>(null);
   const [modules, setModules] = useState<Module[]>([]);
   const [lessons, setLessons] = useState<Record<string, Lesson[]>>({});
-  const [expandedModule, setExpandedModule] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [liveSessions, setLiveSessions] = useState<LiveSession[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [expandedModule, setExpandedModule] = useState<string | null>(null);
+  
+  // Header state
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedEmail, setEditedEmail] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Single source of truth for learning access
   const hasLearningAccess = useMemo(() => 
@@ -98,24 +112,62 @@ export const StudentDashboard: React.FC = () => {
 
   const trainingStatus = studentData?.trainingStatus || 'inactive';
   const examStatus = studentData?.examStatus || 'not_started';
-  const isEnrolled = !!studentData?.courseId;
 
-  // Calculate progress metrics
+  // Header functions
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    if (!profile) return;
+    
+    try {
+      // Update profile in Firebase (implementation depends on your auth setup)
+      setIsEditingProfile(false);
+      setShowProfileSettings(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      setEditedName(profile.name || '');
+      setEditedEmail(profile.email || '');
+    }
+  }, [profile]);
+
   const progressMetrics = useMemo(() => {
-    const totalLessons = Object.values(lessons).flat().length;
-    const completedLessons = Object.values(lessons).flat().filter(lesson => lesson.completed).length;
+    if (!studentData || !course) return {
+      overallProgress: 0,
+      completedLessons: 0,
+      totalLessons: 0,
+      weeklyStreak: 0,
+      nextMilestone: 'Beginner'
+    };
+
+    const allLessons = Object.values(lessons).flat();
+    const completedLessons = allLessons.filter(lesson => lesson.completed).length;
+    const totalLessons = allLessons.length;
     const overallProgress = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
     const weeklyStreak = (studentData as any)?.weeklyStreak || 0;
-    const nextMilestone = overallProgress < 25 ? '25%' : overallProgress < 50 ? '50%' : overallProgress < 75 ? '75%' : '100%';
-    
+
+    const nextMilestone = overallProgress >= 80 ? 'Advanced' :
+                        overallProgress >= 50 ? 'Intermediate' : 'Beginner';
+
     return {
       overallProgress,
-      weeklyStreak,
       completedLessons,
       totalLessons,
+      weeklyStreak,
       nextMilestone
     };
-  }, [lessons, studentData]);
+  }, [studentData, course, lessons]);
 
   const steps = useMemo(() => [
     { id: 'training', label: 'Training', status: trainingStatus === 'completed' ? 'completed' : (hasLearningAccess ? 'active' : 'pending'), icon: Zap },
@@ -217,18 +269,297 @@ export const StudentDashboard: React.FC = () => {
 
   return (
     <>
-      {/* Premium iOS 26-inspired Dashboard */}
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 pb-24">
+      {/* Premium Mobile Dashboard */}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        {/* Premium Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-white shadow-sm border-b border-gray-100"
+        >
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              {/* User Profile Section */}
+              <div className="flex items-center gap-3">
+                {/* User Avatar */}
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-sm">
+                  {profile?.name ? (
+                    <span className="text-white font-semibold text-sm">
+                      {profile.name.charAt(0).toUpperCase()}
+                    </span>
+                  ) : (
+                    <User size={18} className="text-white" />
+                  )}
+                </div>
+                
+                {/* Greeting Text */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Hello, {profile?.name || 'User'}!
+                  </h2>
+                  <p className="text-sm text-gray-500">Welcome back</p>
+                </div>
+              </div>
+              
+              {/* Right Side Actions */}
+              <div className="flex items-center gap-2">
+                {/* Search Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <Search size={16} className="text-gray-600" />
+                </motion.button>
+                
+                {/* More Options Button */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowMoreOptions(!showMoreOptions)}
+                  className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors relative"
+                >
+                  <MoreVertical size={16} className="text-gray-600" />
+                </motion.button>
+              </div>
+            </div>
+          </div>
+          
+          {/* More Options Dropdown */}
+          <AnimatePresence>
+            {showMoreOptions && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                className="absolute top-16 right-4 z-50"
+              >
+                <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden min-w-[180px]">
+                  <motion.button
+                    whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowMoreOptions(false);
+                      setShowProfileSettings(true);
+                    }}
+                    className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors"
+                  >
+                    <Settings size={16} className="text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Profile Settings</span>
+                  </motion.button>
+                  
+                  <motion.button
+                    whileHover={{ backgroundColor: 'rgba(0, 0, 0, 0.05)' }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => {
+                      setShowMoreOptions(false);
+                      setShowSignOutConfirm(true);
+                    }}
+                    className="w-full px-4 py-3 flex items-center gap-3 text-left hover:bg-gray-50 transition-colors border-t border-gray-100"
+                  >
+                    <LogOut size={16} className="text-red-600" />
+                    <span className="text-sm font-medium text-red-600">Sign Out</span>
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+        
+        {/* Profile Settings Modal */}
+        <AnimatePresence>
+          {showProfileSettings && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center"
+              onClick={() => setShowProfileSettings(false)}
+            >
+              <motion.div
+                initial={{ y: 100 }}
+                animate={{ y: 0 }}
+                exit={{ y: 100 }}
+                transition={{ duration: 0.3, ease: "easeOut" }}
+                className="bg-white rounded-t-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">Profile Settings</h3>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => setShowProfileSettings(false)}
+                      className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+                    >
+                      <X size={16} className="text-gray-600" />
+                    </motion.button>
+                  </div>
+                  
+                  {/* Profile Avatar */}
+                  <div className="flex flex-col items-center mb-6">
+                    <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-3">
+                      {profile?.name ? (
+                        <span className="text-white font-bold text-2xl">
+                          {profile.name.charAt(0).toUpperCase()}
+                        </span>
+                      ) : (
+                        <User size={32} className="text-white" />
+                      )}
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      className="px-4 py-2 bg-purple-100 text-purple-600 rounded-lg text-sm font-medium hover:bg-purple-200 transition-colors flex items-center gap-2"
+                    >
+                      <Camera size={14} />
+                      Change Photo
+                    </motion.button>
+                  </div>
+                  
+                  {/* Profile Form */}
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                      <input
+                        type="text"
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        disabled={!isEditingProfile}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                        placeholder="Your name"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                      <input
+                        type="email"
+                        value={editedEmail}
+                        onChange={(e) => setEditedEmail(e.target.value)}
+                        disabled={!isEditingProfile}
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                        placeholder="your.email@example.com"
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Actions */}
+                  <div className="flex gap-3 mt-6">
+                    {!isEditingProfile ? (
+                      <>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setIsEditingProfile(true)}
+                          className="flex-1 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
+                        >
+                          Edit Profile
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => setShowProfileSettings(false)}
+                          className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          Cancel
+                        </motion.button>
+                      </>
+                    ) : (
+                      <>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleProfileUpdate}
+                          className="flex-1 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
+                        >
+                          Save Changes
+                        </motion.button>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={() => {
+                            setIsEditingProfile(false);
+                            setEditedName(profile?.name || '');
+                            setEditedEmail(profile?.email || '');
+                          }}
+                          className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          Cancel
+                        </motion.button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Sign Out Confirmation */}
+        <AnimatePresence>
+          {showSignOutConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4"
+              onClick={() => setShowSignOutConfirm(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white rounded-2xl p-6 max-w-sm w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center mb-6">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <LogOut size={20} className="text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">Sign Out</h3>
+                  <p className="text-gray-600 text-sm">Are you sure you want to sign out?</p>
+                </div>
+                
+                <div className="flex gap-3">
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setShowSignOutConfirm(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={handleSignOut}
+                    className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+                  >
+                    Sign Out
+                  </motion.button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {/* Main Content */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
           className="px-4 pb-24"
         >
-          {/* Premium Mobile Dashboard Content */}
-          <div className="px-4 pb-24">
-            {/* Hero Section */}
-            <motion.div
+          {/* Hero Section */}
+          <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
@@ -558,9 +889,8 @@ export const StudentDashboard: React.FC = () => {
                 ))}
               </div>
             </motion.div>
-          </div>
-        </motion.div>
-      </div>
-    </>
-  );
+          </motion.div>
+        </div>
+      </>
+    );
 };
