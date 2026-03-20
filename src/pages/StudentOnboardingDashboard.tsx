@@ -282,12 +282,18 @@ export const StudentOnboardingDashboard: React.FC = () => {
             </div>
             
             {/* Primary CTA */}
-            <button className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg mb-3">
+            <button 
+              onClick={() => navigate('/student/todays-learning')}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg mb-3"
+            >
               Continue Learning
             </button>
             
             {/* Secondary CTA */}
-            <button className="w-full bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-2xl hover:bg-gray-200 transition-colors">
+            <button 
+              onClick={() => navigate('/student/modules')}
+              className="w-full bg-gray-100 text-gray-700 font-medium py-3 px-6 rounded-2xl hover:bg-gray-200 transition-colors"
+            >
               Practice
             </button>
           </div>
@@ -342,6 +348,56 @@ export const StudentOnboardingDashboard: React.FC = () => {
                   <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Upcoming</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Modules Section */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Modules</h3>
+            <div className="space-y-3">
+              {/* Sample module data with safe fallbacks */}
+              {[
+                { title: 'Listening', lessonsCompleted: 3, assignments: 1, progress: 75 },
+                { title: 'Reading', lessonsCompleted: 2, assignments: 1, progress: 50 },
+                { title: 'Writing', lessonsCompleted: 1, assignments: 2, progress: 25 },
+                { title: 'Speaking', lessonsCompleted: 4, assignments: 1, progress: 100 }
+              ].map((module, index) => (
+                <div key={index} className="p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors cursor-pointer">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl flex items-center justify-center">
+                        <span className="text-blue-600 font-bold text-sm">{module.title.charAt(0)}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900 text-sm">{module.title}</h4>
+                        <p className="text-gray-500 text-xs">
+                          {module.lessonsCompleted} lesson{module.lessonsCompleted !== 1 ? 's' : ''} completed
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-medium text-gray-600">{module.progress}%</span>
+                      <div className="w-16 h-2 bg-gray-200 rounded-full mt-1">
+                        <div 
+                          className="h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                          style={{ width: `${module.progress}%` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-500">
+                      {module.assignments} assignment{module.assignments !== 1 ? 's' : ''}
+                    </span>
+                    <button 
+                      onClick={() => navigate(`/student/modules?module=${module.title.toLowerCase()}`)}
+                      className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      View →
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>

@@ -283,7 +283,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
         />
         <NavItem
           icon={ClipboardList}
-          label="Tasks"
+          label="Assignments"
           active={isActive('/tasks')}
           onClick={() => handleNavigate('/tasks', true)}
           disabled={!hasLearningAccess}
