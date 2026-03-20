@@ -25,6 +25,7 @@ import { CreateAssignmentPage } from './pages/CreateAssignmentPage';
 import { AdminDashboard } from './pages/AdminDashboard';
 import { ProfilePage } from './pages/ProfilePage';
 import { TeacherStudentsPage } from './pages/TeacherStudentsPage_Minimal';
+import { TeacherProfilePage } from './pages/TeacherProfilePage';
 import { TeacherLessonsPage } from './pages/TeacherLessonsPage';
 import { TeacherAttendancePage } from './pages/TeacherAttendancePage';
 import { TeacherAssignmentsPage } from './pages/TeacherAssignmentsPage';
@@ -123,7 +124,7 @@ const AppContent: React.FC = () => {
           <Route path="/teacher/tasks" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherTasksPage onCreateAssignment={() => setIsCreatingAssignment(true)} /></ProtectedRoute>} />
           <Route path="/teacher/exams" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherExamsPage /></ProtectedRoute>} />
           <Route path="/teacher/students/:studentId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentProfilePage /></ProtectedRoute>} />
-          <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><ProfilePage /></ProtectedRoute>} />
+          <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherProfilePage /></ProtectedRoute>} />
 
           {/* Shared Routes - Live Classes for both teachers and students */}
           <Route path="/live" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><LiveClassesPage /></ProtectedRoute>} />
