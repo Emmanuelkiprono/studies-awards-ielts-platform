@@ -215,23 +215,161 @@ export const StudentOnboardingDashboard: React.FC = () => {
 
   const statusSteps = getStatusSteps();
 
-  // TEMPORARY SIMPLE TEST: Isolate the issue
-  console.log('🔍 RENDERING SIMPLE DASHBOARD TEST');
+  // REAL DASHBOARD CONTENT - SAFE VERSION
+  console.log('🔍 RENDERING REAL DASHBOARD CONTENT');
+  
+  // Safe data defaults
+  const safeUserName = profile?.name || user?.user_metadata?.full_name || "Student";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-lg">
-        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <span className="text-blue-600 text-xl">🏠</span>
+    <>
+      {/* Premium Mobile Dashboard */}
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+        {/* Simple Safe Header */}
+        <div className="bg-white shadow-sm border-b border-gray-100">
+          <div className="px-4 py-4">
+            <div className="flex items-center justify-between">
+              {/* User Profile Section */}
+              <div className="flex items-center gap-3">
+                {/* User Avatar */}
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-sm">
+                  <span className="text-white font-semibold text-sm">
+                    {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+                  </span>
+                </div>
+                
+                {/* Greeting Text */}
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Hello, {safeUserName}
+                  </h2>
+                  <p className="text-sm text-gray-500">Welcome back</p>
+                </div>
+              </div>
+              
+              {/* Right Side Actions */}
+              <div className="flex items-center gap-2">
+                {/* Search Button */}
+                <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+                  🔍
+                </button>
+                
+                {/* Menu Button */}
+                <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
+                  ⋯
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-        <h3 className="text-lg font-bold text-gray-900 mb-2">Home Dashboard</h3>
-        <p className="text-gray-600 text-sm mb-4">Dashboard route is working!</p>
-        <div className="text-xs text-gray-500">
-          <p>Profile: {profile?.name || 'Loading...'}</p>
-          <p>Loading: {loading ? 'Yes' : 'No'}</p>
-          <p>Student Data: {studentData ? 'Yes' : 'No'}</p>
+
+        {/* Main Content */}
+        <div className="px-4 pb-24">
+          {/* Hero Section */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                  Welcome back, {safeUserName}!
+                </h2>
+                <p className="text-gray-500 text-sm">
+                  {hasAccess ? "Your training journey continues" : "Your enrollment is pending activation"}
+                </p>
+              </div>
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-100 to-pink-100 rounded-2xl flex items-center justify-center">
+                <span className="text-purple-600 text-xl">✨</span>
+              </div>
+            </div>
+            
+            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+              {hasAccess
+                ? "Keep up the momentum and unlock your full potential."
+                : "We'll notify you as soon as your access is ready."}
+            </p>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            <button className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 hover:shadow-md">
+              <span className="text-blue-600 text-lg">▶️</span>
+              <p className="text-xs font-medium text-gray-700 mt-1">Learn</p>
+            </button>
+            <button className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 hover:shadow-md">
+              <span className="text-green-600 text-lg">📝</span>
+              <p className="text-xs font-medium text-gray-700 mt-1">Practice</p>
+            </button>
+            <button className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 hover:shadow-md">
+              <span className="text-purple-600 text-lg">📊</span>
+              <p className="text-xs font-medium text-gray-700 mt-1">Progress</p>
+            </button>
+            <button className="bg-white rounded-2xl p-3 shadow-sm border border-gray-100 hover:shadow-md">
+              <span className="text-orange-600 text-lg">🎯</span>
+              <p className="text-xs font-medium text-gray-700 mt-1">Goals</p>
+            </button>
+          </div>
+
+          {/* Status Card */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Your Status</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-blue-600">📚</span>
+                  <span className="text-sm font-medium text-gray-900">Training</span>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${
+                  hasAccess ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                }`}>
+                  {hasAccess ? 'Active' : 'Pending'}
+                </span>
+              </div>
+              
+              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <span className="text-purple-600">🎓</span>
+                  <span className="text-sm font-medium text-gray-900">Enrollment</span>
+                </div>
+                <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700">
+                  {studentData?.onboardingStatus || 'Processing'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Today's Tasks */}
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Today's Tasks</h3>
+            <div className="space-y-3">
+              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-blue-600">📖</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Speaking Basics</p>
+                      <p className="text-xs text-gray-500">45 min</p>
+                    </div>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">In Progress</span>
+                </div>
+              </div>
+              
+              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-purple-600">🎥</span>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Live Practice</p>
+                      <p className="text-xs text-gray-500">2:00 PM</p>
+                    </div>
+                  </div>
+                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Upcoming</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 
   // FINAL SAFETY WRAPPER: Prevent any remaining white screen crashes
