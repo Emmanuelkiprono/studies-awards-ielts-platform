@@ -199,11 +199,15 @@ export const StudentOnboardingDashboard: React.FC = () => {
     }
   };
 
-  if (loading || loadingStatus) {
+  // SAFETY CHECK: Prevent white screen crashes
+  if (loading || loadingStatus || !profile) {
     return (
       <div className="p-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="w-8 h-8 border-4 border-[rgba(var(--ui-accent-rgb)/0.30)] border-t-[var(--ui-accent)] rounded-full animate-spin" />
+          <div className="text-center">
+            <div className="w-8 h-8 border-4 border-[rgba(var(--ui-accent-rgb)/0.30)] border-t-[var(--ui-accent)] rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading...</p>
+          </div>
         </div>
       </div>
     );

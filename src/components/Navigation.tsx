@@ -266,9 +266,9 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
         <NavItem
           icon={LayoutDashboard}
           label="Home"
-          active={isActive('/courses') || isActive('/onboarding')}
+          active={isActive('/dashboard') || isActive('/courses')}
           onClick={() => {
-            const dashboardRoute = hasLearningAccess ? '/courses' : '/onboarding';
+            const dashboardRoute = hasLearningAccess ? '/courses' : '/dashboard';
             console.log('HOME TAB CLICK', { hasLearningAccess, dashboardRoute, studentData });
             navigate(dashboardRoute);
           }}
