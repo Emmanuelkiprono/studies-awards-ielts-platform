@@ -283,7 +283,10 @@ export const StudentOnboardingDashboard: React.FC = () => {
             
             {/* Primary CTA */}
             <button 
-              onClick={() => navigate('/student/todays-learning')}
+              onClick={() => {
+                console.log('🔍 CONTINUE LEARNING CLICKED - navigating to /student/todays-learning');
+                navigate('/student/todays-learning');
+              }}
               className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-2xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg mb-3"
             >
               Continue Learning
