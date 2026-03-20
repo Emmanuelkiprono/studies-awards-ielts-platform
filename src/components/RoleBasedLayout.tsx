@@ -4,7 +4,11 @@ import { BottomNav } from './Navigation';
 import { TeacherLayout } from './TeacherLayout';
 import { useAuth } from '../hooks/useAuth';
 
-export const RoleBasedLayout: React.FC = () => {
+interface RoleBasedLayoutProps {
+  children?: React.ReactNode;
+}
+
+export const RoleBasedLayout: React.FC<RoleBasedLayoutProps> = ({ children }) => {
   const { profile } = useAuth();
 
   // Check if user is teacher/admin
@@ -13,13 +17,13 @@ export const RoleBasedLayout: React.FC = () => {
 
   // If teacher, use sidebar layout
   if (isTeacher) {
-    return <TeacherLayout />;
+    return <TeacherLayout>{children}</TeacherLayout>;
   }
 
   // If student or other roles, use bottom navigation
   return (
     <>
-      <Outlet />
+      {children || <Outlet />}
       <BottomNav />
     </>
   );
