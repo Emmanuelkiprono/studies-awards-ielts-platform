@@ -30,7 +30,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth');
+      // Let onAuthStateChanged listener handle redirect to /auth
     } catch (error) {
       console.error('Sign out error:', error);
     }

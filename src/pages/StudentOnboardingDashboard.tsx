@@ -48,7 +48,7 @@ interface StatusStep {
 
 export const StudentOnboardingDashboard: React.FC = () => {
   console.log(' /DASHBOARD PAGE MOUNTING - StudentOnboardingDashboard');
-  const { profile, user, studentData, loading, loadingStatus } = useAuth();
+  const { profile, user, studentData, loading, loadingStatus, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -61,17 +61,20 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   // Sign out handler
-  const { signOut } = useAuth();
   const handleSignOut = async () => {
     try {
+      // Close the confirmation modal first
+      setShowSignOutConfirm(false);
+      // Sign out from Firebase
       if (signOut) {
         await signOut();
       }
-      navigate('/auth');
+      // Let onAuthStateChanged listener handle redirect to /auth
     } catch (error) {
       console.error('Sign out error:', error);
+      // Close confirmation on error
+      setShowSignOutConfirm(false);
     }
-    setShowSignOutConfirm(false);
   };
 
   // Profile update handler
@@ -294,7 +297,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
               </div>
               
               {/* Right Side Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 relative">
                 {/* Notifications Button */}
                 <button
                   onClick={() => navigate('/notifications')}

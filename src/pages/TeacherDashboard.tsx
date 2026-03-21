@@ -26,11 +26,13 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
+import { useLiveClassCreation } from '../hooks/useLiveClassCreation';
 import { db } from '../services/firebase';
 import { collection, query, where, onSnapshot, doc, getDoc, getDocs, updateDoc, serverTimestamp, addDoc, orderBy } from 'firebase/firestore';
-import { Course, UserProfile, Enrollment, Module, Assignment, Announcement, Resource } from '../types';
+import { Course, UserProfile, Enrollment, Module, Assignment, Announcement, Resource, Batch } from '../types';
 import { NotificationService } from '../services/notificationService';
 import { FileUpload } from '../components/FileUpload';
+import { CreateLiveClassModal } from '../components/CreateLiveClassModal';
 
 interface TeacherDashboardProps {
   onCreateAssignment: () => void;
@@ -88,6 +90,12 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
   const [showAnnouncementModal, setShowAnnouncementModal] = useState(false);
   const [announcementForm, setAnnouncementForm] = useState({ title: '', message: '' });
   const [announcementLoading, setAnnouncementLoading] = useState(false);
+
+  // Create Live Class modal
+  const [showCreateLiveClassModal, setShowCreateLiveClassModal] = useState(false);
+  const [liveClassModalModules, setLiveClassModalModules] = useState<Module[]>([]);
+  const [liveClassModalBatches, setLiveClassModalBatches] = useState<Batch[]>([]);
+  const { createLiveClass, isCreating: isCreatingLiveClass } = useLiveClassCreation();
 
   const isEnrollmentEligible = (s: Partial<Enrollment>) => {
     const eligibleIso = s.eligibleAt || s.eligibleExamDate;
@@ -247,6 +255,31 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
     });
   }, [showCreateModal, createForm.courseId, selectedCourseId]);
 
+  // 6. Fetch modules and batches for Create Live Class modal
+  useEffect(() => {
+    if (!showCreateLiveClassModal || !selectedCourseId) {
+      setLiveClassModalModules([]);
+      setLiveClassModalBatches([]);
+      return;
+    }
+
+    // Fetch modules
+    getDocs(query(
+      collection(db, 'courses', selectedCourseId, 'modules'),
+      orderBy('order', 'asc')
+    )).then(snap => {
+      setLiveClassModalModules(snap.docs.map(d => ({ id: d.id, ...d.data() } as Module)));
+    }).catch(err => console.error('Error fetching modules:', err));
+
+    // Fetch batches
+    getDocs(query(
+      collection(db, 'batches'),
+      where('teacherId', '==', teacherData?.uid)
+    )).then(snap => {
+      setLiveClassModalBatches(snap.docs.map(d => ({ id: d.id, ...d.data() } as Batch)));
+    }).catch(err => console.error('Error fetching batches:', err));
+  }, [showCreateLiveClassModal, selectedCourseId, teacherData?.uid]);
+
   const handleSendAnnouncement = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!teacherUser || !selectedCourseId) return;
@@ -321,6 +354,28 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({ onCreateAssi
       alert('Failed to share resource.');
     } finally {
       setResourceLoading(false);
+    }
+  };
+
+  const handleCreateLiveClass = async (formData: any) => {
+    if (!teacherUser) {
+      throw new Error('Teacher information not available');
+    }
+
+    try {
+      await createLiveClass({
+        ...formData,
+        teacherId: teacherUser.uid,
+      });
+
+      // Show success message
+      alert('✅ Live class created successfully!');
+      
+      // Reset and close modal
+      setShowCreateLiveClassModal(false);
+    } catch (err) {
+      console.error('Error creating live class:', err);
+      throw err;
     }
   };
 
@@ -860,6 +915,19 @@ const handleScheduleSession = async (e: React.FormEvent) => {
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold text-gray-900 text-sm">Attendance</p>
                       <p className="text-xs text-gray-600">Track presence</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setShowCreateLiveClassModal(true)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-red-50 to-red-100/50 border border-red-200 hover:border-red-300 hover:shadow-md transition-all group text-left"
+                  >
+                    <div className="p-2 bg-red-600 rounded-lg text-white flex-shrink-0 group-hover:bg-red-700">
+                      <Video size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">Create Class</p>
+                      <p className="text-xs text-gray-600">Schedule live session</p>
                     </div>
                   </button>
 
@@ -1533,6 +1601,15 @@ const handleScheduleSession = async (e: React.FormEvent) => {
           </>
         )}
       </AnimatePresence>
+
+      {/* Create Live Class Modal */}
+      <CreateLiveClassModal
+        isOpen={showCreateLiveClassModal}
+        onClose={() => setShowCreateLiveClassModal(false)}
+        modules={liveClassModalModules}
+        batches={liveClassModalBatches}
+        onCreateClass={handleCreateLiveClass}
+      />
     </motion.div >
   );
 };

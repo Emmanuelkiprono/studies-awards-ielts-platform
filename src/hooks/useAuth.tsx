@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let unsubscribeStudent: (() => void) | undefined;
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      console.log('🔐 AUTH: onAuthStateChanged fired, user:', firebaseUser?.uid || 'null');
       setUser(firebaseUser);
 
       if (firebaseUser) {
@@ -105,15 +106,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setLoading(false);
         });
       } else {
+        console.log('🔐 AUTH: User logged out, clearing state');
         setProfile(null);
         setStudentData(null);
         setForcePasswordChange(false);
         setLoading(false);
         if (unsubscribeProfile) {
+          console.log('🔐 AUTH: Unsubscribing from profile listener');
           unsubscribeProfile();
           unsubscribeProfile = undefined;
         }
         if (unsubscribeStudent) {
+          console.log('🔐 AUTH: Unsubscribing from student listener');
           unsubscribeStudent();
           unsubscribeStudent = undefined;
         }
@@ -203,7 +207,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    await firebaseSignOut(auth);
+    console.log('🔐 AUTH: Hard logout initiated');
+    try {
+      // Save current user email before clearing
+      const currentEmail = auth.currentUser?.email || user?.email;
+      if (currentEmail) {
+        localStorage.setItem('lastEmail', currentEmail);
+        console.log('🔐 AUTH: Email saved to localStorage:', currentEmail);
+      }
+
+      // IMMEDIATELY clear all auth state (hard logout)
+      setUser(null);
+      setProfile(null);
+      setStudentData(null);
+      setForcePasswordChange(false);
+      console.log('🔐 AUTH: Auth state cleared immediately');
+
+      // Clear session storage
+      sessionStorage.clear();
+      console.log('🔐 AUTH: Session storage cleared');
+
+      // Then sign out from Firebase
+      await firebaseSignOut(auth);
+      console.log('🔐 AUTH: Firebase signOut completed');
+    } catch (error) {
+      console.error('🔐 AUTH: signOut error:', error);
+      // Even if Firebase signOut fails, state is already cleared
+      throw error;
+    }
   };
 
   const resetPassword = async (email: string) => {

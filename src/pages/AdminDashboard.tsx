@@ -115,6 +115,9 @@ export const AdminDashboard: React.FC = () => {
 
 
   useEffect(() => {
+    // Guard: don't fetch if user is not authenticated
+    if (!adminUser) return;
+
     // Fetch teachers
     const teachersQ = query(collection(db, 'users'), where('role', '==', 'teacher'));
     const unsubscribeTeachers = onSnapshot(teachersQ, (snapshot) => {
@@ -190,7 +193,7 @@ export const AdminDashboard: React.FC = () => {
       unsubscribeCourses();
       unsubscribeStudents();
     };
-  }, []);
+  }, [adminUser]);
 
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();

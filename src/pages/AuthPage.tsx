@@ -22,6 +22,14 @@ export const AuthPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
+  // Load last used email from localStorage on page load
+  useEffect(() => {
+    const lastEmail = localStorage.getItem('lastEmail');
+    if (lastEmail) {
+      setEmail(lastEmail);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchCourses = async () => {
       const q = query(collection(db, 'courses'), where('active', '==', true));

@@ -115,16 +115,18 @@ export const StudentDashboard_Premium: React.FC = () => {
 
   // Safe Header functions
   const handleSignOut = async () => {
+    console.log('🚪 STUDENT: Sign out initiated');
     try {
-      // Safe sign out - try multiple methods
-      if (signOut) {
-        await signOut();
-      }
-      navigate('/auth');
+      setShowSignOutConfirm(false);
+      console.log('🚪 STUDENT: Calling Firebase signOut...');
+      await signOut();
+      console.log('🚪 STUDENT: Firebase signOut completed, performing hard redirect to /auth');
+      // Hard redirect using window.location.replace (not navigate) to ensure complete logout
+      window.location.replace('/auth');
     } catch (error) {
-      console.error('Error signing out:', error);
-      // Fallback navigation even if sign out fails
-      navigate('/auth');
+      console.error('🚪 STUDENT: Sign out error:', error);
+      // Even on error, perform hard redirect to clear the session
+      window.location.replace('/auth');
     }
   };
 
@@ -137,6 +139,7 @@ export const StudentDashboard_Premium: React.FC = () => {
       setShowProfileSettings(false);
     } catch (error) {
       console.error('Error updating profile:', error);
+      alert('Failed to update profile. Please try again.');
     }
   };
 
@@ -259,9 +262,14 @@ export const StudentDashboard_Premium: React.FC = () => {
   }
 
   // ADDITIONAL SAFETY: Safe data defaults
-  const safeUserName = profile?.name || user?.user_metadata?.full_name || "Student";
+  const safeUserName = profile?.name || "Student";
   const safeModulesList = Array.isArray(modules) ? modules : [];
   const safeTasksList = []; // Tasks are static mock data, safe to use empty array
+
+  // Check if student has an active enrollment
+  const isEnrolled = useMemo(() => {
+    return !!(studentData && studentData.courseId);
+  }, [studentData]);
 
   if (!isEnrolled && profile?.role === 'student') {
     return (
@@ -310,7 +318,7 @@ export const StudentDashboard_Premium: React.FC = () => {
               </div>
               
               {/* Right Side Actions */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 relative">
                 {/* Notifications Button */}
                 <button
                   onClick={() => navigate('/notifications')}
@@ -321,7 +329,10 @@ export const StudentDashboard_Premium: React.FC = () => {
                 
                 {/* Menu Button */}
                 <button
-                  onClick={() => setShowMoreOptions(!showMoreOptions)}
+                  onClick={() => {
+                    console.log('student menu clicked');
+                    setShowMoreOptions(!showMoreOptions);
+                  }}
                   className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
                   <MoreVertical size={16} className="text-gray-600" />
@@ -345,6 +356,7 @@ export const StudentDashboard_Premium: React.FC = () => {
               
               <button
                 onClick={() => {
+                  console.log('student sign out menu clicked');
                   setShowMoreOptions(false);
                   setShowSignOutConfirm(true);
                 }}
@@ -509,7 +521,10 @@ export const StudentDashboard_Premium: React.FC = () => {
                   Cancel
                 </button>
                 <button
-                  onClick={handleSignOut}
+                  onClick={() => {
+                    console.log('student confirm sign out clicked');
+                    handleSignOut();
+                  }}
                   className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
                 >
                   Sign Out

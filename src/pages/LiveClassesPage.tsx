@@ -51,7 +51,7 @@ async function createDailyRoom(sessionTitle: string): Promise<string> {
 }
 
 export const LiveClassesPage: React.FC = () => {
-  const { isTeacher, profile, studentData } = useAuth();
+  const { user, isTeacher, profile, studentData } = useAuth();
   const location = useLocation();
   const [sessions, setSessions] = useState<LiveSession[]>([]);
   const [enrolledStudents, setEnrolledStudents] = useState<UserProfile[]>([]);
@@ -76,7 +76,8 @@ export const LiveClassesPage: React.FC = () => {
   }, [location.state]);
 
   useEffect(() => {
-    if (!courseId) { setLoading(false); return; }
+    // Guard: don't fetch if user is not authenticated or no courseId
+    if (!user || !courseId) { setLoading(false); return; }
     const q = query(collection(db, 'liveSessions'), where('courseId', '==', courseId));
     const unsub = onSnapshot(q, async (snap) => {
       const all = snap.docs
@@ -96,7 +97,7 @@ export const LiveClassesPage: React.FC = () => {
       setLoading(false);
     });
     return () => unsub();
-  }, [courseId, isTeacher]);
+  }, [user, courseId, isTeacher]);
 
   const now = new Date().toISOString();
   const upcoming = sessions.filter(s => s.startTime >= now && !s.isLive);

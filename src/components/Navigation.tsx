@@ -173,7 +173,7 @@ const AppearanceModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { studentData } = useAuth();
+  const { user, studentData } = useAuth();
   const { showToast } = useToast();
   const isTeacher = role === 'teacher';
   const [hasUpcomingSession, setHasUpcomingSession] = useState(false);
@@ -204,7 +204,8 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
   };
 
   useEffect(() => {
-    if (isTeacher || !studentData?.courseId) return;
+    // Guard: don't query if user is not authenticated
+    if (!user || isTeacher || !studentData?.courseId) return;
     const now = new Date().toISOString();
     getDocs(query(
       collection(db, 'liveSessions'),
@@ -213,7 +214,7 @@ export const BottomNav: React.FC<{ role?: string }> = ({ role = 'student' }) => 
       const upcoming = snap.docs.some(d => (d.data().startTime as string) >= now);
       setHasUpcomingSession(upcoming);
     }).catch(() => {});
-  }, [studentData?.courseId, isTeacher]);
+  }, [user, studentData?.courseId, isTeacher]);
 
   const isActive = (path: string) => {
     if (path === '/dashboard' && location.pathname === '/dashboard') return true;

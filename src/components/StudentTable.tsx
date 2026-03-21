@@ -58,7 +58,7 @@ export const StudentTable: React.FC<StudentTableProps> = ({
   onApprove,
   onReject
 }) => {
-  const { profile: teacherData } = useAuth();
+  const { user, profile: teacherData } = useAuth();
   const { showToast } = useToast();
   const [students, setStudents] = useState<StudentTableRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -195,6 +195,12 @@ const mergeStudentData = useCallback(async (studentDocs: any[]) => {
 
   // Fetch students data with single query approach
   const fetchStudents = useCallback(async (isInitial = false) => {
+    // Guard: don't query if user is not authenticated
+    if (!user) {
+      setLoading(false);
+      setStudents([]);
+      return;
+    }
     try {
       let studentsQuery = query(
         collection(db, 'students'),
