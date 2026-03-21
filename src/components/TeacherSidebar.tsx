@@ -121,9 +121,9 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
   return (
     <div className={`fixed left-0 top-0 h-screen bg-white border-r border-gray-200 transition-all duration-300 z-50 ${
       collapsed ? 'w-16' : 'w-64'
-    }`}>
-      {/* Branding Header */}
-      <div className="p-4 border-b border-gray-100">
+    } flex flex-col`}>
+      {/* Branding Header - Fixed at top */}
+      <div className="flex-shrink-0 p-4 border-b border-gray-100">
         <div className="flex items-center justify-between mb-4">
           {!collapsed && (
             <div className="flex-1">
@@ -141,8 +141,8 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
         
         {/* Teacher Profile Block */}
         {!collapsed && profile && (
-          <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
+          <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
               <User size={20} className="text-white" />
             </div>
             <div className="flex-1 min-w-0">
@@ -153,12 +153,12 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
         )}
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+      {/* Navigation - Independently scrollable */}
+      <nav className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-8">
         {menuSections.map((section) => (
-          <div key={section.title}>
+          <div key={section.title} className="space-y-2">
             {!collapsed && (
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-3">
                 {section.title}
               </h3>
             )}
@@ -173,13 +173,13 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
                     to={item.path}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                       isActive
-                        ? 'bg-purple-50 text-purple-600 border-l-4 border-purple-600'
+                        ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-600 border-l-4 border-purple-600 shadow-sm'
                         : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                     }`}
                   >
                     <Icon size={20} className="flex-shrink-0" />
                     {!collapsed && (
-                      <span className="font-medium">{item.label}</span>
+                      <span className="font-medium text-sm">{item.label}</span>
                     )}
                   </NavLink>
                 );
@@ -189,8 +189,8 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
         ))}
       </nav>
 
-      {/* Bottom Section */}
-      <div className="p-4 border-t border-gray-100">
+      {/* Bottom Section - Fixed at bottom */}
+      <div className="flex-shrink-0 p-4 border-t border-gray-100">
         <div className="space-y-1">
           {bottomMenuItems.map((item) => {
             const Icon = item.icon;

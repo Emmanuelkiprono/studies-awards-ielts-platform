@@ -532,84 +532,418 @@ const handleScheduleSession = async (e: React.FormEvent) => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 space-y-8 max-w-7xl mx-auto w-full pb-24"
+      className="w-full space-y-6"
     >
-      {/* Welcome Section */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h2 className="text-3xl font-black text-[var(--ui-heading)] mb-2 tracking-tight">Teacher Home</h2>
-          <p className="text-[var(--ui-muted)] font-medium">Welcome back, {teacherData?.name}. What would you like to manage today?</p>
+      {/* ===== TOP BAR ===== */}
+      <section className="flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+        {/* Search Input */}
+        <div className="flex-1 max-w-md bg-white rounded-lg px-4 py-3 border border-gray-200 flex items-center gap-2">
+          <Search size={18} className="text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search students, lessons..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="flex-1 bg-transparent text-sm text-gray-900 placeholder-gray-400 outline-none"
+          />
         </div>
-        <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-1 px-3 py-2 bg-gray-50 rounded-lg border border-gray-200 text-xs font-medium text-gray-600">
+            <Calendar size={14} />
+            {new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold text-sm transition-colors"
+          >
+            <Plus size={16} /> Create
+          </button>
+        </div>
+      </section>
+
+      {/* ===== COURSE SELECTOR ===== */}
+      {courses.length > 0 && (
+        <section className="flex gap-2 overflow-x-auto pb-2">
           {courses.map(course => (
             <button
               key={course.id}
               onClick={() => setSelectedCourseId(course.id)}
               className={cn(
-                "px-6 py-2 rounded-xl text-xs font-bold transition-all",
+                "px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap flex-shrink-0 border",
                 selectedCourseId === course.id
-                  ? "bg-[var(--ui-accent)] text-white shadow-lg"
-                  : "text-[var(--ui-muted)] hover:text-[var(--ui-body)] hover:bg-white/5"
+                  ? "bg-purple-600 text-white border-purple-700 shadow-md"
+                  : "bg-white text-gray-700 border-gray-200 hover:border-gray-300"
               )}
             >
               {course.name}
             </button>
           ))}
-        </div>
-      </section>
-
-      {/* Primary Navigation Cards */}
-      <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <GlassCard
-          gradient
-          className="p-6 cursor-pointer group hover:scale-[1.02] transition-all border-l-4 border-l-[#6324eb]"
-          onClick={() => navigate('/teacher/courses')}
-        >
-          <div className="size-12 rounded-2xl bg-[#6324eb]/20 flex items-center justify-center text-[#6324eb] mb-4 group-hover:bg-[#6324eb] group-hover:text-white transition-colors">
-            <LayoutDashboard size={24} />
-          </div>
-          <h3 className="text-[var(--ui-heading)] font-bold">Manage Courses</h3>
-          <p className="text-[10px] text-[var(--ui-muted)] mt-1 uppercase font-bold tracking-wider">IELTS + PTE Academic</p>
-        </GlassCard>
-
-        <GlassCard
-          className="p-6 cursor-pointer group hover:scale-[1.02] transition-all border-l-4 border-l-blue-500"
-          onClick={() => navigate(`/teacher/modules?courseId=${selectedCourseId}`)}
-        >
-          <div className="size-12 rounded-2xl bg-blue-500/20 flex items-center justify-center text-blue-500 mb-4 group-hover:bg-blue-500 group-hover:text-white transition-colors">
-            <BookOpen size={24} />
-          </div>
-          <h3 className="text-[var(--ui-heading)] font-bold">Manage Modules</h3>
-          <p className="text-[10px] text-[var(--ui-muted)] mt-1 uppercase font-bold tracking-wider">Curriculum Builder</p>
-        </GlassCard>
-
-        <GlassCard
-          className="p-6 cursor-pointer group hover:scale-[1.02] transition-all border-l-4 border-l-emerald-500"
-          onClick={() => navigate(`/teacher/lessons?courseId=${selectedCourseId}`)}
-        >
-          <div className="size-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center text-emerald-500 mb-4 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-            <Video size={24} />
-          </div>
-          <h3 className="text-[var(--ui-heading)] font-bold">Manage Lessons</h3>
-          <p className="text-[10px] text-[var(--ui-muted)] mt-1 uppercase font-bold tracking-wider">Video & PDF Content</p>
-        </GlassCard>
-
-        <GlassCard
-          className="p-6 cursor-pointer group hover:scale-[1.02] transition-all border-l-4 border-l-amber-500"
-          onClick={() => navigate('/teacher/approvals')}
-        >
-          <div className="size-12 rounded-2xl bg-amber-500/20 flex items-center justify-center text-amber-500 mb-4 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-            <Users size={24} />
-          </div>
-          <h3 className="text-[var(--ui-heading)] font-bold">Student Approvals</h3>
-          <p className="text-[10px] text-[var(--ui-muted)] mt-1 uppercase font-bold tracking-wider">{enrolledStudents.length} Students Active</p>
-        </GlassCard>
-      </section>
+        </section>
+      )}
 
       {selectedCourse ? (
         <>
-          {/* Detailed Stats Row */}
-          <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* ===== KPI CARDS SECTION ===== */}
+          <section className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            {/* Total Students */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-emerald-100 rounded-md">
+                  <Users size={16} className="text-emerald-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{enrolledStudents.length}</p>
+              <p className="text-xs text-gray-600 font-medium">Students</p>
+            </div>
+
+            {/* Pending Approvals */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-amber-100 rounded-md">
+                  <Clock size={16} className="text-amber-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">
+                {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').length}
+              </p>
+              <p className="text-xs text-gray-600 font-medium">Pending</p>
+            </div>
+
+            {/* Active Batches */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-blue-100 rounded-md">
+                  <BookOpen size={16} className="text-blue-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{courses.length}</p>
+              <p className="text-xs text-gray-600 font-medium">Batches</p>
+            </div>
+
+            {/* Assignments */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-purple-100 rounded-md">
+                  <ClipboardList size={16} className="text-purple-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{assignments.length}</p>
+              <p className="text-xs text-gray-600 font-medium">Tasks</p>
+            </div>
+
+            {/* Grading Queue */}
+            <div className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors">
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 bg-red-100 rounded-md">
+                  <CheckCircle2 size={16} className="text-red-600" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold text-gray-900">{pendingSubmissionsCount}</p>
+              <p className="text-xs text-gray-600 font-medium">Grading</p>
+            </div>
+          </section>
+
+          {/* ===== MAIN TWO-COLUMN LAYOUT ===== */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* LEFT COLUMN */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* TODAY'S FOCUS - Command Center */}
+              <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-purple-50 to-transparent">
+                  <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                    <LayoutDashboard size={20} className="text-purple-600" />
+                    Today's Focus
+                  </h3>
+                  <p className="text-xs text-gray-600 mt-1">What needs your attention</p>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Pending Approvals Alert */}
+                  {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').length > 0 && (
+                    <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-amber-100 rounded-lg flex-shrink-0">
+                          <AlertCircle size={16} className="text-amber-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-amber-900 text-sm">
+                            {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').length} Student Approvals Pending
+                          </p>
+                          <p className="text-xs text-amber-700 mt-1">Review and approve exam bookings</p>
+                          <button
+                            onClick={() => navigate('/teacher/approvals')}
+                            className="mt-2 text-xs font-semibold text-amber-600 hover:text-amber-700 flex items-center gap-1"
+                          >
+                            Review Now <ChevronRight size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Assignments Needing Review */}
+                  {pendingSubmissionsCount > 0 && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 bg-red-100 rounded-lg flex-shrink-0">
+                          <ClipboardList size={16} className="text-red-600" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold text-red-900 text-sm">
+                            {pendingSubmissionsCount} Submissions to Grade
+                          </p>
+                          <p className="text-xs text-red-700 mt-1">Students are waiting for feedback</p>
+                          <button
+                            onClick={() => navigate('/teacher/tasks')}
+                            className="mt-2 text-xs font-semibold text-red-600 hover:text-red-700 flex items-center gap-1"
+                          >
+                            Grade Now <ChevronRight size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upcoming Class */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 bg-blue-100 rounded-lg flex-shrink-0">
+                        <Video size={16} className="text-blue-600" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-semibold text-blue-900 text-sm">No Live Class Scheduled</p>
+                        <p className="text-xs text-blue-700 mt-1">Schedule a session for your students</p>
+                        <button
+                          onClick={() => setShowLiveModal(true)}
+                          className="mt-2 text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                        >
+                          Schedule Now <ChevronRight size={12} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick Stats */}
+                  {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').length === 0 && pendingSubmissionsCount === 0 && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
+                      <div className="flex justify-center mb-2">
+                        <CheckCircle2 size={24} className="text-green-600" />
+                      </div>
+                      <p className="font-semibold text-green-900 text-sm">All Caught Up!</p>
+                      <p className="text-xs text-green-700 mt-1">No urgent tasks at the moment</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* UPCOMING LIVE CLASS */}
+              <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-transparent">
+                  <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                    <Video size={20} className="text-emerald-600" />
+                    Next Live Class
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg text-center">
+                    <p className="text-sm text-gray-600">No live class scheduled</p>
+                    <button
+                      onClick={() => setShowLiveModal(true)}
+                      className="mt-3 text-xs font-semibold text-purple-600 hover:text-purple-700 flex items-center gap-1 justify-center"
+                    >
+                      <Plus size={14} /> Schedule Live Class
+                    </button>
+                  </div>
+                </div>
+              </section>
+
+              {/* RECENT STUDENT ACTIVITY */}
+              <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-transparent">
+                  <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                    <GraduationCap size={20} className="text-blue-600" />
+                    Recent Activity
+                  </h3>
+                </div>
+                <div className="divide-y divide-gray-100 max-h-96 overflow-y-auto">
+                  {filteredStudents.slice(0, 6).length > 0 ? (
+                    filteredStudents.slice(0, 6).map((student) => (
+                      <div
+                        key={student.uid}
+                        onClick={() => navigate(`/teacher/students/${student.uid}`)}
+                        className="px-6 py-4 flex items-center gap-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                      >
+                        <img
+                          src={student.avatarUrl || `https://picsum.photos/seed/${student.uid}/100/100`}
+                          alt={student.name}
+                          className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{student.name}</p>
+                          <p className="text-xs text-gray-500">
+                            {student.trainingStatus ? student.trainingStatus.replace('_', ' ') : 'No activity'}
+                          </p>
+                        </div>
+                        <ChevronRight size={16} className="text-gray-400 flex-shrink-0" />
+                      </div>
+                    ))
+                  ) : (
+                    <div className="px-6 py-8 text-center">
+                      <p className="text-sm text-gray-500">No student activity yet</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+
+            {/* RIGHT COLUMN */}
+            <div className="space-y-6">
+              {/* QUICK ACTIONS */}
+              <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-pink-50 to-transparent">
+                  <h3 className="font-bold text-gray-900 text-lg flex items-center gap-2">
+                    <Plus size={20} className="text-pink-600" />
+                    Quick Actions
+                  </h3>
+                </div>
+                <div className="p-6 space-y-3">
+                  <button
+                    onClick={() => navigate('/teacher/batches')}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-purple-50 to-purple-100/50 border border-purple-200 hover:border-purple-300 hover:shadow-md transition-all group text-left"
+                  >
+                    <div className="p-2 bg-purple-600 rounded-lg text-white flex-shrink-0 group-hover:bg-purple-700">
+                      <Users size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">Manage Batches</p>
+                      <p className="text-xs text-gray-600">{courses.length} courses</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => navigate('/teacher/approvals')}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-amber-50 to-amber-100/50 border border-amber-200 hover:border-amber-300 hover:shadow-md transition-all group text-left"
+                  >
+                    <div className="p-2 bg-amber-600 rounded-lg text-white flex-shrink-0 group-hover:bg-amber-700">
+                      <CheckCircle2 size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">Approvals</p>
+                      <p className="text-xs text-gray-600">
+                        {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').length} pending
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => navigate(`/teacher/lessons?courseId=${selectedCourseId}`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-blue-50 to-blue-100/50 border border-blue-200 hover:border-blue-300 hover:shadow-md transition-all group text-left"
+                  >
+                    <div className="p-2 bg-blue-600 rounded-lg text-white flex-shrink-0 group-hover:bg-blue-700">
+                      <BookOpen size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">Lessons</p>
+                      <p className="text-xs text-gray-600">Manage content</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => navigate(`/teacher/attendance`)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-green-50 to-green-100/50 border border-green-200 hover:border-green-300 hover:shadow-md transition-all group text-left"
+                  >
+                    <div className="p-2 bg-green-600 rounded-lg text-white flex-shrink-0 group-hover:bg-green-700">
+                      <Calendar size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">Attendance</p>
+                      <p className="text-xs text-gray-600">Track presence</p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setShowCreateModal(true)}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-cyan-50 to-cyan-100/50 border border-cyan-200 hover:border-cyan-300 hover:shadow-md transition-all group text-left"
+                  >
+                    <div className="p-2 bg-cyan-600 rounded-lg text-white flex-shrink-0 group-hover:bg-cyan-700">
+                      <ClipboardList size={16} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-semibold text-gray-900 text-sm">Create Task</p>
+                      <p className="text-xs text-gray-600">{assignments.length} active</p>
+                    </div>
+                  </button>
+                </div>
+              </section>
+
+              {/* PENDING APPROVALS SUMMARY */}
+              {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').length > 0 && (
+                <section className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                  <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-orange-50 to-transparent">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                      <AlertCircle size={18} className="text-orange-600" />
+                      Pending Approvals
+                    </h3>
+                  </div>
+                  <div className="divide-y divide-gray-100 max-h-80 overflow-y-auto">
+                    {eligibleStudents.filter(s => s.examStatus !== 'booked' && s.examStatus !== 'completed').slice(0, 4).map((student) => (
+                      <div key={student.uid} className="px-6 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-gray-900 text-sm truncate">{student.name}</p>
+                          <p className="text-xs text-gray-500">Exam booking waiting</p>
+                        </div>
+                        <button
+                          onClick={() => handleApproveExamBooking(student)}
+                          disabled={approvingId === student.uid}
+                          className="px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700 hover:bg-emerald-200 text-xs font-semibold transition-all disabled:opacity-50 flex-shrink-0 ml-2"
+                        >
+                          {approvingId === student.uid ? '...' : 'Approve'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              )}
+
+              {/* COURSE OVERVIEW CARD */}
+              <section className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-lg p-6 text-white">
+                <h4 className="font-bold mb-4">Course Overview</h4>
+                <div className="space-y-3">
+                  <div>
+                    <p className="text-xs text-purple-100">Course</p>
+                    <p className="font-semibold">{selectedCourse?.name}</p>
+                  </div>
+                  <div className="pt-3 border-t border-purple-400">
+                    <p className="text-xs text-purple-100 mb-2">Quick Stats</p>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <p className="text-purple-100 text-xs">Students</p>
+                        <p className="font-bold">{enrolledStudents.length}</p>
+                      </div>
+                      <div>
+                        <p className="text-purple-100 text-xs">Tasks</p>
+                        <p className="font-bold">{assignments.length}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <GraduationCap size={32} className="text-gray-400" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-900">No Course Assigned</h3>
+          <p className="text-gray-600 text-sm mt-2">
+            You haven't been assigned to any course yet. Contact the administrator.
+          </p>
+        </div>
+      )}
             <GlassCard className="p-6 flex items-center gap-4 relative overflow-hidden group border border-white/5">
               <div className="size-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 ring-1 ring-emerald-500/20">
                 <CheckCircle2 size={24} />
@@ -779,136 +1113,18 @@ const handleScheduleSession = async (e: React.FormEvent) => {
           </section>
         </>
       ) : (
-        <GlassCard className="p-12 text-center space-y-4">
-          <div className="size-20 rounded-full bg-white/5 flex items-center justify-center mx-auto text-slate-500">
-            <GraduationCap size={40} />
+        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+            <GraduationCap size={32} className="text-gray-400" />
           </div>
-          <div className="max-w-md mx-auto">
-            <h3 className="text-xl font-bold text-[var(--ui-heading)]">No Course Assigned</h3>
-            <p className="text-[var(--ui-muted)] text-sm mt-2">
-              You haven't been assigned to any course yet. Please contact the administrator to get started.
-            </p>
-          </div>
-        </GlassCard>
-      )}
-
-      {/* Quick Actions Floating Button */}
-      {selectedCourse && (
-        <div className="fixed bottom-24 right-6 z-40">
-          <button
-            onClick={() => setShowQuickActions(true)}
-            className="bg-[var(--ui-accent)] text-white size-14 flex items-center justify-center rounded-2xl shadow-2xl hover:scale-110 transition-transform active:scale-95"
-          >
-            <Plus size={32} />
-          </button>
+          <h3 className="text-lg font-bold text-gray-900">No Course Assigned</h3>
+          <p className="text-gray-600 text-sm mt-2">
+            You haven't been assigned to any course yet. Please contact the administrator.
+          </p>
         </div>
       )}
 
-      {/* Quick Action Modal */}
-      <AnimatePresence>
-        {showQuickActions && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowQuickActions(false)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="fixed inset-0 z-[70] flex items-center justify-center p-4 pointer-events-none"
-            >
-              <div className="bg-[var(--ui-bg)] border border-[var(--ui-border)] rounded-3xl p-8 shadow-2xl max-w-sm w-full pointer-events-auto space-y-6">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-[var(--ui-heading)]">Quick Actions</h3>
-                  <button onClick={() => setShowQuickActions(false)} className="text-[var(--ui-muted)] hover:text-[var(--ui-heading)]">
-                    <X size={24} />
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 gap-3">
-                  <button
-                    onClick={() => {
-                      setShowQuickActions(false);
-                      setShowLiveModal(true);
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all group w-full text-left"
-                  >
-                    <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <Video size={24} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[var(--ui-heading)]">Schedule Session</p>
-                      <p className="text-xs text-[var(--ui-muted)]">Live Class</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setShowQuickActions(false);
-                      navigate(`/teacher/lessons?courseId=${selectedCourseId}&mode=create`);
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-[#6324eb]/10 hover:border-[#6324eb]/30 transition-all group w-full text-left"
-                  >
-                    <div className="size-12 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:bg-emerald-500 group-hover:text-white transition-all">
-                      <Video size={24} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[var(--ui-heading)]">Add Lesson</p>
-                      <p className="text-xs text-[var(--ui-muted)]">Video & Resources</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setShowQuickActions(false);
-                      navigate(`/teacher/modules?courseId=${selectedCourseId}&mode=create`);
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-blue-500/10 hover:border-blue-500/30 transition-all group w-full text-left"
-                  >
-                    <div className="size-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all">
-                      <BookOpen size={24} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[var(--ui-heading)]">Add Module</p>
-                      <p className="text-xs text-[var(--ui-muted)]">New Chapter</p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setShowQuickActions(false);
-                      setShowCreateModal(true);
-                    }}
-                    className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-[#6324eb]/10 hover:border-[#6324eb]/30 transition-all group w-full text-left"
-                  >
-                    <div className="size-12 rounded-xl bg-[#6324eb]/10 flex items-center justify-center text-[#6324eb] group-hover:bg-[#6324eb] group-hover:text-white transition-all">
-                      <ClipboardList size={24} />
-                    </div>
-                    <div>
-                      <p className="font-bold text-[var(--ui-heading)]">Create Task</p>
-                      <p className="text-xs text-[var(--ui-muted)]">New Assignment</p>
-                    </div>
-                  </button>
-                </div>
-
-                <div className="pt-2">
-                  <button
-                    onClick={() => setShowQuickActions(false)}
-                    className="w-full py-4 rounded-2xl bg-white/5 text-[var(--ui-body)] font-bold hover:bg-white/10 transition-all"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
+      {/* ===== MODALS ===== */}
       {/* Schedule Live Session Modal */}
       <AnimatePresence>
         {showLiveModal && (

@@ -13,20 +13,20 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
   const { profile } = useAuth();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Fixed Sidebar */}
       <TeacherSidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
       
-      {/* Main Content */}
-      <div className={`transition-all duration-300 ${
+      {/* Main Content Area - Scrollable */}
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${
         sidebarCollapsed ? 'ml-16' : 'ml-64'
       }`}>
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+        {/* Top Header - Fixed */}
+        <header className="flex-shrink-0 bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-40">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Teacher Dashboard</h1>
-              <p className="text-sm text-gray-500">Manage your classes and students</p>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+              <p className="text-sm text-gray-500 mt-1">Manage your courses and students efficiently</p>
             </div>
             <div className="flex items-center gap-4">
               <ProfileDropdown />
@@ -34,9 +34,11 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="p-6">
-          {children || <Outlet />}
+        {/* Scrollable Content Area */}
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-8 space-y-6">
+            {children || <Outlet />}
+          </div>
         </main>
       </div>
     </div>

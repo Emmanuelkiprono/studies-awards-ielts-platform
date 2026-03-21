@@ -21,6 +21,10 @@ import {
   BookOpen,
   UserCheck,
   Lock,
+  Bell,
+  MoreVertical,
+  X,
+  LogOut,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
@@ -47,6 +51,48 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const { profile, user, studentData, loading, loadingStatus } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Header state for top-right actions
+  const [showMoreOptions, setShowMoreOptions] = useState(false);
+  const [showProfileSettings, setShowProfileSettings] = useState(false);
+  const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [editedEmail, setEditedEmail] = useState('');
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+
+  // Sign out handler
+  const { signOut } = useAuth();
+  const handleSignOut = async () => {
+    try {
+      if (signOut) {
+        await signOut();
+      }
+      navigate('/auth');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
+    setShowSignOutConfirm(false);
+  };
+
+  // Profile update handler
+  const handleProfileUpdate = async () => {
+    if (!profile) return;
+    
+    try {
+      // Update profile in Firebase (implementation depends on your auth setup)
+      setIsEditingProfile(false);
+      setShowProfileSettings(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (profile) {
+      setEditedName(profile.name || '');
+      setEditedEmail(profile.email || '');
+    }
+  }, [profile]);
   const state = location.state as { 
     enrollmentCompleted?: boolean; 
     newStatus?: string; 
@@ -228,7 +274,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
         {/* Simple Safe Header */}
         <div className="bg-white shadow-sm border-b border-gray-100">
           <div className="px-4 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between relative">
               {/* User Profile Section */}
               <div className="flex items-center gap-3">
                 {/* User Avatar */}
@@ -249,18 +295,49 @@ export const StudentOnboardingDashboard: React.FC = () => {
               
               {/* Right Side Actions */}
               <div className="flex items-center gap-2">
-                {/* Search Button */}
-                <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  🔍
+                {/* Notifications Button */}
+                <button
+                  onClick={() => navigate('/notifications')}
+                  className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <Bell size={16} className="text-gray-600" />
                 </button>
                 
                 {/* Menu Button */}
-                <button className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors">
-                  ⋯
+                <button
+                  onClick={() => setShowMoreOptions(!showMoreOptions)}
+                  className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                >
+                  <MoreVertical size={16} className="text-gray-600" />
                 </button>
               </div>
             </div>
           </div>
+          
+          {/* Simple Menu Dropdown */}
+          {showMoreOptions && (
+            <div className="absolute right-0 top-12 z-[100] w-48 rounded-2xl border border-gray-200 bg-white shadow-xl p-2">
+              <button
+                onClick={() => {
+                  setShowMoreOptions(false);
+                  setShowProfileSettings(true);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100"
+              >
+                <span className="text-sm font-medium text-gray-900">Profile Settings</span>
+              </button>
+              
+              <button
+                onClick={() => {
+                  setShowMoreOptions(false);
+                  setShowSignOutConfirm(true);
+                }}
+                className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors"
+              >
+                <span className="text-sm font-medium text-red-600">Sign Out</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Main Content */}
@@ -893,7 +970,139 @@ export const StudentOnboardingDashboard: React.FC = () => {
           </div>
         </motion.div>
       )}
-    </motion.div>
+    
+    {/* Profile Settings Modal */}
+    {showProfileSettings && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-end justify-center">
+        <div className="bg-white rounded-t-3xl w-full max-w-lg max-h-[80vh] overflow-y-auto">
+          <div className="p-6">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Profile Settings</h3>
+              <button
+                onClick={() => setShowProfileSettings(false)}
+                className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
+              >
+                <X size={16} className="text-gray-600" />
+              </button>
+            </div>
+            
+            {/* Profile Avatar */}
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center mb-3">
+                {profile?.name ? (
+                  <span className="text-white font-bold text-2xl">
+                    {profile.name.charAt(0).toUpperCase()}
+                  </span>
+                ) : (
+                  <User size={32} className="text-white" />
+                )}
+              </div>
+              <button className="text-sm text-purple-600 hover:text-purple-700 font-medium">
+                Change Photo
+              </button>
+            </div>
+            
+            {/* Profile Form */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  disabled={!isEditingProfile}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                  placeholder="Your name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <input
+                  type="email"
+                  value={editedEmail}
+                  onChange={(e) => setEditedEmail(e.target.value)}
+                  disabled={!isEditingProfile}
+                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-500"
+                  placeholder="your.email@example.com"
+                />
+              </div>
+            </div>
+            
+            {/* Actions */}
+            <div className="flex gap-3 mt-6">
+              {!isEditingProfile ? (
+                <>
+                  <button
+                    onClick={() => setIsEditingProfile(true)}
+                    className="flex-1 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
+                  >
+                    Edit Profile
+                  </button>
+                  <button
+                    onClick={() => setShowProfileSettings(false)}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={handleProfileUpdate}
+                    className="flex-1 py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors"
+                  >
+                    Save Changes
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditingProfile(false);
+                      setEditedName(profile?.name || '');
+                      setEditedEmail(profile?.email || '');
+                    }}
+                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+    
+    {/* Simple Sign Out Confirmation */}
+    {showSignOutConfirm && (
+      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl p-6 max-w-sm w-full">
+          <div className="text-center mb-6">
+            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LogOut size={24} className="text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign Out</h3>
+            <p className="text-gray-600 text-sm">Are you sure you want to sign out?</p>
+          </div>
+          
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowSignOutConfirm(false)}
+              className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSignOut}
+              className="flex-1 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+      </motion.div>
     );
   } catch (error) {
     console.error('Onboarding Dashboard render error:', error);
