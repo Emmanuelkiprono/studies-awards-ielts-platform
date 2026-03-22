@@ -3,6 +3,7 @@ import {
   collection, 
   doc, 
   addDoc, 
+  setDoc,
   updateDoc, 
   deleteDoc, 
   getDoc, 
@@ -186,36 +187,70 @@ export const useBatchManagement = (teacherId?: string, courseId?: string) => {
   // Assign student to batch
   const assignStudentToBatch = useCallback(async (studentUid: string, batchId: string, courseId: string) => {
     try {
-      // Get batch info
       const batch = await getBatch(batchId);
-      
-      // Update student data
       const studentRef = doc(db, 'students', studentUid);
+      const existingStudentSnap = await getDoc(studentRef);
+      const existingStudentData = existingStudentSnap.exists()
+        ? existingStudentSnap.data() as Partial<StudentData>
+        : undefined;
+      const previousBatchId = existingStudentData?.batchId || existingStudentData?.batchInfo?.batchId;
+
       const batchInfo: StudentBatchInfo = {
         batchId,
-        joinedAt: serverTimestamp(),
-        currentWeek: 1,
-        progressPercent: 0
+        joinedAt: existingStudentData?.batchInfo?.joinedAt || serverTimestamp(),
+        currentWeek: existingStudentData?.batchInfo?.currentWeek || 1,
+        progressPercent: existingStudentData?.batchInfo?.progressPercent || 0,
+        ...(existingStudentData?.batchInfo?.currentLessonId && {
+          currentLessonId: existingStudentData?.batchInfo?.currentLessonId
+        }),
+        ...(existingStudentData?.batchInfo?.attendanceRate !== undefined && {
+          attendanceRate: existingStudentData?.batchInfo?.attendanceRate
+        }),
+        ...(existingStudentData?.batchInfo?.lastAttendanceDate && {
+          lastAttendanceDate: existingStudentData?.batchInfo?.lastAttendanceDate
+        })
       };
 
-      await updateDoc(studentRef, {
+      await setDoc(studentRef, {
+        uid: studentUid,
         batchId,
+        batchName: batch.name,
         batchInfo,
-        courseId,
+        courseId: courseId || batch.courseId,
         lastStatusUpdate: serverTimestamp()
-      });
+      }, { merge: true });
 
-      // Update batch student count
-      const batchRef = doc(db, 'batches', batchId);
-      await updateDoc(batchRef, {
-        currentStudents: batch.currentStudents + 1,
+      const nextBatchStudentsSnapshot = await getDocs(query(
+        collection(db, 'students'),
+        where('batchId', '==', batchId)
+      ));
+
+      await updateDoc(doc(db, 'batches', batchId), {
+        currentStudents: nextBatchStudentsSnapshot.size,
         updatedAt: serverTimestamp()
       });
 
+      if (previousBatchId && previousBatchId !== batchId) {
+        const previousBatchStudentsSnapshot = await getDocs(query(
+          collection(db, 'students'),
+          where('batchId', '==', previousBatchId)
+        ));
+
+        await updateDoc(doc(db, 'batches', previousBatchId), {
+          currentStudents: previousBatchStudentsSnapshot.size,
+          updatedAt: serverTimestamp()
+        });
+      }
+
       return batch;
     } catch (err) {
-      console.error('Error assigning student to batch:', err);
-      throw new Error('Failed to assign student to batch');
+      console.error('Error assigning student to batch:', {
+        studentUid,
+        batchId,
+        courseId,
+        err
+      });
+      throw new Error(err instanceof Error ? err.message : 'Failed to assign student to batch');
     }
   }, [getBatch]);
 

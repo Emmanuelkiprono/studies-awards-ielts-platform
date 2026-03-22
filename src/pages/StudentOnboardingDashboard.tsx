@@ -27,9 +27,16 @@ import {
   LogOut,
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, getDoc, onSnapshot, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import {
+  buildAttendanceSummary,
+  formatAttendanceDateTime,
+  getAttendanceDateValue,
+  getAttendanceStatusBadgeClassName,
+  getAttendanceStatusLabel,
+} from '../lib/attendance';
 import { db } from '../services/firebase';
-import { OnboardingStatus, PaymentInfo, RejectionInfo } from '../types';
+import { Attendance, OnboardingStatus, PaymentInfo, RejectionInfo } from '../types';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { cn } from '../lib/utils';
 
@@ -46,9 +53,104 @@ interface StatusStep {
   };
 }
 
+interface DashboardLiveSession {
+  id: string;
+  title?: string;
+  batchId?: string;
+  moduleId?: string;
+  startTime?: string;
+  endTime?: string;
+  meetingLink?: string;
+  status?: 'scheduled' | 'live' | 'ended' | 'cancelled';
+  scheduledAt?: { toDate?: () => Date };
+}
+
+interface TodayTaskCard {
+  id: string;
+  title: string;
+  module: string;
+  time: string;
+  status: 'Live' | 'Scheduled' | 'Completed';
+  statusClassName: string;
+  cardClassName: string;
+  iconClassName: string;
+  buttonLabel: string;
+  meetingLink?: string;
+}
+
+const isValidDate = (value: Date | null) => Boolean(value && !Number.isNaN(value.getTime()));
+
+const getDashboardSessionStartDate = (session: DashboardLiveSession) => {
+  if (session.startTime) {
+    const parsedDate = new Date(session.startTime);
+    if (isValidDate(parsedDate)) {
+      return parsedDate;
+    }
+  }
+
+  const scheduledDate = session.scheduledAt?.toDate?.();
+  if (scheduledDate && isValidDate(scheduledDate)) {
+    return scheduledDate;
+  }
+
+  return null;
+};
+
+const getDashboardSessionEndDate = (session: DashboardLiveSession) => {
+  if (session.endTime) {
+    const parsedDate = new Date(session.endTime);
+    if (isValidDate(parsedDate)) {
+      return parsedDate;
+    }
+  }
+
+  return null;
+};
+
+const isSameLocalDay = (left: Date, right: Date) =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate();
+
+const getTodayTaskSessionFilterReasons = (
+  session: DashboardLiveSession,
+  expectedBatchId: string | undefined,
+  today: Date
+) => {
+  const reasons: string[] = [];
+  const sessionStartDate = getDashboardSessionStartDate(session);
+  const sessionEndDate = getDashboardSessionEndDate(session);
+
+  if (session.status === 'cancelled') {
+    reasons.push('status is cancelled');
+  }
+
+  if (!session.batchId) {
+    reasons.push('missing batchId');
+  } else if (expectedBatchId && session.batchId !== expectedBatchId) {
+    reasons.push(`batchId mismatch: expected ${expectedBatchId}, got ${session.batchId}`);
+  }
+
+  if (!sessionStartDate) {
+    reasons.push('missing or invalid startTime');
+  } else if (!isSameLocalDay(sessionStartDate, today)) {
+    reasons.push('session is not scheduled for today');
+  }
+
+  if (session.endTime && !sessionEndDate) {
+    reasons.push('invalid endTime');
+  }
+
+  if (sessionStartDate && sessionEndDate && sessionEndDate.getTime() <= sessionStartDate.getTime()) {
+    reasons.push('endTime must be after startTime');
+  }
+
+  return reasons;
+};
+
 export const StudentOnboardingDashboard: React.FC = () => {
   console.log(' /DASHBOARD PAGE MOUNTING - StudentOnboardingDashboard');
-  const { profile, user, studentData, loading, loadingStatus, signOut } = useAuth();
+  const { profile, user, studentData, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -108,6 +210,13 @@ export const StudentOnboardingDashboard: React.FC = () => {
   const [paymentInfo, setPaymentInfo] = useState<PaymentInfo | null>(null);
   const [rejectionInfo, setRejectionInfo] = useState<RejectionInfo | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [todayLiveSessions, setTodayLiveSessions] = useState<DashboardLiveSession[]>([]);
+  const [todayTaskModules, setTodayTaskModules] = useState<Record<string, string>>({});
+  const [todayTaskBatchName, setTodayTaskBatchName] = useState('');
+  const [tasksLoading, setTasksLoading] = useState(true);
+  const [attendanceHistory, setAttendanceHistory] = useState<Attendance[]>([]);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
+  const studentBatchId = studentData?.batchId || studentData?.batchInfo?.batchId;
 
   // Single source of truth for access
   const hasAccess = studentData?.onboardingStatus === 'approved' ||
@@ -123,6 +232,179 @@ export const StudentOnboardingDashboard: React.FC = () => {
       setRejectionInfo(studentData.rejectionInfo || null);
     }
   }, [studentData, state]);
+
+  useEffect(() => {
+    if (!studentBatchId) {
+      console.log('[StudentOnboardingDashboard] No student batchId found for Today\'s Tasks live class fetch', {
+        studentBatchId,
+        studentDataBatchId: studentData?.batchId,
+        studentBatchInfoBatchId: studentData?.batchInfo?.batchId,
+      });
+      setTodayLiveSessions([]);
+      setTodayTaskModules({});
+      setTodayTaskBatchName('');
+      setTasksLoading(false);
+      return;
+    }
+
+    setTasksLoading(true);
+
+    const liveSessionsQuery = query(
+      collection(db, 'liveSessions'),
+      where('batchId', '==', studentBatchId)
+    );
+
+    const unsubscribe = onSnapshot(
+      liveSessionsQuery,
+      async (snapshot) => {
+        const today = new Date();
+        const fetchedSessions = snapshot.docs
+          .map((sessionDoc) => ({ id: sessionDoc.id, ...sessionDoc.data() } as DashboardLiveSession));
+
+        console.log('[StudentOnboardingDashboard] Today\'s Tasks live class fetch', {
+          studentBatchId,
+          studentDataBatchId: studentData?.batchId,
+          studentBatchInfoBatchId: studentData?.batchInfo?.batchId,
+          fetchedSessions,
+        });
+
+        const sessionsForToday = fetchedSessions
+          .filter((session) => {
+            const filterReasons = getTodayTaskSessionFilterReasons(session, studentBatchId, today);
+
+            if (filterReasons.length > 0) {
+              console.log('[StudentOnboardingDashboard] Filtering out live session from Today\'s Tasks', {
+                studentBatchId,
+                sessionId: session.id,
+                filterReasons,
+                session,
+              });
+              return false;
+            }
+
+            if (!session.meetingLink) {
+              console.log('[StudentOnboardingDashboard] Today\'s Tasks live session missing meetingLink', {
+                studentBatchId,
+                sessionId: session.id,
+                session,
+              });
+            }
+
+            if (!session.status) {
+              console.log('[StudentOnboardingDashboard] Today\'s Tasks live session missing status, using time-based fallback', {
+                studentBatchId,
+                sessionId: session.id,
+                session,
+              });
+            }
+
+            return true;
+          })
+          .sort((left, right) => {
+            const leftTime = getDashboardSessionStartDate(left)?.getTime() ?? 0;
+            const rightTime = getDashboardSessionStartDate(right)?.getTime() ?? 0;
+            return leftTime - rightTime;
+          });
+
+        setTodayLiveSessions(sessionsForToday);
+
+        try {
+          const batchSnapshot = await getDoc(doc(db, 'batches', studentBatchId));
+          const batchData = batchSnapshot.exists() ? batchSnapshot.data() : null;
+          const batchCourseId = batchData?.courseId as string | undefined;
+
+          setTodayTaskBatchName(batchData?.name || '');
+
+          const moduleIds = [...new Set(
+            sessionsForToday
+              .map((session) => session.moduleId)
+              .filter((moduleId): moduleId is string => Boolean(moduleId))
+          )];
+
+          if (!batchCourseId || moduleIds.length === 0) {
+            setTodayTaskModules({});
+          } else {
+            const moduleEntries = await Promise.all(
+              moduleIds.map(async (moduleId) => {
+                const moduleSnapshot = await getDoc(doc(db, 'courses', batchCourseId, 'modules', moduleId));
+                if (!moduleSnapshot.exists()) {
+                  return null;
+                }
+
+                return [moduleId, moduleSnapshot.data().name || 'General Live Class'] as const;
+              })
+            );
+
+            setTodayTaskModules(
+              Object.fromEntries(
+                moduleEntries.filter(
+                  (entry): entry is readonly [string, string] => Boolean(entry)
+                )
+              )
+            );
+          }
+        } catch (error) {
+          console.error('Error loading today live class metadata:', error);
+          setTodayTaskBatchName('');
+          setTodayTaskModules({});
+        }
+
+        setTasksLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching today live classes:', error);
+        setTodayLiveSessions([]);
+        setTodayTaskModules({});
+        setTodayTaskBatchName('');
+        setTasksLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [studentBatchId]);
+
+  useEffect(() => {
+    const studentUid = studentData?.uid || profile?.uid;
+
+    if (!studentUid) {
+      setAttendanceHistory([]);
+      setAttendanceLoading(false);
+      return;
+    }
+
+    setAttendanceLoading(true);
+
+    const attendanceQuery = query(
+      collection(db, 'attendance'),
+      where('studentUid', '==', studentUid)
+    );
+
+    const unsubscribe = onSnapshot(
+      attendanceQuery,
+      (snapshot) => {
+        const nextHistory = snapshot.docs
+          .map((attendanceDoc) => ({
+            id: attendanceDoc.id,
+            ...attendanceDoc.data(),
+          } as Attendance))
+          .sort((left, right) => {
+            const leftTime = getAttendanceDateValue(left)?.getTime() ?? 0;
+            const rightTime = getAttendanceDateValue(right)?.getTime() ?? 0;
+            return rightTime - leftTime;
+          });
+
+        setAttendanceHistory(nextHistory);
+        setAttendanceLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching student attendance history:', error);
+        setAttendanceHistory([]);
+        setAttendanceLoading(false);
+      }
+    );
+
+    return () => unsubscribe();
+  }, [profile?.uid, studentData?.uid]);
 
   const getStatusSteps = (): StatusStep[] => {
     const steps: StatusStep[] = [
@@ -248,14 +530,76 @@ export const StudentOnboardingDashboard: React.FC = () => {
     }
   };
 
+  const todayTaskCards: TodayTaskCard[] = todayLiveSessions.reduce<TodayTaskCard[]>((cards, session) => {
+    const sessionStartDate = getDashboardSessionStartDate(session);
+    if (!sessionStartDate) {
+      return cards;
+    }
+
+    const sessionEndDate = getDashboardSessionEndDate(session);
+    const now = new Date();
+    const moduleLabel =
+      (session.moduleId && todayTaskModules[session.moduleId]) ||
+      todayTaskBatchName ||
+      'General Live Class';
+
+    let status: TodayTaskCard['status'] = 'Scheduled';
+    if (
+      session.status === 'live' ||
+      (sessionEndDate && sessionStartDate.getTime() <= now.getTime() && now.getTime() < sessionEndDate.getTime())
+    ) {
+      status = 'Live';
+    } else if (
+      session.status === 'ended' ||
+      (sessionEndDate && sessionEndDate.getTime() <= now.getTime())
+    ) {
+      status = 'Completed';
+    }
+
+    cards.push({
+      id: session.id,
+      title: session.title || 'Live Class',
+      module: moduleLabel,
+      time: sessionEndDate
+        ? `${sessionStartDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${sessionEndDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+        : sessionStartDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status,
+      statusClassName:
+        status === 'Live'
+          ? 'bg-red-100 text-red-700'
+          : status === 'Completed'
+            ? 'bg-gray-100 text-gray-700'
+            : 'bg-purple-100 text-purple-700',
+      cardClassName:
+        status === 'Live'
+          ? 'bg-red-50 border-red-200'
+          : status === 'Completed'
+            ? 'bg-gray-50 border-gray-200'
+            : 'bg-purple-50 border-purple-200',
+      iconClassName:
+        status === 'Live'
+          ? 'bg-red-100 text-red-600'
+          : status === 'Completed'
+            ? 'bg-gray-100 text-gray-700'
+            : 'bg-purple-100 text-purple-600',
+      buttonLabel: status === 'Live' ? 'Join Class' : 'View Class',
+      meetingLink: session.meetingLink,
+    });
+
+    return cards;
+  }, []);
+
+  const attendanceSummary = buildAttendanceSummary(attendanceHistory);
+  const recentAttendanceHistory = attendanceHistory.slice(0, 4);
+
   // SAFETY CHECK: Prevent white screen crashes
-  if (loading || loadingStatus || !profile) {
+  if (loading || !profile) {
     return (
       <div className="p-4 max-w-4xl mx-auto w-full">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="w-8 h-8 border-4 border-[rgba(var(--ui-accent-rgb)/0.30)] border-t-[var(--ui-accent)] rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading...</p>
+            <p className="text-gray-700">Loading...</p>
           </div>
         </div>
       </div>
@@ -268,7 +612,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
   console.log('🔍 RENDERING REAL DASHBOARD CONTENT');
   
   // Safe data defaults
-  const safeUserName = profile?.name || user?.user_metadata?.full_name || "Student";
+  const safeUserName = profile?.name || user?.displayName || "Student";
 
   return (
     <>
@@ -289,7 +633,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 
                 {/* Greeting Text */}
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-black">
                     Hello, {safeUserName}
                   </h2>
                   <p className="text-sm text-gray-500">Welcome back</p>
@@ -303,7 +647,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                   onClick={() => navigate('/notifications')}
                   className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <Bell size={16} className="text-gray-600" />
+                  <Bell size={16} className="text-gray-700" />
                 </button>
                 
                 {/* Menu Button */}
@@ -311,7 +655,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                   onClick={() => setShowMoreOptions(!showMoreOptions)}
                   className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
                 >
-                  <MoreVertical size={16} className="text-gray-600" />
+                  <MoreVertical size={16} className="text-gray-700" />
                 </button>
               </div>
             </div>
@@ -327,7 +671,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
                 }}
                 className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors border-b border-gray-100"
               >
-                <span className="text-sm font-medium text-gray-900">Profile Settings</span>
+                <span className="text-sm font-medium text-black">Profile Settings</span>
               </button>
               
               <button
@@ -349,7 +693,7 @@ export const StudentOnboardingDashboard: React.FC = () => {
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-1">
+                <h2 className="text-2xl font-bold text-black mb-1">
                   Today's Learning
                 </h2>
                 <p className="text-gray-500 text-sm">
@@ -404,39 +748,120 @@ export const StudentOnboardingDashboard: React.FC = () => {
           
           {/* Today's Tasks */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Today's Tasks</h3>
+            <h3 className="text-lg font-bold text-black mb-4">Today's Tasks</h3>
             <div className="space-y-3">
-              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-blue-600">📖</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Speaking Basics</p>
-                      <p className="text-xs text-gray-500">45 min</p>
+              {tasksLoading ? (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <p className="text-sm text-gray-500">Loading today's tasks...</p>
+                </div>
+              ) : todayTaskCards.length === 0 ? (
+                <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 text-center">
+                  <p className="text-sm font-medium text-black">No tasks scheduled for today</p>
+                </div>
+              ) : (
+                todayTaskCards.map((task) => (
+                  <div key={task.id} className={`p-3 rounded-xl border ${task.cardClassName}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3">
+                        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${task.iconClassName}`}>
+                          <Calendar size={16} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-black">{task.title}</p>
+                          <p className="text-xs text-gray-500">Module: {task.module}</p>
+                          <p className="text-xs text-gray-500">Time: {task.time}</p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`text-xs px-2 py-1 rounded-full ${task.statusClassName}`}>{task.status}</span>
+                        {task.meetingLink && (
+                          <button
+                            onClick={() => window.open(task.meetingLink, '_blank', 'noopener,noreferrer')}
+                            className="text-xs font-medium text-purple-600 hover:text-purple-700"
+                          >
+                            {task.buttonLabel}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded-full">In Progress</span>
-                </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-black mb-1">Attendance Summary</h3>
+                <p className="text-sm text-gray-700">Your live-class attendance rate and recent history.</p>
               </div>
-              
-              <div className="p-3 bg-purple-50 rounded-xl border border-purple-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className="text-purple-600">🎥</span>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Live Practice</p>
-                      <p className="text-xs text-gray-500">2:00 PM</p>
+              <div className="text-right">
+                <p className="text-2xl font-semibold tracking-tight text-black">
+                  {attendanceSummary.attendanceRate.toFixed(1)}%
+                </p>
+                <p className="text-xs text-gray-500">Attendance rate</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 mb-4">
+              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-3">
+                <p className="text-xs text-gray-700">Present</p>
+                <p className="text-lg font-semibold text-black">{attendanceSummary.present}</p>
+              </div>
+              <div className="rounded-2xl border border-red-200 bg-red-50 p-3">
+                <p className="text-xs text-gray-700">Absent</p>
+                <p className="text-lg font-semibold text-black">{attendanceSummary.absent}</p>
+              </div>
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-3">
+                <p className="text-xs text-gray-700">Late</p>
+                <p className="text-lg font-semibold text-black">{attendanceSummary.late}</p>
+              </div>
+              <div className="rounded-2xl border border-blue-200 bg-blue-50 p-3">
+                <p className="text-xs text-gray-700">Excused</p>
+                <p className="text-lg font-semibold text-black">{attendanceSummary.excused}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {attendanceLoading ? (
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                  Loading attendance history...
+                </div>
+              ) : recentAttendanceHistory.length === 0 ? (
+                <div className="rounded-2xl border border-gray-200 bg-gray-50 p-4 text-sm text-gray-500">
+                  No attendance history yet.
+                </div>
+              ) : (
+                recentAttendanceHistory.map((record) => (
+                  <div key={record.id} className="rounded-2xl border border-gray-200 bg-gray-50 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-black">
+                          {record.sessionTitle || 'Live Class'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {record.batch || todayTaskBatchName || 'Batch'} · {formatAttendanceDateTime(getAttendanceDateValue(record))}
+                        </p>
+                        {record.notes && (
+                          <p className="mt-2 text-xs text-gray-700">{record.notes}</p>
+                        )}
+                      </div>
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${getAttendanceStatusBadgeClassName(record.status)}`}
+                      >
+                        {getAttendanceStatusLabel(record.status)}
+                      </span>
                     </div>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-purple-100 text-purple-700 rounded-full">Upcoming</span>
-                </div>
-              </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Modules Section */}
           <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 mb-6">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Modules</h3>
+            <h3 className="text-lg font-bold text-black mb-4">Modules</h3>
             <div className="space-y-3">
               {/* Sample module data with safe fallbacks */}
               {[
@@ -452,14 +877,14 @@ export const StudentOnboardingDashboard: React.FC = () => {
                         <span className="text-blue-600 font-bold text-sm">{module.title.charAt(0)}</span>
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900 text-sm">{module.title}</h4>
+                        <h4 className="font-semibold text-black text-sm">{module.title}</h4>
                         <p className="text-gray-500 text-xs">
                           {module.lessonsCompleted} lesson{module.lessonsCompleted !== 1 ? 's' : ''} completed
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className="text-xs font-medium text-gray-600">{module.progress}%</span>
+                      <span className="text-xs font-medium text-gray-700">{module.progress}%</span>
                       <div className="w-16 h-2 bg-gray-200 rounded-full mt-1">
                         <div 
                           className="h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
@@ -981,12 +1406,12 @@ export const StudentOnboardingDashboard: React.FC = () => {
           <div className="p-6">
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Profile Settings</h3>
+              <h3 className="text-xl font-bold text-black">Profile Settings</h3>
               <button
                 onClick={() => setShowProfileSettings(false)}
                 className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
               >
-                <X size={16} className="text-gray-600" />
+                <X size={16} className="text-gray-700" />
               </button>
             </div>
             
@@ -1084,8 +1509,8 @@ export const StudentOnboardingDashboard: React.FC = () => {
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <LogOut size={24} className="text-red-600" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Sign Out</h3>
-            <p className="text-gray-600 text-sm">Are you sure you want to sign out?</p>
+            <h3 className="text-lg font-semibold text-black mb-2">Sign Out</h3>
+            <p className="text-gray-700 text-sm">Are you sure you want to sign out?</p>
           </div>
           
           <div className="flex gap-3">
@@ -1115,8 +1540,8 @@ export const StudentOnboardingDashboard: React.FC = () => {
           <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <span className="text-red-600 text-xl">⚠️</span>
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">Home content unavailable</h3>
-          <p className="text-gray-600 text-sm mb-4">Please try refreshing the page</p>
+          <h3 className="text-lg font-bold text-black mb-2">Home content unavailable</h3>
+          <p className="text-gray-700 text-sm mb-4">Please try refreshing the page</p>
           <button 
             onClick={() => window.location.reload()}
             className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
@@ -1128,3 +1553,4 @@ export const StudentOnboardingDashboard: React.FC = () => {
     );
   }
 };
+

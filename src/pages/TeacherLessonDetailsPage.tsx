@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
@@ -136,12 +136,12 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         setError(null);
         setLoading(false); // Always set loading to false when lesson loads
       } else {
-        console.error('❌ LESSON NOT FOUND:', lessonId);
+        console.error('âŒ LESSON NOT FOUND:', lessonId);
         setError('Lesson not found');
         setLoading(false); // Always set loading to false on error
       }
     }, (err) => {
-      console.error('❌ ERROR LOADING LESSON:', err);
+      console.error('âŒ ERROR LOADING LESSON:', err);
       setError('Failed to load lesson');
       setLoading(false); // Always set loading to false on error
     });
@@ -241,7 +241,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
       setAttendance(attendanceData);
     });
 
-    return () => unsubscribeAttendance;
+    return unsubscribeAttendance;
   }, [liveSession?.id]);
 
   const startLiveClass = async () => {
@@ -249,7 +249,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     console.log('SELECTED LESSON:', lesson?.id);
     
     if (!lesson || !teacherProfile) {
-      console.error('❌ MISSING LESSON OR TEACHER:', { lesson: !!lesson, teacherProfile: !!teacherProfile });
+      console.error('âŒ MISSING LESSON OR TEACHER:', { lesson: !!lesson, teacherProfile: !!teacherProfile });
       return;
     }
     
@@ -270,18 +270,18 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         createdAt: serverTimestamp()
       };
 
-      console.log('🔴 LIVE SESSION CREATION:', sessionData);
+      console.log('ðŸ”´ LIVE SESSION CREATION:', sessionData);
 
       let sessionId: string;
       if (liveSession) {
-        console.log('🔄 UPDATING EXISTING SESSION:', liveSession.id);
+        console.log('ðŸ”„ UPDATING EXISTING SESSION:', liveSession.id);
         await updateDoc(doc(db, 'liveSessions', liveSession.id), sessionData);
         sessionId = liveSession.id;
       } else {
-        console.log('➕ CREATING NEW LIVE SESSION');
+        console.log('âž• CREATING NEW LIVE SESSION');
         const docRef = await addDoc(collection(db, 'liveSessions'), sessionData);
         sessionId = docRef.id;
-        console.log('✅ LIVE SESSION CREATED WITH ID:', sessionId);
+        console.log('âœ… LIVE SESSION CREATED WITH ID:', sessionId);
       }
       
       console.log('LIVE SESSION CREATED:', sessionId);
@@ -298,14 +298,14 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     setActionLoading('end');
     try {
-      console.log('🛑 ENDING LIVE SESSION:', liveSession.id);
+      console.log('ðŸ›‘ ENDING LIVE SESSION:', liveSession.id);
       await updateDoc(doc(db, 'liveSessions', liveSession.id), {
         status: 'ended',
         endedAt: serverTimestamp()
       });
-      console.log('✅ LIVE SESSION ENDED SUCCESSFULLY');
+      console.log('âœ… LIVE SESSION ENDED SUCCESSFULLY');
     } catch (error) {
-      console.error('❌ ERROR ENDING LIVE CLASS:', error);
+      console.error('âŒ ERROR ENDING LIVE CLASS:', error);
     } finally {
       setActionLoading(null);
     }
@@ -316,14 +316,14 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     setActionLoading('attendance');
     try {
-      console.log('📝 OPENING ATTENDANCE FOR SESSION:', liveSession.id);
+      console.log('ðŸ“ OPENING ATTENDANCE FOR SESSION:', liveSession.id);
       await updateDoc(doc(db, 'liveSessions', liveSession.id), {
         attendanceOpen: true,
         attendanceClosed: false
       });
-      console.log('✅ ATTENDANCE OPENED SUCCESSFULLY');
+      console.log('âœ… ATTENDANCE OPENED SUCCESSFULLY');
     } catch (error) {
-      console.error('❌ ERROR OPENING ATTENDANCE:', error);
+      console.error('âŒ ERROR OPENING ATTENDANCE:', error);
     } finally {
       setActionLoading(null);
     }
@@ -334,14 +334,14 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     
     setActionLoading('attendance');
     try {
-      console.log('📝 CLOSING ATTENDANCE FOR SESSION:', liveSession.id);
+      console.log('ðŸ“ CLOSING ATTENDANCE FOR SESSION:', liveSession.id);
       await updateDoc(doc(db, 'liveSessions', liveSession.id), {
         attendanceOpen: false,
         attendanceClosed: true
       });
-      console.log('✅ ATTENDANCE CLOSED SUCCESSFULLY');
+      console.log('âœ… ATTENDANCE CLOSED SUCCESSFULLY');
     } catch (error) {
-      console.error('❌ ERROR CLOSING ATTENDANCE:', error);
+      console.error('âŒ ERROR CLOSING ATTENDANCE:', error);
     } finally {
       setActionLoading(null);
     }
@@ -362,11 +362,11 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         markedBy: teacherProfile!.uid
       };
       
-      console.log('📝 MARKING ATTENDANCE:', { studentUid, status, sessionId: liveSession.id });
+      console.log('ðŸ“ MARKING ATTENDANCE:', { studentUid, status, sessionId: liveSession.id });
       await setDoc(attendanceRef, attendanceData);
-      console.log('✅ ATTENDANCE MARKED SUCCESSFULLY');
+      console.log('âœ… ATTENDANCE MARKED SUCCESSFULLY');
     } catch (error) {
-      console.error('❌ ERROR MARKING ATTENDANCE:', error);
+      console.error('âŒ ERROR MARKING ATTENDANCE:', error);
     }
   };
 
@@ -420,7 +420,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
   if (error || !lesson) {
     return (
       <div className="text-center py-24 bg-red-500/10 rounded-3xl border border-red-500/30">
-        <h3 className="text-xl font-bold text-white mb-2">Error</h3>
+        <h3 className="text-xl font-semibold text-black mb-2">Error</h3>
         <p className="text-slate-400 mb-6">{error || 'Lesson not found'}</p>
         <button
           onClick={() => navigate('/teacher/batches')}
@@ -444,47 +444,47 @@ export const TeacherLessonDetailsPage: React.FC = () => {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate(`/teacher/batches/${lesson.batchId}`)}
-          className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{lesson.title}</h2>
+          <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">{lesson.title}</h2>
           <p className="text-slate-400 font-medium">Lesson Details and Management</p>
         </div>
       </div>
 
       {/* Lesson Summary */}
       <GlassCard className="p-6 border border-white/5">
-        <h3 className="text-xl font-bold text-white mb-6">Lesson Summary</h3>
+        <h3 className="text-xl font-semibold text-black mb-6">Lesson Summary</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <BookOpen size={16} />
               <span className="text-sm">Batch</span>
             </div>
-            <span className="text-lg font-bold text-white">{batch?.name || 'Loading...'}</span>
+            <span className="text-lg font-semibold text-black">{batch?.name || 'Loading...'}</span>
           </div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Calendar size={16} />
               <span className="text-sm">Week</span>
             </div>
-            <span className="text-lg font-bold text-white">Week {lesson.weekNumber}</span>
+            <span className="text-lg font-semibold text-black">Week {lesson.weekNumber}</span>
           </div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Clock size={16} />
               <span className="text-sm">Order</span>
             </div>
-            <span className="text-lg font-bold text-white">#{lesson.order}</span>
+            <span className="text-lg font-semibold text-black">#{lesson.order}</span>
           </div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <VideoIcon size={16} />
               <span className="text-sm">Live Class</span>
             </div>
-            <span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${getStatusColor(liveSession?.status || 'not_started')}`}>
+            <span className={`px-3 py-1 text-xs font-semibold text-black rounded-full ${getStatusColor(liveSession?.status || 'not_started')}`}>
               {liveSession?.status === 'live' ? 'Live Now' : 
                liveSession?.status === 'ended' ? 'Ended' : 'Not Started'}
             </span>
@@ -497,7 +497,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
               <FileText size={16} />
               <span className="text-sm">Description</span>
             </div>
-            <p className="text-white">{lesson.description}</p>
+            <p className="text-black">{lesson.description}</p>
           </div>
         )}
       </GlassCard>
@@ -505,7 +505,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
       {/* Lesson Materials */}
       <GlassCard className="p-6 border border-white/5">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Lesson Materials</h3>
+          <h3 className="text-xl font-semibold text-black">Lesson Materials</h3>
           <PrimaryButton>
             <Plus size={16} className="mr-2" />
             Add Material
@@ -515,7 +515,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
         {(!lesson.materials || lesson.materials.length === 0) ? (
           <div className="text-center py-12 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
             <Upload size={48} className="mx-auto text-slate-500/50 mb-4" />
-            <h4 className="text-lg font-bold text-white mb-2">No materials uploaded</h4>
+            <h4 className="text-lg font-semibold text-black mb-2">No materials uploaded</h4>
             <p className="text-slate-500">Upload PDFs, videos, notes, or links for this lesson.</p>
           </div>
         ) : (
@@ -529,13 +529,13 @@ export const TeacherLessonDetailsPage: React.FC = () => {
                       <Icon size={20} className="text-[#6324eb]" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white">{material.title}</h4>
+                      <h4 className="font-semibold text-black">{material.title}</h4>
                       <p className="text-sm text-slate-400 capitalize">{material.type}</p>
                     </div>
                   </div>
                   <button
                     onClick={() => window.open(material.url, '_blank')}
-                    className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                    className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
                   >
                     <ExternalLink size={16} />
                   </button>
@@ -548,7 +548,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
 
       {/* Live Class Section */}
       <GlassCard className="p-6 border border-white/5">
-        <h3 className="text-xl font-bold text-white mb-6">Live Class</h3>
+        <h3 className="text-xl font-semibold text-black mb-6">Live Class</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
@@ -556,7 +556,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
               <VideoIcon size={16} />
               <span className="text-sm">Status</span>
             </div>
-            <span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${getStatusColor(liveSession?.status || 'not_started')}`}>
+            <span className={`px-3 py-1 text-xs font-semibold text-black rounded-full ${getStatusColor(liveSession?.status || 'not_started')}`}>
               {liveSession?.status === 'live' ? 'Live Now' : 
                liveSession?.status === 'ended' ? 'Ended' : 'Not Started'}
             </span>
@@ -632,7 +632,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
       {liveSession && (
         <GlassCard className="p-6 border border-white/5">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-white">Attendance</h3>
+            <h3 className="text-xl font-semibold text-black">Attendance</h3>
             <div className="flex items-center gap-4 text-sm">
               <span className="flex items-center gap-1 text-green-400">
                 <CheckCircle size={16} /> Present: {attendanceCounts.present}
@@ -649,13 +649,13 @@ export const TeacherLessonDetailsPage: React.FC = () => {
           {!liveSession.attendanceOpen && !liveSession.attendanceClosed ? (
             <div className="text-center py-12 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
               <Users size={48} className="mx-auto text-slate-500/50 mb-4" />
-              <h4 className="text-lg font-bold text-white mb-2">Attendance Not Open</h4>
+              <h4 className="text-lg font-semibold text-black mb-2">Attendance Not Open</h4>
               <p className="text-slate-500">Start the live class and open attendance to begin tracking.</p>
             </div>
           ) : students.length === 0 ? (
             <div className="text-center py-12 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
               <Users size={48} className="mx-auto text-slate-500/50 mb-4" />
-              <h4 className="text-lg font-bold text-white mb-2">No students assigned to this batch yet</h4>
+              <h4 className="text-lg font-semibold text-black mb-2">No students assigned to this batch yet</h4>
               <p className="text-slate-500">Students will appear here once they are approved and assigned to this batch.</p>
             </div>
           ) : (
@@ -669,7 +669,7 @@ export const TeacherLessonDetailsPage: React.FC = () => {
                     <th className="pb-3 font-medium">Mark Attendance</th>
                   </tr>
                 </thead>
-                <tbody className="text-white">
+                <tbody className="text-gray-700">
                   {students.map((student) => {
                     const attendanceStatus = getAttendanceStatus(student.uid);
                     return (
@@ -732,3 +732,4 @@ export const TeacherLessonDetailsPage: React.FC = () => {
     </motion.div>
   );
 };
+

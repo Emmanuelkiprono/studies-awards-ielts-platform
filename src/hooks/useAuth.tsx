@@ -9,6 +9,7 @@ import {
 } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, query, where, getDocs, collection } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
+import { ensureStudentAutoAssignment } from '../lib/studentAssignment';
 import { UserProfile, StudentData, UserRole } from '../types';
 import { NotificationService } from '../services/notificationService';
 
@@ -175,6 +176,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await setDoc(doc(db, 'students', newUser.uid), {
       ...sData,
       createdAt: serverTimestamp()
+    });
+
+    await ensureStudentAutoAssignment({
+      studentUid: newUser.uid,
+      courseId,
+      studentData: {
+        ...sData,
+        createdAt: now,
+      },
     });
 
     // Create enrollment record

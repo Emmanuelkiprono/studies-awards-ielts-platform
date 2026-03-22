@@ -71,10 +71,10 @@ export function NotificationsPage() {
               onClick={() => navigate("/dashboard")}
               className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
             >
-              <span className="text-gray-600">←</span>
+              <span className="text-gray-700">←</span>
             </button>
             <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
+              <h1 className="text-xl font-bold text-black">Notifications</h1>
               <p className="text-sm text-gray-500">Stay updated with your progress</p>
             </div>
           </div>
@@ -95,10 +95,10 @@ export function NotificationsPage() {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className={`font-semibold text-gray-900 text-sm ${!notification.read ? 'font-bold' : ''}`}>
+                  <h3 className={`font-semibold text-black text-sm ${!notification.read ? 'font-bold' : ''}`}>
                     {notification.title}
                   </h3>
-                  <p className="text-gray-600 text-sm mt-1">{notification.message}</p>
+                  <p className="text-gray-700 text-sm mt-1">{notification.message}</p>
                   <p className="text-gray-500 text-xs mt-2">{notification.time}</p>
                 </div>
 
@@ -116,11 +116,12 @@ export function NotificationsPage() {
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bell size={24} className="text-gray-400" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">No notifications</h3>
-            <p className="text-gray-600 text-sm">You're all caught up!</p>
+            <h3 className="text-lg font-semibold text-black mb-2">No notifications</h3>
+            <p className="text-gray-700 text-sm">You're all caught up!</p>
           </div>
         )}
       </div>
     </div>
   );
 }
+

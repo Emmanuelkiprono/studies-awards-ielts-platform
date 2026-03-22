@@ -103,10 +103,10 @@ export function AssignmentsPage() {
               onClick={() => navigate("/dashboard")}
               className="w-9 h-9 bg-gray-100 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
             >
-              <span className="text-gray-600">←</span>
+              <span className="text-gray-700">←</span>
             </button>
             <div className="flex-1">
-              <h1 className="text-xl font-bold text-gray-900">Assignments</h1>
+              <h1 className="text-xl font-bold text-black">Assignments</h1>
               <p className="text-sm text-gray-500">Track and submit your work</p>
             </div>
           </div>
@@ -120,27 +120,27 @@ export function AssignmentsPage() {
             <div>
               <div className="flex items-center justify-center mb-1">
                 <span className="text-yellow-500 text-sm mr-1">⏰</span>
-                <span className="text-gray-600 text-sm">Pending</span>
+                <span className="text-gray-700 text-sm">Pending</span>
               </div>
-              <div className="text-xl font-bold text-gray-900">{pendingCount}</div>
+              <div className="text-xl font-bold text-black">{pendingCount}</div>
               <div className="text-xs text-gray-500">to do</div>
             </div>
             
             <div>
               <div className="flex items-center justify-center mb-1">
                 <span className="text-blue-500 text-sm mr-1">📤</span>
-                <span className="text-gray-600 text-sm">Submitted</span>
+                <span className="text-gray-700 text-sm">Submitted</span>
               </div>
-              <div className="text-xl font-bold text-gray-900">{submittedCount}</div>
+              <div className="text-xl font-bold text-black">{submittedCount}</div>
               <div className="text-xs text-gray-500">in review</div>
             </div>
             
             <div>
               <div className="flex items-center justify-center mb-1">
                 <span className="text-green-500 text-sm mr-1">✓</span>
-                <span className="text-gray-600 text-sm">Graded</span>
+                <span className="text-gray-700 text-sm">Graded</span>
               </div>
-              <div className="text-xl font-bold text-gray-900">{gradedCount}</div>
+              <div className="text-xl font-bold text-black">{gradedCount}</div>
               <div className="text-xs text-gray-500">completed</div>
             </div>
           </div>
@@ -161,8 +161,8 @@ export function AssignmentsPage() {
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-gray-900 text-sm truncate">{assignment.title}</h3>
-                  <p className="text-gray-600 text-xs truncate">{assignment.description}</p>
+                  <h3 className="font-semibold text-black text-sm truncate">{assignment.title}</h3>
+                  <p className="text-gray-700 text-xs truncate">{assignment.description}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${getAssignmentColor(assignment.type)}`}>
                       {assignment.type.charAt(0).toUpperCase() + assignment.type.slice(1)}
@@ -178,7 +178,7 @@ export function AssignmentsPage() {
 
                 <div className="flex flex-col gap-1.5 items-end">
                   {assignment.score && (
-                    <div className="text-sm font-semibold text-gray-900">
+                    <div className="text-sm font-semibold text-black">
                       {assignment.score}/9.0
                     </div>
                   )}
@@ -197,3 +197,4 @@ export function AssignmentsPage() {
     </div>
   );
 }
+

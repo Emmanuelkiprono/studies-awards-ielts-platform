@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import {
@@ -144,7 +144,7 @@ export const TeacherModulesPage: React.FC = () => {
         >
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Curriculum Builder</h2>
+                    <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">Curriculum Builder</h2>
                     <p className="text-slate-400 font-medium">Manage modules and structure for your courses.</p>
                 </div>
 
@@ -168,7 +168,7 @@ export const TeacherModulesPage: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-4">
                 <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                    <h3 className="text-xl font-semibold text-black flex items-center gap-2">
                         <BookOpen size={24} className="text-[#6324eb]" />
                         Modules ({modules.length})
                     </h3>
@@ -252,7 +252,7 @@ export const TeacherModulesPage: React.FC = () => {
                                 </div>
 
                                 <div className="flex-1">
-                                    <h4 className="text-lg font-bold text-white">{mod.name}</h4>
+                                    <h4 className="text-lg font-semibold text-black">{mod.name}</h4>
                                     <p className="text-sm text-slate-500 mt-1 line-clamp-1">{mod.description}</p>
                                 </div>
 
@@ -291,3 +291,4 @@ export const TeacherModulesPage: React.FC = () => {
         </motion.div>
     );
 };
+

@@ -159,7 +159,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               {/* Header */}
               <div className="sticky top-0 flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-white">
-                <h2 className="text-2xl font-bold text-gray-900">Create Live Class</h2>
+                <h2 className="text-2xl font-bold text-black">Create Live Class</h2>
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -179,7 +179,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
 
                 {/* Class Title */}
                 <div>
-                  <label htmlFor="title" className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="title" className="block text-sm font-semibold text-black mb-2">
                     Class Title *
                   </label>
                   <input
@@ -201,7 +201,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
 
                 {/* Module Selection */}
                 <div>
-                  <label htmlFor="moduleId" className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="moduleId" className="block text-sm font-semibold text-black mb-2">
                     Module *
                   </label>
                   <select
@@ -228,7 +228,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
 
                 {/* Batch Selection */}
                 <div>
-                  <label htmlFor="batchId" className="block text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="batchId" className="block text-sm font-semibold text-black mb-2">
                     Batch / Group *
                   </label>
                   <select
@@ -255,7 +255,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
 
                 {/* Date */}
                 <div>
-                  <label htmlFor="date" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="date" className="flex items-center text-sm font-semibold text-black mb-2">
                     <Calendar size={16} className="mr-2" /> Date *
                   </label>
                   <input
@@ -277,7 +277,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
                 {/* Start & End Time */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="startTime" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
+                    <label htmlFor="startTime" className="flex items-center text-sm font-semibold text-black mb-2">
                       <Clock size={16} className="mr-2" /> Start Time *
                     </label>
                     <input
@@ -297,7 +297,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
                   </div>
 
                   <div>
-                    <label htmlFor="endTime" className="block text-sm font-semibold text-gray-900 mb-2">
+                    <label htmlFor="endTime" className="block text-sm font-semibold text-black mb-2">
                       End Time *
                     </label>
                     <input
@@ -319,7 +319,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
 
                 {/* Meeting Link */}
                 <div>
-                  <label htmlFor="meetingLink" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="meetingLink" className="flex items-center text-sm font-semibold text-black mb-2">
                     <Link size={16} className="mr-2" /> Meeting Link *
                   </label>
                   <input
@@ -341,7 +341,7 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
 
                 {/* Description (Optional) */}
                 <div>
-                  <label htmlFor="description" className="flex items-center text-sm font-semibold text-gray-900 mb-2">
+                  <label htmlFor="description" className="flex items-center text-sm font-semibold text-black mb-2">
                     <BookOpen size={16} className="mr-2" /> Description (Optional)
                   </label>
                   <textarea
@@ -380,3 +380,4 @@ export const CreateLiveClassModal: React.FC<CreateLiveClassModalProps> = ({
     </AnimatePresence>
   );
 };
+

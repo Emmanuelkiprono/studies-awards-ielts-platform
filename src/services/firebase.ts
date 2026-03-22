@@ -1,40 +1,75 @@
 import { GoogleGenAI } from "@google/genai";
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  browserLocalPersistence,
+  getAuth,
+  indexedDBLocalPersistence,
+  initializeAuth,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import type { Messaging } from "firebase/messaging";
 import { getStorage } from "firebase/storage";
 import { getMessaging } from "firebase/messaging";
 
-// --- FIREBASE CONFIGURATION ---
-// To use this app in production, you must provide your own Firebase configuration.
-// 1. Go to the Firebase Console (https://console.firebase.google.com/)
-// 2. Create a new project.
-// 3. Add a Web App to your project.
-// 4. Copy the firebaseConfig object and paste it below.
-// 5. Enable Authentication (Email/Password), Firestore, Storage, and Cloud Messaging.
-
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "YOUR_API_KEY",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "YOUR_AUTH_DOMAIN",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "YOUR_PROJECT_ID",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "YOUR_STORAGE_BUCKET",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "YOUR_MESSAGING_SENDER_ID",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "YOUR_APP_ID"
+const firebaseEnv = {
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
+const missingFirebaseEnvVars = Object.entries({
+  VITE_FIREBASE_API_KEY: firebaseEnv.apiKey,
+  VITE_FIREBASE_AUTH_DOMAIN: firebaseEnv.authDomain,
+  VITE_FIREBASE_PROJECT_ID: firebaseEnv.projectId,
+  VITE_FIREBASE_STORAGE_BUCKET: firebaseEnv.storageBucket,
+  VITE_FIREBASE_MESSAGING_SENDER_ID: firebaseEnv.messagingSenderId,
+  VITE_FIREBASE_APP_ID: firebaseEnv.appId,
+})
+  .filter(([, value]) => !value)
+  .map(([key]) => key);
+
+if (missingFirebaseEnvVars.length > 0) {
+  console.warn(
+    `[Firebase] Missing Vite environment variables: ${missingFirebaseEnvVars.join(
+      ", "
+    )}. Auth and Firestore will not work correctly until they are set.`
+  );
+}
+
+const firebaseConfig = {
+  apiKey: firebaseEnv.apiKey ?? "",
+  authDomain: firebaseEnv.authDomain ?? "",
+  projectId: firebaseEnv.projectId ?? "",
+  storageBucket: firebaseEnv.storageBucket ?? "",
+  messagingSenderId: firebaseEnv.messagingSenderId ?? "",
+  appId: firebaseEnv.appId ?? "",
+};
+
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+
+let authInstance;
+try {
+  authInstance = initializeAuth(app, {
+    persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+  });
+} catch {
+  authInstance = getAuth(app);
+}
+
+export const auth = authInstance;
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
-// Messaging might not be available in all environments (e.g., SSR or certain browsers)
-export let messaging: any = null;
+export let messaging: Messaging | null = null;
 try {
-  messaging = getMessaging(app);
+  if (typeof window !== "undefined" && "Notification" in window && "serviceWorker" in navigator) {
+    messaging = getMessaging(app);
+  }
 } catch (e) {
   console.warn("Firebase Messaging not supported in this environment.");
 }
 
-// --- GEMINI AI CONFIGURATION ---
 export const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "dummy-key-to-prevent-crash" });

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+﻿import React, { useEffect, useMemo, useState } from 'react';
 import { GlassCard, StatusBadge, PrimaryButton } from '../components/UI';
 import {
   Calendar,
@@ -223,7 +223,7 @@ export const TeacherExamsPage: React.FC = () => {
     >
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2">
+          <h2 className="text-2xl md:text-3xl font-semibold text-black tracking-tight flex items-center gap-2">
             <Calendar className="text-[#6324eb]" size={24} />
             Exam Booking Panel
           </h2>
@@ -241,7 +241,7 @@ export const TeacherExamsPage: React.FC = () => {
                 "px-4 py-1.5 rounded-xl text-xs font-bold transition-all",
                 selectedCourseId === course.id
                   ? "bg-[#6324eb] text-white shadow-lg shadow-[#6324eb]/20"
-                  : "text-slate-400 hover:text-white hover:bg-white/10"
+                  : "text-slate-400 hover:text-black hover:bg-white/10"
               )}
             >
               {course.name}
@@ -301,25 +301,25 @@ export const TeacherExamsPage: React.FC = () => {
                   <tr key={row.uid} className="hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-white">
+                        <div className="size-8 rounded-full bg-white/10 flex items-center justify-center text-xs font-semibold text-black">
                           {row.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-white text-sm font-semibold">{row.name}</p>
+                          <p className="text-black text-sm font-semibold">{row.name}</p>
                           <p className="text-[11px] text-slate-500">{row.email}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-[12px] text-slate-300">
-                      {row.course?.name || '—'}
+                      {row.course?.name || 'â€”'}
                     </td>
                     <td className="px-4 py-3 text-[12px] text-slate-300">
-                      {reg ? reg.toLocaleDateString() : '—'}
+                      {reg ? reg.toLocaleDateString() : 'â€”'}
                     </td>
                     <td className="px-4 py-3 text-[12px]">
                       <div className="flex flex-col gap-1">
                         <span className="text-slate-300">
-                          {eligibleDate ? eligibleDate.toLocaleDateString() : '—'}
+                          {eligibleDate ? eligibleDate.toLocaleDateString() : 'â€”'}
                         </span>
                         <span className="text-[10px] text-slate-500">
                           Reg. + 28 days
@@ -419,12 +419,12 @@ export const TeacherExamsPage: React.FC = () => {
               <GlassCard className="max-w-md w-full p-6 space-y-5 pointer-events-auto bg-[#0b0814] border-white/10">
                 <div className="flex justify-between items-start gap-3">
                   <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-black flex items-center gap-2">
                       <BookOpen size={18} className="text-[#6324eb]" />
                       Book Exam
                     </h3>
                     <p className="text-xs text-slate-500 mt-1">
-                      {bookingModalRow.name} • {bookingModalRow.course?.name || 'Course'}
+                      {bookingModalRow.name} â€¢ {bookingModalRow.course?.name || 'Course'}
                     </p>
                   </div>
                   <button
@@ -512,4 +512,5 @@ export const TeacherExamsPage: React.FC = () => {
     </motion.div>
   );
 }
+
 

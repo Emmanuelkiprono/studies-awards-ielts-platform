@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
   --color-primary: #6324eb;
   --color-accent-blue: #3b82f6;
   --color-background-dark: #0b0814;
@@ -195,10 +195,20 @@ html[data-accent="green"] {
 @layer base {
   body {
     @apply font-sans antialiased min-h-screen;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
     background-color: var(--ui-bg);
-    color: var(--ui-text);
+    color: black;
     background: var(--ui-bg-gradient);
     background-attachment: fixed;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold tracking-tight;
   }
   
   /* Light theme specific fixes - force black text for maximum contrast */

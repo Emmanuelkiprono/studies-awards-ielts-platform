@@ -213,14 +213,22 @@ export const useAttendance = (sessionId?: string) => {
 
       const attendanceData = {
         sessionId,
+        sessionTitle: '',
         lessonId,
         batchId,
+        batch: '',
         studentUid,
+        studentId: studentUid,
+        studentName: '',
+        teacherId: markedBy || '',
         status,
+        date: new Date().toISOString(),
         markedAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
         markedBy,
         lateMinutes: lateMinutes || 0,
-        notes: notes || ''
+        notes: notes || '',
+        autoMarked: false
       };
 
       console.log(' ATTENDANCE DATA TO SAVE:', attendanceData);
@@ -228,7 +236,10 @@ export const useAttendance = (sessionId?: string) => {
       if (existingSnapshot.empty) {
         // Create new attendance record
         console.log(' CREATING NEW ATTENDANCE RECORD');
-        await addDoc(collection(db, 'attendance'), attendanceData);
+        await addDoc(collection(db, 'attendance'), {
+          ...attendanceData,
+          createdAt: serverTimestamp()
+        });
       } else {
         // Update existing attendance record
         console.log(' UPDATING EXISTING ATTENDANCE RECORD:', existingSnapshot.docs[0].id);

@@ -16,6 +16,7 @@ import {
   User
 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { hasTeacherOperationsAccess } from '../lib/teacherPermissions';
 
 interface TeacherSidebarProps {
   collapsed: boolean;
@@ -26,6 +27,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
   const location = useLocation();
   const navigate = useNavigate();
   const { profile, signOut } = useAuth();
+  const canManageOperations = hasTeacherOperationsAccess(profile?.role);
 
   const handleSignOut = async () => {
     try {
@@ -41,7 +43,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
       title: 'Overview',
       items: [
         {
-          path: '/teacher/dashboard',
+          path: '/teacher',
           label: 'Dashboard',
           icon: LayoutDashboard
         }
@@ -74,7 +76,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
     },
     {
       title: 'Students',
-      items: [
+      items: canManageOperations ? [
         {
           path: '/teacher/students',
           label: 'Students',
@@ -85,13 +87,13 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
           label: 'Approvals',
           icon: UserCheck
         }
-      ]
+      ] : []
     },
     {
       title: 'Work',
       items: [
         {
-          path: '/teacher/assignments',
+          path: '/teacher/tasks',
           label: 'Tasks / Assignments',
           icon: FileText
         }
@@ -127,7 +129,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
         <div className="flex items-center justify-between mb-4">
           {!collapsed && (
             <div className="flex-1">
-              <h1 className="text-lg font-bold text-gray-900">Breemic International</h1>
+              <h1 className="text-lg font-bold text-black">Breemic International</h1>
               <p className="text-xs text-purple-600 font-medium">Teacher Portal</p>
             </div>
           )}
@@ -135,7 +137,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
             onClick={onToggle}
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors flex-shrink-0"
           >
-            {collapsed ? <Menu size={20} className="text-gray-600" /> : <X size={20} className="text-gray-600" />}
+            {collapsed ? <Menu size={20} className="text-gray-700" /> : <X size={20} className="text-gray-700" />}
           </button>
         </div>
         
@@ -143,11 +145,11 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
         {!collapsed && profile && (
           <div className="flex items-center gap-3 p-3 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg border border-purple-200">
             <div className="w-10 h-10 bg-gradient-to-br from-purple-600 to-purple-700 rounded-full flex items-center justify-center flex-shrink-0">
-              <User size={20} className="text-white" />
+              <User size={20} className="text-black" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{profile.name}</p>
-              <p className="text-xs text-gray-600 capitalize">{profile.role}</p>
+              <p className="text-sm font-semibold text-black truncate">{profile.name}</p>
+              <p className="text-xs text-gray-700 capitalize">{profile.role}</p>
             </div>
           </div>
         )}
@@ -155,7 +157,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
 
       {/* Navigation - Independently scrollable */}
       <nav className="flex-1 overflow-y-auto overscroll-contain p-4 space-y-8">
-        {menuSections.map((section) => (
+        {menuSections.filter((section) => section.items.length > 0).map((section) => (
           <div key={section.title} className="space-y-2">
             {!collapsed && (
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 mb-3">
@@ -174,7 +176,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                       isActive
                         ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-600 border-l-4 border-purple-600 shadow-sm'
-                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-black'
                     }`}
                   >
                     <Icon size={20} className="flex-shrink-0" />
@@ -203,7 +205,7 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 text-left ${
                   isActive
                     ? 'bg-purple-50 text-purple-600 border-l-4 border-purple-600'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-black'
                 }`}
               >
                 <Icon size={20} className="flex-shrink-0" />
@@ -218,3 +220,4 @@ export const TeacherSidebar: React.FC<TeacherSidebarProps> = ({ collapsed, onTog
     </div>
   );
 };
+

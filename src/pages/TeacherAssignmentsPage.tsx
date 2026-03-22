@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { GlassCard, StatusBadge, PrimaryButton } from '../components/UI';
 import {
   ClipboardList,
@@ -156,7 +156,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
     >
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-2xl font-semibold text-black flex items-center gap-2">
             <ClipboardList className="text-[#6324eb]" size={28} />
             Assignments
           </h2>
@@ -170,7 +170,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
                   "px-3 py-1.5 rounded-xl text-xs font-bold transition-all border",
                   selectedCourseId === course.id
                     ? "bg-[#6324eb] text-white border-[#6324eb] shadow-lg shadow-[#6324eb]/20"
-                    : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white"
+                    : "bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-black"
                 )}
               >
                 {course.name}
@@ -186,7 +186,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
       {courses.length === 0 && !loading && (
         <GlassCard className="p-8 text-center border-orange-500/20 bg-orange-500/5">
           <AlertCircle className="mx-auto text-orange-500 mb-4" size={48} />
-          <h3 className="text-xl font-bold text-white mb-2">No Courses Available</h3>
+          <h3 className="text-xl font-semibold text-black mb-2">No Courses Available</h3>
           <p className="text-slate-400">Please contact the administrator to create courses or assign you as a teacher.</p>
         </GlassCard>
       )}
@@ -215,7 +215,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
                 </div>
               </div>
             </div>
-            <ChevronRight size={20} className="text-slate-600 group-hover:text-white transition-colors" />
+            <ChevronRight size={20} className="text-slate-600 group-hover:text-black transition-colors" />
           </GlassCard>
         ))}
         {assignments.length === 0 && selectedCourseId && (
@@ -245,7 +245,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
 
                 <div className="flex justify-between items-start mb-6">
                   <div>
-                    <h3 className="text-xl font-bold text-white">{selectedAssignment.title}</h3>
+                    <h3 className="text-xl font-semibold text-black">{selectedAssignment.title}</h3>
                     <p className="text-slate-400 text-sm">Review student submissions for this task.</p>
                   </div>
                   <button onClick={() => setSelectedAssignment(null)} className="p-2 rounded-full bg-white/5 hover:bg-white/10">
@@ -263,7 +263,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
                       <div className="flex items-center gap-3">
                         <img src={submission.student.avatarUrl} alt={submission.student.name} className="size-10 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                         <div>
-                          <p className="text-sm font-bold text-white">{submission.student.name}</p>
+                          <p className="text-sm font-semibold text-black">{submission.student.name}</p>
                           <p className="text-[10px] text-slate-500 uppercase">{submission.fileName || (submission.notes ? 'Text submission' : 'No file')}</p>
                         </div>
                       </div>
@@ -299,7 +299,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
             >
               <GlassCard className="max-w-xl w-full p-8 space-y-6 pointer-events-auto bg-[#0d1225] border-white/10 shadow-2xl">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-xl font-bold text-white">Grade Submission</h3>
+                  <h3 className="text-xl font-semibold text-black">Grade Submission</h3>
                   <button onClick={() => setSelectedSubmission(null)} className="p-2 rounded-full bg-white/5 hover:bg-white/10">
                     <ArrowLeft size={20} className="text-slate-400" />
                   </button>
@@ -310,7 +310,7 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
                     <div className="flex items-center gap-3">
                       <FileText size={24} className="text-[#6324eb] shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-white font-bold text-sm truncate">{selectedSubmission.fileName || 'Text submission'}</p>
+                        <p className="text-black font-bold text-sm truncate">{selectedSubmission.fileName || 'Text submission'}</p>
                         <p className="text-slate-400 text-xs">Submitted by {selectedSubmission.student.name}</p>
                       </div>
                       {selectedSubmission.fileUrl && (
@@ -387,3 +387,4 @@ export const TeacherAssignmentsPage: React.FC<{ onCreateAssignment: () => void }
     </motion.div>
   );
 };
+

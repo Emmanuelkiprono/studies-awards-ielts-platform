@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -216,7 +216,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Lesson Management</h2>
+          <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">Lesson Management</h2>
           <p className="text-slate-400 font-medium">Create and organize lesson content for your batches.</p>
         </div>
         <PrimaryButton
@@ -243,14 +243,14 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
         <select
           value={selectedBatch}
           onChange={(e) => setSelectedBatch(e.target.value)}
-          className="px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
+          className="px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
         >
           <option value="">All Batches</option>
           {batches.map(batch => (
             <option key={batch.id} value={batch.id}>{batch.name}</option>
           ))}
         </select>
-        <button className="flex items-center gap-2 px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-colors">
+        <button className="flex items-center gap-2 px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-black hover:bg-white/10 transition-colors">
           <Filter size={18} />
           Filter
         </button>
@@ -259,7 +259,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
       {/* Create Lesson Form */}
       {showCreateForm && (
         <GlassCard className="p-6 border border-white/5">
-          <h3 className="text-xl font-bold text-white mb-6">Create New Lesson</h3>
+          <h3 className="text-xl font-semibold text-black mb-6">Create New Lesson</h3>
           <form onSubmit={handleCreateLesson} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -269,7 +269,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
                   required
                   value={formData.title}
                   onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                   placeholder="e.g., Introduction to IELTS Speaking"
                 />
               </div>
@@ -279,7 +279,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
                   required
                   value={formData.batchId}
                   onChange={(e) => setFormData({ ...formData, batchId: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
                 >
                   <option value="">Select Batch</option>
                   {batches.map(batch => (
@@ -295,7 +295,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
                   min="1"
                   value={formData.weekNumber}
                   onChange={(e) => setFormData({ ...formData, weekNumber: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -306,7 +306,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
                   min="15"
                   value={formData.duration}
                   onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
             </div>
@@ -316,12 +316,12 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 placeholder="Lesson objectives and content overview..."
               />
             </div>
             <div className="flex items-center gap-4">
-              <label className="flex items-center gap-2 text-white">
+              <label className="flex items-center gap-2 text-black">
                 <input
                   type="checkbox"
                   checked={formData.liveEnabled}
@@ -336,7 +336,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+                className="px-6 py-3 bg-white/10 text-black rounded-xl hover:bg-white/20 transition-colors"
               >
                 Cancel
               </button>
@@ -356,8 +356,8 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
-                    <h4 className="text-lg font-bold text-white">{lesson.title}</h4>
-                    <span className={`px-2 py-1 text-xs font-bold text-white rounded-full ${getStatusColor(lesson.status)}`}>
+                    <h4 className="text-lg font-semibold text-black">{lesson.title}</h4>
+                    <span className={`px-2 py-1 text-xs font-semibold text-black rounded-full ${getStatusColor(lesson.status)}`}>
                       {lesson.status.charAt(0).toUpperCase() + lesson.status.slice(1)}
                     </span>
                     {lesson.liveEnabled && (
@@ -425,7 +425,7 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
       {filteredLessons.length === 0 && (
         <div className="text-center py-24 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
           <BookOpen size={48} className="mx-auto text-slate-500/50 mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No Lessons Created</h3>
+          <h3 className="text-xl font-semibold text-black mb-2">No Lessons Created</h3>
           <p className="text-slate-500 mb-6">Create your first lesson to start building the curriculum.</p>
           <PrimaryButton onClick={() => setShowCreateForm(true)}>
             <Plus size={20} className="mr-2" />
@@ -436,3 +436,4 @@ export const TeacherLessonsPage_Simple: React.FC = () => {
     </motion.div>
   );
 };
+

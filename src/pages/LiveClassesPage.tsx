@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
 import {
   collection, addDoc, serverTimestamp, getDocs, query, where,
-  doc, updateDoc, onSnapshot,
+  doc, updateDoc, onSnapshot, getDoc,
 } from 'firebase/firestore';
 import { LiveSession, UserProfile } from '../types';
 
@@ -50,6 +50,121 @@ async function createDailyRoom(sessionTitle: string): Promise<string> {
   */
 }
 
+type StudentLiveClassRecord = LiveSession & {
+  batchId?: string;
+  title?: string;
+  startTime?: string;
+  endTime?: string;
+  meetingLink?: string;
+  meetingUrl?: string;
+  moduleId?: string;
+  status?: 'scheduled' | 'live' | 'ended' | 'cancelled';
+  scheduledAt?: { toDate?: () => Date };
+};
+
+type StudentLiveClassState = 'live_now' | 'coming_soon' | 'scheduled' | 'completed';
+
+const isValidLiveClassDate = (value?: string) => Boolean(value && !Number.isNaN(new Date(value).getTime()));
+
+const getStudentLiveClassStartDate = (session: LiveSession) => {
+  const studentSession = session as StudentLiveClassRecord;
+  const startTime = studentSession.startTime;
+  if (!isValidLiveClassDate(startTime)) {
+    const scheduledDate = studentSession.scheduledAt?.toDate?.();
+    if (scheduledDate && !Number.isNaN(scheduledDate.getTime())) {
+      return scheduledDate;
+    }
+
+    return null;
+  }
+
+  return new Date(startTime!);
+};
+
+const getStudentLiveClassEndDate = (session: LiveSession) => {
+  const endTime = (session as StudentLiveClassRecord).endTime;
+  if (!isValidLiveClassDate(endTime)) {
+    return null;
+  }
+
+  return new Date(endTime!);
+};
+
+const isSameCalendarDay = (left: Date, right: Date) =>
+  left.getFullYear() === right.getFullYear() &&
+  left.getMonth() === right.getMonth() &&
+  left.getDate() === right.getDate();
+
+const getStudentLiveClassFilterReasons = (session: LiveSession, expectedBatchId?: string) => {
+  const studentSession = session as StudentLiveClassRecord;
+  const startDate = getStudentLiveClassStartDate(session);
+  const endDate = getStudentLiveClassEndDate(session);
+  const reasons: string[] = [];
+
+  if (!studentSession.batchId) {
+    reasons.push('missing batchId');
+  } else if (expectedBatchId && studentSession.batchId !== expectedBatchId) {
+    reasons.push(`batchId mismatch: expected ${expectedBatchId}, got ${studentSession.batchId}`);
+  }
+
+  if (!studentSession.title?.trim()) {
+    reasons.push('missing title');
+  }
+
+  if (!startDate) {
+    reasons.push('missing or invalid startTime');
+  }
+
+  if (studentSession.endTime && !endDate) {
+    reasons.push('invalid endTime');
+  }
+
+  if (startDate && endDate && endDate.getTime() <= startDate.getTime()) {
+    reasons.push('endTime must be after startTime');
+  }
+
+  return reasons;
+};
+
+const getStudentLiveClassMeetingLink = (session: LiveSession) => {
+  const studentSession = session as StudentLiveClassRecord;
+  return studentSession.meetingLink || studentSession.meetingUrl;
+};
+
+const getStudentLiveClassState = (
+  session: LiveSession,
+  now = new Date()
+): StudentLiveClassState | null => {
+  const studentSession = session as StudentLiveClassRecord;
+  const startDate = getStudentLiveClassStartDate(session);
+  const endDate = getStudentLiveClassEndDate(session);
+
+  if (!startDate || studentSession.status === 'cancelled') {
+    return null;
+  }
+
+  if (studentSession.status === 'ended' || (endDate && endDate.getTime() <= now.getTime())) {
+    return 'completed';
+  }
+
+  if (
+    studentSession.status === 'live' ||
+    (endDate && startDate.getTime() <= now.getTime() && now.getTime() < endDate.getTime())
+  ) {
+    return 'live_now';
+  }
+
+  if (startDate.getTime() > now.getTime() && isSameCalendarDay(startDate, now)) {
+    return 'coming_soon';
+  }
+
+  if (startDate.getTime() > now.getTime()) {
+    return 'scheduled';
+  }
+
+  return 'completed';
+};
+
 export const LiveClassesPage: React.FC = () => {
   const { user, isTeacher, profile, studentData } = useAuth();
   const location = useLocation();
@@ -63,8 +178,12 @@ export const LiveClassesPage: React.FC = () => {
   const [activeRoom, setActiveRoom] = useState<{ session: LiveSession; roomUrl: string } | null>(null);
   const [isStarting, setIsStarting] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [studentBatchName, setStudentBatchName] = useState('');
+  const [studentModuleNames, setStudentModuleNames] = useState<Record<string, string>>({});
 
   const courseId = isTeacher ? profile?.assignedCourseId : studentData?.courseId;
+  const studentBatchId = studentData?.batchId || studentData?.batchInfo?.batchId;
+  const getSessionModuleId = (session: LiveSession) => (session as LiveSession & { moduleId?: string }).moduleId;
 
   // Handle direct video room opening from navigation state
   useEffect(() => {
@@ -76,28 +195,165 @@ export const LiveClassesPage: React.FC = () => {
   }, [location.state]);
 
   useEffect(() => {
-    // Guard: don't fetch if user is not authenticated or no courseId
-    if (!user || !courseId) { setLoading(false); return; }
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    if (!isTeacher) {
+      if (!studentBatchId) {
+        console.log('[LiveClassesPage] No student batchId found for live class fetch', {
+          studentBatchId,
+          studentDataBatchId: studentData?.batchId,
+          studentBatchInfoBatchId: studentData?.batchInfo?.batchId,
+        });
+        setSessions([]);
+        setStudentBatchName('');
+        setStudentModuleNames({});
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      const studentSessionsQuery = query(
+        collection(db, 'liveSessions'),
+        where('batchId', '==', studentBatchId)
+      );
+
+      const unsub = onSnapshot(
+        studentSessionsQuery,
+        async (snap) => {
+          const fetchedSessions = snap.docs.map((sessionDoc) => ({
+            id: sessionDoc.id,
+            ...sessionDoc.data(),
+          } as LiveSession));
+
+          console.log('[LiveClassesPage] Student live class fetch', {
+            studentBatchId,
+            studentDataBatchId: studentData?.batchId,
+            studentBatchInfoBatchId: studentData?.batchInfo?.batchId,
+            fetchedSessions,
+          });
+
+          const all = fetchedSessions
+            .filter((session) => {
+              const filterReasons = getStudentLiveClassFilterReasons(session, studentBatchId);
+
+              if (filterReasons.length > 0) {
+                console.log('[LiveClassesPage] Filtering out student live session', {
+                  studentBatchId,
+                  sessionId: session.id,
+                  filterReasons,
+                  session,
+                });
+                return false;
+              }
+
+              if (!(session as StudentLiveClassRecord).meetingLink && !(session as StudentLiveClassRecord).meetingUrl) {
+                console.log('[LiveClassesPage] Student live session missing meeting link', {
+                  studentBatchId,
+                  sessionId: session.id,
+                  session,
+                });
+              }
+
+              if (!(session as StudentLiveClassRecord).status) {
+                console.log('[LiveClassesPage] Student live session missing status, using time-based fallback state', {
+                  studentBatchId,
+                  sessionId: session.id,
+                  session,
+                });
+              }
+
+              return true;
+            })
+            .sort((a, b) => {
+              const leftTime = getStudentLiveClassStartDate(a)?.getTime() ?? 0;
+              const rightTime = getStudentLiveClassStartDate(b)?.getTime() ?? 0;
+              return leftTime - rightTime;
+            });
+
+          setSessions(all);
+
+          try {
+            const batchSnap = await getDoc(doc(db, 'batches', studentBatchId));
+            const batchData = batchSnap.exists() ? batchSnap.data() : null;
+            const batchCourseId = batchData?.courseId as string | undefined;
+
+            setStudentBatchName(batchData?.name || '');
+
+            const moduleIds = [...new Set(
+              all
+                .map((session) => getSessionModuleId(session))
+                .filter((moduleId): moduleId is string => Boolean(moduleId))
+            )];
+
+            if (!batchCourseId || moduleIds.length === 0) {
+              setStudentModuleNames({});
+            } else {
+              const moduleEntries = await Promise.all(
+                moduleIds.map(async (moduleId) => {
+                  const moduleSnap = await getDoc(doc(db, 'courses', batchCourseId, 'modules', moduleId));
+                  if (!moduleSnap.exists()) {
+                    return null;
+                  }
+
+                  return [moduleId, moduleSnap.data().name || 'Untitled Module'] as const;
+                })
+              );
+
+              setStudentModuleNames(
+                Object.fromEntries(
+                  moduleEntries.filter(
+                    (entry): entry is readonly [string, string] => Boolean(entry)
+                  )
+                )
+              );
+            }
+          } catch (error) {
+            console.error('Error loading student live class metadata:', error);
+            setStudentBatchName('');
+            setStudentModuleNames({});
+          }
+
+          setLoading(false);
+        },
+        (error) => {
+          console.error('Error fetching live classes:', error);
+          setSessions([]);
+          setStudentBatchName('');
+          setStudentModuleNames({});
+          setLoading(false);
+        }
+      );
+
+      return () => unsub();
+    }
+
+    if (!courseId) {
+      setLoading(false);
+      return;
+    }
+
     const q = query(collection(db, 'liveSessions'), where('courseId', '==', courseId));
     const unsub = onSnapshot(q, async (snap) => {
       const all = snap.docs
         .map(d => ({ id: d.id, ...d.data() } as LiveSession))
         .sort((a, b) => a.startTime.localeCompare(b.startTime));
       setSessions(all);
-      if (isTeacher) {
-        const enrollSnap = await getDocs(query(collection(db, 'enrollments'), where('courseId', '==', courseId)));
-        const uids = enrollSnap.docs.map(d => d.data().userId as string);
-        const students: UserProfile[] = [];
-        for (const uid of uids) {
-          const uSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
-          if (!uSnap.empty) students.push(uSnap.docs[0].data() as UserProfile);
-        }
-        setEnrolledStudents(students);
+      const enrollSnap = await getDocs(query(collection(db, 'enrollments'), where('courseId', '==', courseId)));
+      const uids = enrollSnap.docs.map(d => d.data().userId as string);
+      const students: UserProfile[] = [];
+      for (const uid of uids) {
+        const uSnap = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
+        if (!uSnap.empty) students.push(uSnap.docs[0].data() as UserProfile);
       }
+      setEnrolledStudents(students);
       setLoading(false);
     });
     return () => unsub();
-  }, [user, courseId, isTeacher]);
+  }, [user, courseId, isTeacher, studentBatchId]);
 
   const now = new Date().toISOString();
   const upcoming = sessions.filter(s => s.startTime >= now && !s.isLive);
@@ -128,6 +384,12 @@ export const LiveClassesPage: React.FC = () => {
   const handleJoinRoom = (session: LiveSession) => {
     if (!session.roomUrl) return;
     setActiveRoom({ session, roomUrl: session.roomUrl });
+  };
+
+  const handleJoinClass = (session: LiveSession) => {
+    const meetingLink = getStudentLiveClassMeetingLink(session);
+    if (!meetingLink) return;
+    window.open(meetingLink, '_blank', 'noopener,noreferrer');
   };
 
   const handleMarkAttendance = (studentId: string, status: 'present' | 'absent') => {
@@ -200,6 +462,210 @@ export const LiveClassesPage: React.FC = () => {
   }
 
   // ── MAIN PAGE ──────────────────────────────────────────────────────────────
+  if (!isTeacher) {
+    const nowDate = new Date();
+    const studentLiveNowSessions = sessions.filter(
+      (session) => getStudentLiveClassState(session, nowDate) === 'live_now'
+    );
+    const studentComingSoonSessions = sessions.filter(
+      (session) => getStudentLiveClassState(session, nowDate) === 'coming_soon'
+    );
+    const studentScheduledSessions = sessions.filter(
+      (session) => getStudentLiveClassState(session, nowDate) === 'scheduled'
+    );
+    const studentCompletedSessions = [...sessions]
+      .filter((session) => getStudentLiveClassState(session, nowDate) === 'completed')
+      .sort((left, right) => {
+        const leftTime = getStudentLiveClassEndDate(left)?.getTime() ?? 0;
+        const rightTime = getStudentLiveClassEndDate(right)?.getTime() ?? 0;
+        return rightTime - leftTime;
+      })
+      .slice(0, 3);
+    const getStudentModuleLabel = (session: LiveSession) => {
+      const moduleId = getSessionModuleId(session);
+      return (moduleId && studentModuleNames[moduleId]) || studentBatchName || 'Not assigned';
+    };
+
+    const renderStudentSessionCard = (
+      session: LiveSession,
+      state: StudentLiveClassState,
+      actionClassName: string
+    ) => {
+      const start = getStudentLiveClassStartDate(session);
+      const end = getStudentLiveClassEndDate(session);
+      const meetingLink = getStudentLiveClassMeetingLink(session);
+
+      if (!start) {
+        return null;
+      }
+
+      const statusLabel =
+        state === 'live_now'
+          ? 'Live Now'
+          : state === 'coming_soon'
+            ? 'Coming Soon'
+            : state === 'scheduled'
+              ? 'Scheduled'
+              : 'Completed';
+
+      const actionLabel = state === 'live_now' ? 'Join Class' : 'View Class';
+      const badgeClassName =
+        state === 'live_now'
+          ? 'bg-red-500/20 text-red-400'
+          : state === 'coming_soon'
+            ? 'bg-amber-500/20 text-amber-400'
+            : state === 'scheduled'
+              ? 'bg-[#6324eb]/20 text-[#a78bfa]'
+              : 'bg-slate-500/20 text-slate-400';
+
+      return (
+        <GlassCard key={session.id} className="p-4 border border-white/5">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-2">
+                <h3 className="text-lg font-bold text-[var(--ui-heading)]">{session.title}</h3>
+                <span className={cn('px-2 py-0.5 rounded-full text-xs font-semibold', badgeClassName)}>
+                  {statusLabel}
+                </span>
+              </div>
+              <div className="space-y-2 text-sm text-[var(--ui-muted)]">
+                <p>Module: {getStudentModuleLabel(session)}</p>
+                <p className="flex items-center gap-2">
+                  <Calendar size={14} />
+                  <span>{start.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                </p>
+                <p className="flex items-center gap-2">
+                  <Clock size={14} />
+                  <span>
+                    {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    {end ? ` - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                  </span>
+                </p>
+                {meetingLink && (
+                  <a
+                    href={meetingLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[var(--ui-accent)] hover:opacity-80"
+                  >
+                    Meeting Link
+                    <ArrowLeft size={14} className="rotate-180" />
+                  </a>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={() => handleJoinClass(session)}
+              disabled={!meetingLink}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed",
+                actionClassName
+              )}
+            >
+              <PlayCircle size={16} />
+              {actionLabel}
+            </button>
+          </div>
+        </GlassCard>
+      );
+    };
+
+    return (
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 space-y-6 max-w-2xl mx-auto w-full pb-24">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold tracking-tight text-[var(--ui-heading)]">Live Classes</h2>
+            {studentBatchName && <p className="text-sm text-[var(--ui-muted)] mt-1">{studentBatchName}</p>}
+          </div>
+          <div className="flex items-center gap-2">
+            {studentLiveNowSessions.length > 0 && (
+              <span className="text-xs font-medium px-2 py-1 bg-red-500/20 text-red-400 rounded-full flex items-center gap-1">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+                </span>
+                {studentLiveNowSessions.length} Live Now
+              </span>
+            )}
+            {studentComingSoonSessions.length > 0 && (
+              <span className="text-xs font-medium px-2 py-1 bg-amber-500/20 text-amber-400 rounded-full">
+                {studentComingSoonSessions.length} Coming Soon
+              </span>
+            )}
+            {studentScheduledSessions.length > 0 && (
+              <span className="text-xs font-medium px-2 py-1 bg-[#6324eb]/20 text-[#a78bfa] rounded-full">
+                {studentScheduledSessions.length} Scheduled
+              </span>
+            )}
+          </div>
+        </div>
+
+        {studentLiveNowSessions.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--ui-heading)]">
+              <Radio className="text-red-400" size={20} /> Live Now
+            </h3>
+            {studentLiveNowSessions.map((session) => renderStudentSessionCard(session, 'live_now', 'bg-red-500 hover:bg-red-600'))}
+          </div>
+        )}
+
+        {studentComingSoonSessions.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--ui-heading)]">
+              <Clock className="text-amber-400" size={20} /> Coming Soon
+            </h3>
+            {studentComingSoonSessions.map((session) => renderStudentSessionCard(session, 'coming_soon', 'bg-amber-500 hover:bg-amber-600'))}
+          </div>
+        )}
+
+        {studentScheduledSessions.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--ui-heading)]">
+              <Calendar className="text-[#6324eb]" size={20} /> Scheduled Classes
+            </h3>
+            {studentScheduledSessions.map((session) => renderStudentSessionCard(session, 'scheduled', 'bg-[#6324eb] hover:bg-[#7c3aed]'))}
+          </div>
+        )}
+
+        {studentCompletedSessions.length > 0 && (
+          <div className="space-y-3">
+            <h3 className="text-lg font-bold flex items-center gap-2 text-[var(--ui-heading)]">
+              <CheckCircle2 className="text-slate-500" size={20} /> Completed
+            </h3>
+            {studentCompletedSessions.map((session) => {
+              const start = getStudentLiveClassStartDate(session);
+              const end = getStudentLiveClassEndDate(session);
+
+              if (!start) {
+                return null;
+              }
+
+              return (
+                <GlassCard key={session.id} className="p-4 border border-white/5 opacity-60">
+                  <div className="space-y-2">
+                    <p className="font-bold text-[var(--ui-heading)]">{session.title}</p>
+                    <p className="text-sm text-[var(--ui-muted)]">Module: {getStudentModuleLabel(session)}</p>
+                    <p className="text-xs text-[var(--ui-muted)]">
+                      {start.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })} · {start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {end ? ` - ${end.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}
+                    </p>
+                  </div>
+                </GlassCard>
+              );
+            })}
+          </div>
+        )}
+
+        {!loading && sessions.length === 0 && (
+          <GlassCard className="p-10 text-center border border-white/5">
+            <Video size={36} className="mx-auto text-slate-600 mb-3" />
+            <p className="text-[var(--ui-heading)] font-bold">No live classes yet</p>
+          </GlassCard>
+        )}
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="p-4 space-y-6 max-w-2xl mx-auto w-full pb-24">
       <div className="flex items-center justify-between">

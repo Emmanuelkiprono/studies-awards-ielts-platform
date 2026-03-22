@@ -31,15 +31,15 @@ export const useLiveClassCreation = () => {
         const startDateTime = new Date(`${formData.date}T${formData.startTime}`);
         const endDateTime = new Date(`${formData.date}T${formData.endTime}`);
 
-        // Validate times are in future (optional, can be removed if you want scheduled past classes)
-        const now = new Date();
-        if (startDateTime < now) {
-          throw new Error('Start time must be in the future');
-        }
-
+        // Validate end time is after start time
         if (endDateTime <= startDateTime) {
           throw new Error('End time must be after start time');
         }
+
+        console.log('📅 Class times:', {
+          startDateTime: startDateTime.toISOString(),
+          endDateTime: endDateTime.toISOString(),
+        });
 
         // Prepare FireStore document data matching LiveSession interface
         const liveSessionData = {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
@@ -184,7 +184,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
   if (error || !batch) {
     return (
       <div className="text-center py-24 bg-red-500/10 rounded-3xl border border-red-500/30">
-        <h3 className="text-xl font-bold text-white mb-2">Error</h3>
+        <h3 className="text-xl font-semibold text-black mb-2">Error</h3>
         <p className="text-slate-400 mb-6">{error || 'Batch not found'}</p>
         <button
           onClick={() => navigate('/teacher/batches')}
@@ -206,26 +206,26 @@ export const TeacherBatchDetailsPage: React.FC = () => {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/teacher/batches')}
-          className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">{batch.name}</h2>
+          <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">{batch.name}</h2>
           <p className="text-slate-400 font-medium">Batch Details and Management</p>
         </div>
       </div>
 
       {/* Batch Summary */}
       <GlassCard className="p-6 border border-white/5">
-        <h3 className="text-xl font-bold text-white mb-6">Batch Summary</h3>
+        <h3 className="text-xl font-semibold text-black mb-6">Batch Summary</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Layers size={16} />
               <span className="text-sm">Status</span>
             </div>
-            <span className={`px-3 py-1 text-xs font-bold text-white rounded-full ${getStatusColor(batch.status)}`}>
+            <span className={`px-3 py-1 text-xs font-semibold text-black rounded-full ${getStatusColor(batch.status)}`}>
               {batch.status.charAt(0).toUpperCase() + batch.status.slice(1)}
             </span>
           </div>
@@ -234,21 +234,21 @@ export const TeacherBatchDetailsPage: React.FC = () => {
               <Users size={16} />
               <span className="text-sm">Students</span>
             </div>
-            <span className="text-lg font-bold text-white">{students.length}/{batch.maxStudents || '∞'}</span>
+            <span className="text-lg font-semibold text-black">{students.length}/{batch.maxStudents || 'âˆž'}</span>
           </div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Calendar size={16} />
               <span className="text-sm">Week</span>
             </div>
-            <span className="text-lg font-bold text-white">Week {batch.weekNumber}</span>
+            <span className="text-lg font-semibold text-black">Week {batch.weekNumber}</span>
           </div>
           <div>
             <div className="flex items-center gap-2 text-slate-400 mb-1">
               <Clock size={16} />
               <span className="text-sm">Started</span>
             </div>
-            <span className="text-lg font-bold text-white">
+            <span className="text-lg font-semibold text-black">
               {batch.startDate?.toDate?.()?.toLocaleDateString() || 'N/A'}
             </span>
           </div>
@@ -258,14 +258,14 @@ export const TeacherBatchDetailsPage: React.FC = () => {
       {/* Students in this Batch */}
       <GlassCard className="p-6 border border-white/5">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Students in this Batch</h3>
+          <h3 className="text-xl font-semibold text-black">Students in this Batch</h3>
           <div className="text-sm text-slate-400">{students.length} students</div>
         </div>
         
         {students.length === 0 ? (
           <div className="text-center py-12 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
             <Users size={48} className="mx-auto text-slate-500/50 mb-4" />
-            <h4 className="text-lg font-bold text-white mb-2">No students assigned to this batch yet</h4>
+            <h4 className="text-lg font-semibold text-black mb-2">No students assigned to this batch yet</h4>
             <p className="text-slate-500">Students will appear here once they are approved and assigned to this batch.</p>
           </div>
         ) : (
@@ -280,7 +280,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
                   <th className="pb-3 font-medium">Progress</th>
                 </tr>
               </thead>
-              <tbody className="text-white">
+              <tbody className="text-gray-700">
                 {students.map((student) => (
                   <tr key={student.uid} className="border-b border-white/5 hover:bg-white/[0.02]">
                     <td className="py-4">
@@ -298,7 +298,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
                       </div>
                     </td>
                     <td className="py-4">
-                      <span className={`px-2 py-1 text-xs font-bold text-white rounded-full ${getTrainingStatusColor(student.trainingStatus)}`}>
+                      <span className={`px-2 py-1 text-xs font-semibold text-black rounded-full ${getTrainingStatusColor(student.trainingStatus)}`}>
                         {student.trainingStatus || 'Unknown'}
                       </span>
                     </td>
@@ -325,7 +325,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
       {/* Lessons in this Batch */}
       <GlassCard className="p-6 border border-white/5">
         <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-bold text-white">Lessons in this Batch</h3>
+          <h3 className="text-xl font-semibold text-black">Lessons in this Batch</h3>
           <div className="flex items-center gap-4">
             <div className="text-sm text-slate-400">{lessons.length} lessons</div>
             <PrimaryButton onClick={() => navigate(`/teacher/batches/${batchId}/lessons`)}>
@@ -338,7 +338,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
         {lessons.length === 0 ? (
           <div className="text-center py-12 bg-white/[0.02] rounded-2xl border border-dashed border-white/10">
             <BookOpen size={48} className="mx-auto text-slate-500/50 mb-4" />
-            <h4 className="text-lg font-bold text-white mb-2">No lessons created for this batch yet</h4>
+            <h4 className="text-lg font-semibold text-black mb-2">No lessons created for this batch yet</h4>
             <p className="text-slate-500 mb-6">Create your first lesson to start building the curriculum for {batch.name}.</p>
             <PrimaryButton onClick={() => navigate(`/teacher/batches/${batchId}/lessons`)}>
               <Plus size={16} className="mr-2" />
@@ -355,7 +355,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
                       <BookOpen size={20} className="text-[#6324eb]" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-white">{lesson.title}</h4>
+                      <h4 className="font-semibold text-black">{lesson.title}</h4>
                       <div className="flex items-center gap-4 mt-1 text-sm text-slate-400">
                         <span>Week {lesson.weekNumber}</span>
                         <span>Order {lesson.order}</span>
@@ -372,7 +372,7 @@ export const TeacherBatchDetailsPage: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => navigate(`/teacher/lessons/${lesson.id}`)}
-                      className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                      className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
                       title="View Lesson"
                     >
                       <FileText size={16} />
@@ -394,3 +394,4 @@ export const TeacherBatchDetailsPage: React.FC = () => {
     </motion.div>
   );
 };
+

@@ -54,7 +54,12 @@ service cloud.firestore {
 
     // Attendance collection
     match /attendance/{attendanceId} {
-      allow read: if isSignedIn() && (request.auth.uid == resource.data.studentId || isTeacher() || isAdmin());
+      allow read: if isSignedIn() && (
+        request.auth.uid == resource.data.studentId ||
+        request.auth.uid == resource.data.studentUid ||
+        isTeacher() ||
+        isAdmin()
+      );
       allow write: if isAdmin() || isTeacher();
     }
 
@@ -73,6 +78,25 @@ service cloud.firestore {
     // Enrollments collection
     match /enrollments/{enrollmentId} {
       allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Batches collection
+    match /batches/{batchId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Live Sessions collection
+    match /liveSessions/{sessionId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin() || isTeacher();
+    }
+
+    // Live Class Joins collection - students join, teachers/admin read
+    match /live_class_joins/{joinId} {
+      allow read: if isSignedIn() && (request.auth.uid == resource.data.studentId || isTeacher() || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == request.resource.data.studentId;
       allow write: if isAdmin() || isTeacher();
     }
   }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -176,7 +176,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Batch Management</h2>
+          <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">Batch Management</h2>
           <p className="text-slate-400 font-medium">Create and manage student cohorts for organized learning.</p>
         </div>
         <PrimaryButton
@@ -200,7 +200,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
             className="input-field pl-12 py-4 w-full"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-colors">
+        <button className="flex items-center gap-2 px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-black hover:bg-white/10 transition-colors">
           <Filter size={18} />
           Filter
         </button>
@@ -209,7 +209,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
       {/* Create Batch Form */}
       {showCreateForm && (
         <GlassCard className="p-6 border border-white/5">
-          <h3 className="text-xl font-bold text-white mb-6">Create New Batch</h3>
+          <h3 className="text-xl font-semibold text-black mb-6">Create New Batch</h3>
           <form onSubmit={handleCreateBatch} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -219,7 +219,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                   placeholder="e.g., Week 1 Cohort"
                 />
               </div>
@@ -231,7 +231,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   min="1"
                   value={formData.weekNumber}
                   onChange={(e) => setFormData({ ...formData, weekNumber: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -242,7 +242,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   min="1"
                   value={formData.maxStudents}
                   onChange={(e) => setFormData({ ...formData, maxStudents: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -251,7 +251,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   required
                   value={formData.status}
                   onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
                 >
                   <option value="active">Active</option>
                   <option value="upcoming">Upcoming</option>
@@ -265,7 +265,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowCreateForm(false)}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+                className="px-6 py-3 bg-white/10 text-black rounded-xl hover:bg-white/20 transition-colors"
               >
                 Cancel
               </button>
@@ -284,9 +284,9 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   <Layers className="text-[#6324eb]" size={24} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{batch.name}</h3>
+                  <h3 className="text-lg font-semibold text-black">{batch.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className={`px-2 py-1 text-xs font-bold text-white rounded-full ${getStatusColor(batch.status)}`}>
+                    <span className={`px-2 py-1 text-xs font-semibold text-black rounded-full ${getStatusColor(batch.status)}`}>
                       {batch.status.charAt(0).toUpperCase() + batch.status.slice(1)}
                     </span>
                     <span className="text-xs text-slate-500">Week {batch.weekNumber}</span>
@@ -296,7 +296,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/teacher/batches/${batch.id}`)}
-                  className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
                   title="View Batch Details"
                 >
                   <Eye size={16} />
@@ -317,8 +317,8 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   <Users size={14} />
                   <span className="text-sm">Students</span>
                 </div>
-                <span className="text-sm font-bold text-white">
-                  {batch.currentStudents}/{batch.maxStudents || '∞'}
+                <span className="text-sm font-semibold text-black">
+                  {batch.currentStudents}/{batch.maxStudents || 'âˆž'}
                 </span>
               </div>
               
@@ -327,7 +327,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
                   <Calendar size={14} />
                   <span className="text-sm">Started</span>
                 </div>
-                <span className="text-sm text-white">
+                <span className="text-sm text-gray-700">
                   {batch.startDate?.toDate?.()?.toLocaleDateString() || 'N/A'}
                 </span>
               </div>
@@ -349,7 +349,7 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
       {filteredBatches.length === 0 && (
         <div className="text-center py-24 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
           <Layers size={48} className="mx-auto text-slate-500/50 mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No Batches Created</h3>
+          <h3 className="text-xl font-semibold text-black mb-2">No Batches Created</h3>
           <p className="text-slate-500 mb-6">Create your first batch to start organizing students by cohorts.</p>
           <PrimaryButton onClick={() => setShowCreateForm(true)}>
             <Plus size={20} className="mr-2" />
@@ -360,3 +360,4 @@ export const TeacherBatchesPage_Quick: React.FC = () => {
     </motion.div>
   );
 };
+

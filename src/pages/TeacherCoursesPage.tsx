@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import {
@@ -62,7 +62,7 @@ export const TeacherCoursesPage: React.FC = () => {
         >
             <div className="flex items-center justify-between">
                 <div>
-                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Manage Courses</h2>
+                    <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">Manage Courses</h2>
                     <p className="text-slate-400 font-medium">Overview of all active IELTS and PTE Academic courses.</p>
                 </div>
             </div>
@@ -72,7 +72,7 @@ export const TeacherCoursesPage: React.FC = () => {
                     <GlassCard key={course.id} gradient className="p-8 group hover:scale-[1.01] transition-all border border-white/5">
                         <div className="flex flex-col h-full gap-6">
                             <div className="flex items-start justify-between">
-                                <div className="size-16 rounded-2xl bg-[#6324eb]/10 flex items-center justify-center text-[#6324eb] ring-1 ring-[#6324eb]/20 group-hover:bg-[#6324eb] group-hover:text-white transition-colors">
+                                <div className="size-16 rounded-2xl bg-[#6324eb]/10 flex items-center justify-center text-[#6324eb] ring-1 ring-[#6324eb]/20 group-hover:bg-[#6324eb] group-hover:text-black transition-colors">
                                     <BookOpen size={32} />
                                 </div>
                                 <StatusBadge
@@ -82,7 +82,7 @@ export const TeacherCoursesPage: React.FC = () => {
                             </div>
 
                             <div>
-                                <h3 className="text-2xl font-black text-white mb-2">{course.name}</h3>
+                                <h3 className="text-2xl font-semibold text-black mb-2">{course.name}</h3>
                                 <p className="text-slate-400 text-sm line-clamp-2 leading-relaxed">
                                     {course.description}
                                 </p>
@@ -91,11 +91,11 @@ export const TeacherCoursesPage: React.FC = () => {
                             <div className="grid grid-cols-2 gap-4 py-6 border-y border-white/5">
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Modules</p>
-                                    <p className="text-xl font-black text-white">{moduleCounts[course.id] || 0}</p>
+                                    <p className="text-xl font-semibold text-black">{moduleCounts[course.id] || 0}</p>
                                 </div>
                                 <div className="space-y-1">
                                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Duration</p>
-                                    <p className="text-xl font-black text-white">{course.durationWeeks} Weeks</p>
+                                    <p className="text-xl font-semibold text-black">{course.durationWeeks} Weeks</p>
                                 </div>
                             </div>
 
@@ -106,7 +106,7 @@ export const TeacherCoursesPage: React.FC = () => {
                                 >
                                     Manage Modules
                                 </PrimaryButton>
-                                <button className="p-4 rounded-xl bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                                <button className="p-4 rounded-xl bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-all">
                                     <ChevronRight size={24} />
                                 </button>
                             </div>
@@ -117,3 +117,4 @@ export const TeacherCoursesPage: React.FC = () => {
         </motion.div>
     );
 };
+

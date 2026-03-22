@@ -11,6 +11,9 @@ export interface UserProfile {
   avatarUrl?: string;
   assignedCourseId?: string;
   phone?: string;
+  title?: string;
+  bio?: string;
+  updatedAt?: any;
 }
 
 export type TrainingStatus = 'inactive' | 'active' | 'completed' | 'locked';
@@ -88,10 +91,21 @@ export interface StudentBatchInfo {
   batchId: string;
   joinedAt: any; // Firestore Timestamp
   currentLessonId?: string;
+  currentLessonOrder?: number;
   currentWeek: number;
   progressPercent: number;
   attendanceRate?: number;
   lastAttendanceDate?: any; // Firestore Timestamp
+}
+
+export interface StudentLessonHistoryItem {
+  id: string;
+  module: string;
+  lesson: string;
+  stage: string;
+  assignedAt?: string;
+  completedAt?: string;
+  notes?: string;
 }
 
 // Lesson System
@@ -133,8 +147,15 @@ export interface LiveSession {
   batchId: string;
   teacherId: string;
   title: string;
+  courseId?: string;
+  moduleId?: string;
+  startTime?: string;
+  endTime?: string;
   meetingLink?: string;
+  meetingUrl?: string;
   meetingId?: string; // For Daily.co or other video providers
+  roomUrl?: string;
+  isLive?: boolean;
   startedAt?: any; // Firestore Timestamp
   endedAt?: any; // Firestore Timestamp
   status: LiveSessionStatus;
@@ -153,15 +174,24 @@ export type AttendanceStatus = 'present' | 'late' | 'absent' | 'excused';
 export interface Attendance {
   id: string;
   sessionId: string;
-  lessonId: string;
+  lessonId?: string;
   studentUid: string;
+  studentId?: string;
+  studentName?: string;
+  teacherId?: string;
+  teacherName?: string;
   batchId: string;
+  batch?: string;
+  sessionTitle?: string;
+  date?: string;
   status: AttendanceStatus;
-  markedAt: any; // Firestore Timestamp
+  markedAt?: any; // Firestore Timestamp
+  createdAt?: any; // Firestore Timestamp
+  updatedAt?: any; // Firestore Timestamp
   markedBy?: string; // teacherId
   lateMinutes?: number;
   notes?: string;
-  autoMarked: boolean; // true if marked by system when student joins
+  autoMarked?: boolean; // true if marked by system when student joins
 }
 
 // Attendance Summary for reporting
@@ -228,7 +258,22 @@ export interface StudentData {
   
   // Batch System Fields
   batchId?: string;               // Current batch assignment
+  batchName?: string;             // Human-readable weekly batch label
   batchInfo?: StudentBatchInfo;   // Detailed batch information
+  assignedTeacherId?: string;
+  assignedTeacherName?: string;
+
+  // Simple trainer assignment fields
+  currentModule?: string;
+  currentModuleId?: string;
+  currentLesson?: string;
+  currentLessonId?: string;
+  status?: string;
+  learningStage?: string;
+  nextAction?: string;
+  trainerNotes?: string;
+  lessonDeadline?: string | null;
+  lessonHistory?: StudentLessonHistoryItem[];
 }
 
 export interface Course {
@@ -306,24 +351,6 @@ export interface Notification {
   read: boolean;
   createdAt: any;
   link?: string;
-}
-
-export interface Attendance {
-  id: string;
-  courseId: string;
-  sessionId: string; // ID of the live class session
-  studentId: string;
-  status: 'present' | 'absent';
-  date: string;
-}
-
-export interface LiveSession {
-  id: string;
-  courseId: string;
-  title: string;
-  startTime: string;
-  endTime: string;
-  meetingUrl?: string;
 }
 
 export interface BreemicEnrollment {

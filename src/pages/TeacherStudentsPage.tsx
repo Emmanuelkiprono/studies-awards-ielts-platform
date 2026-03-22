@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { GlassCard, StatusBadge, PrimaryButton } from '../components/UI';
 import {
   Users,
@@ -313,7 +313,7 @@ export const TeacherStudentsPage: React.FC = () => {
       className="p-4 space-y-6 max-w-4xl mx-auto w-full pb-24"
     >
       <header className="flex flex-col gap-2">
-        <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+        <h2 className="text-2xl font-semibold text-black flex items-center gap-2">
           <Users className="text-[#6324eb]" size={28} />
           My Students
         </h2>
@@ -326,7 +326,7 @@ export const TeacherStudentsPage: React.FC = () => {
           onClick={() => setActiveSubTab('all')}
           className={cn(
             "px-6 py-2.5 rounded-xl text-sm font-bold transition-all",
-            activeSubTab === 'all' ? "bg-[#6324eb] text-white shadow-lg" : "text-slate-400 hover:text-white"
+            activeSubTab === 'all' ? "bg-[#6324eb] text-white shadow-lg" : "text-slate-400 hover:text-black"
           )}
         >
           All
@@ -335,7 +335,7 @@ export const TeacherStudentsPage: React.FC = () => {
           onClick={() => setActiveSubTab('pending')}
           className={cn(
             "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-            activeSubTab === 'pending' ? "bg-amber-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+            activeSubTab === 'pending' ? "bg-amber-500 text-white shadow-lg" : "text-slate-400 hover:text-black"
           )}
         >
           Pending
@@ -349,7 +349,7 @@ export const TeacherStudentsPage: React.FC = () => {
           onClick={() => setActiveSubTab('eligible')}
           className={cn(
             "px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2",
-            activeSubTab === 'eligible' ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400 hover:text-white"
+            activeSubTab === 'eligible' ? "bg-emerald-500 text-white shadow-lg" : "text-slate-400 hover:text-black"
           )}
         >
           Eligible for Exam
@@ -413,10 +413,10 @@ export const TeacherStudentsPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <p className="text-slate-100 font-semibold">{student.name}</p>
                   {student.paymentStatus === 'pending' && (
-                    <span className="text-[10px] bg-amber-500 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Pending</span>
+                    <span className="text-[10px] bg-amber-500 text-black px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Pending</span>
                   )}
                   {student.eligibleAt && new Date() >= new Date(student.eligibleAt) && (
-                    <span className="text-[10px] bg-emerald-500 text-white px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span className="text-[10px] bg-emerald-500 text-black px-2 py-0.5 rounded-full font-bold uppercase tracking-wider flex items-center gap-1">
                       <CheckCircle2 size={8} /> Eligible
                     </span>
                   )}
@@ -431,7 +431,7 @@ export const TeacherStudentsPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            <ChevronRight size={20} className="text-slate-600 group-hover:text-white transition-colors" />
+            <ChevronRight size={20} className="text-slate-600 group-hover:text-black transition-colors" />
           </GlassCard>
         ))}
         {filteredStudents.length === 0 && (
@@ -465,7 +465,7 @@ export const TeacherStudentsPage: React.FC = () => {
                   <div className="flex items-center gap-4">
                     <img src={selectedStudent.avatarUrl || `https://picsum.photos/seed/${selectedStudent.uid}/100/100`} alt={selectedStudent.name} className="size-16 rounded-2xl object-cover border border-white/10" referrerPolicy="no-referrer" />
                     <div>
-                      <h3 className="text-xl font-bold text-white">{selectedStudent.name}</h3>
+                      <h3 className="text-xl font-semibold text-black">{selectedStudent.name}</h3>
                       <p className="text-slate-400 text-sm">{selectedStudent.email}</p>
                       {selectedStudent.location && (
                         <p className="text-slate-500 text-xs mt-1 flex items-center gap-1">
@@ -484,7 +484,7 @@ export const TeacherStudentsPage: React.FC = () => {
                   {selectedStudent.registeredAt && (
                     <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-4">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-black uppercase tracking-widest flex items-center gap-2">
                           <Calendar size={14} className="text-amber-500" />
                           Exam Timeline
                         </h4>
@@ -497,13 +497,13 @@ export const TeacherStudentsPage: React.FC = () => {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <p className="text-[10px] text-slate-500 uppercase font-bold">Registered</p>
-                          <p className="text-white text-sm font-medium">
+                          <p className="text-black text-sm font-medium">
                             {selectedStudent.registeredAt?.toDate ? selectedStudent.registeredAt.toDate().toLocaleDateString() : new Date(selectedStudent.registeredAt).toLocaleDateString()}
                           </p>
                         </div>
                         <div className="space-y-1">
                           <p className="text-[10px] text-slate-500 uppercase font-bold">Eligible From</p>
-                          <p className="text-white text-sm font-medium">
+                          <p className="text-black text-sm font-medium">
                             {selectedStudent.eligibleAt ? new Date(selectedStudent.eligibleAt).toLocaleDateString() : 'TBD'}
                           </p>
                         </div>
@@ -585,7 +585,7 @@ export const TeacherStudentsPage: React.FC = () => {
                   {selectedStudent.paymentStatus !== 'pending' && selectedStudent.trainingStatus !== 'locked' && selectedStudent.trainingStatus !== 'inactive' && (
                     <>
                       <div className="space-y-4">
-                        <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-black uppercase tracking-widest flex items-center gap-2">
                           <TrendingUp size={14} className="text-[#6324eb]" />
                           Update Records
                         </h4>
@@ -621,7 +621,7 @@ export const TeacherStudentsPage: React.FC = () => {
                       </div>
 
                       <div className="space-y-4">
-                        <h4 className="text-sm font-bold text-white uppercase tracking-widest flex items-center gap-2">
+                        <h4 className="text-sm font-semibold text-black uppercase tracking-widest flex items-center gap-2">
                           <BarChart3 size={14} className="text-emerald-400" />
                           Scores (Band)
                         </h4>
@@ -665,3 +665,4 @@ export const TeacherStudentsPage: React.FC = () => {
     </motion.div>
   );
 };
+

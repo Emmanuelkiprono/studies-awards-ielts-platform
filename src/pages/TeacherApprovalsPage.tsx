@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import {
     Users,
@@ -154,7 +154,7 @@ export const TeacherApprovalsPage: React.FC = () => {
             className="p-4 space-y-8 max-w-7xl mx-auto w-full pb-24"
         >
             <div>
-                <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Student Approvals</h2>
+                <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">Student Approvals</h2>
                 <p className="text-slate-400 font-medium">Verify pending payments and grant course access.</p>
             </div>
 
@@ -171,7 +171,7 @@ export const TeacherApprovalsPage: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-xl border border-white/10">
                     <Clock size={16} className="text-amber-500" />
-                    <span className="text-xs font-bold text-white">{students.length} Pending</span>
+                    <span className="text-xs font-semibold text-black">{students.length} Pending</span>
                 </div>
             </div>
 
@@ -184,7 +184,7 @@ export const TeacherApprovalsPage: React.FC = () => {
                                     <Users size={24} />
                                 </div>
                                 <div>
-                                    <h4 className="text-lg font-bold text-white">{student.name}</h4>
+                                    <h4 className="text-lg font-semibold text-black">{student.name}</h4>
                                     <div className="flex items-center gap-3 mt-1">
                                         <span className="flex items-center gap-1 text-xs text-slate-500"><Mail size={12} /> {student.email}</span>
                                         {student.phone && <span className="flex items-center gap-1 text-xs text-slate-500"><Phone size={12} /> {student.phone}</span>}
@@ -229,3 +229,4 @@ export const TeacherApprovalsPage: React.FC = () => {
         </motion.div>
     );
 };
+

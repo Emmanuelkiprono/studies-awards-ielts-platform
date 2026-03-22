@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -152,7 +152,7 @@ export const TeacherBatchesPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Batch Management</h2>
+          <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">Batch Management</h2>
           <p className="text-slate-400 font-medium">Organize students by cohorts and manage their learning journey.</p>
         </div>
         <PrimaryButton
@@ -167,7 +167,7 @@ export const TeacherBatchesPage: React.FC = () => {
       {/* Create/Edit Form */}
       {showCreateForm && (
         <GlassCard className="p-6 border border-white/5">
-          <h3 className="text-xl font-bold text-white mb-6">
+          <h3 className="text-xl font-semibold text-black mb-6">
             {editingBatch ? 'Edit Batch' : 'Create New Batch'}
           </h3>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -179,7 +179,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   required
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                   placeholder="e.g., Week 1 Cohort"
                 />
               </div>
@@ -191,7 +191,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   min="1"
                   value={formData.weekNumber}
                   onChange={(e) => setFormData({ ...formData, weekNumber: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -201,7 +201,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   required
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -210,7 +210,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   type="date"
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -221,7 +221,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   min="1"
                   value={formData.maxStudents}
                   onChange={(e) => setFormData({ ...formData, maxStudents: parseInt(e.target.value) })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
               <div>
@@ -234,7 +234,7 @@ export const TeacherBatchesPage: React.FC = () => {
                     ...formData, 
                     schedule: { ...formData.schedule, startTime: e.target.value }
                   })}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 />
               </div>
             </div>
@@ -244,7 +244,7 @@ export const TeacherBatchesPage: React.FC = () => {
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={3}
-                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
+                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-black placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb] focus:border-transparent"
                 placeholder="Batch description and objectives..."
               />
             </div>
@@ -258,7 +258,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   setShowCreateForm(false);
                   setEditingBatch(null);
                 }}
-                className="px-6 py-3 bg-white/10 text-white rounded-xl hover:bg-white/20 transition-colors"
+                className="px-6 py-3 bg-white/10 text-black rounded-xl hover:bg-white/20 transition-colors"
               >
                 Cancel
               </button>
@@ -277,9 +277,9 @@ export const TeacherBatchesPage: React.FC = () => {
                   <Users className="text-[#6324eb]" size={24} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">{batch.name}</h3>
+                  <h3 className="text-lg font-semibold text-black">{batch.name}</h3>
                   <div className="flex items-center gap-2 mt-1">
-                    <span className={`px-2 py-1 text-xs font-bold text-white rounded-full ${getStatusColor(batch.status)}`}>
+                    <span className={`px-2 py-1 text-xs font-semibold text-black rounded-full ${getStatusColor(batch.status)}`}>
                       {getStatusText(batch.status)}
                     </span>
                     <span className="text-xs text-slate-500">Week {batch.weekNumber}</span>
@@ -289,14 +289,14 @@ export const TeacherBatchesPage: React.FC = () => {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => navigate(`/teacher/batches/${batch.id}/lessons`)}
-                  className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
                   title="View Lessons"
                 >
                   <BookOpen size={16} />
                 </button>
                 <button
                   onClick={() => handleEdit(batch)}
-                  className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                  className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
                   title="Edit Batch"
                 >
                   <Edit size={16} />
@@ -321,8 +321,8 @@ export const TeacherBatchesPage: React.FC = () => {
                   <Users size={14} />
                   <span className="text-sm">Students</span>
                 </div>
-                <span className="text-sm font-bold text-white">
-                  {batch.currentStudents}/{batch.maxStudents || '∞'}
+                <span className="text-sm font-semibold text-black">
+                  {batch.currentStudents}/{batch.maxStudents || 'âˆž'}
                 </span>
               </div>
               
@@ -331,7 +331,7 @@ export const TeacherBatchesPage: React.FC = () => {
                   <Calendar size={14} />
                   <span className="text-sm">Started</span>
                 </div>
-                <span className="text-sm text-white">
+                <span className="text-sm text-gray-700">
                   {batch.startDate.toDate().toLocaleDateString()}
                 </span>
               </div>
@@ -342,7 +342,7 @@ export const TeacherBatchesPage: React.FC = () => {
                     <Clock size={14} />
                     <span className="text-sm">Schedule</span>
                   </div>
-                  <span className="text-sm text-white">
+                  <span className="text-sm text-gray-700">
                     {batch.schedule.weekdays.slice(0, 2).join(', ')} {batch.schedule.startTime}
                   </span>
                 </div>
@@ -352,14 +352,14 @@ export const TeacherBatchesPage: React.FC = () => {
             <div className="mt-6 flex items-center gap-3">
               <button
                 onClick={() => navigate(`/teacher/batches/${batch.id}/students`)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-white rounded-lg hover:bg-white/10 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-black rounded-lg hover:bg-white/10 transition-colors"
               >
                 <Eye size={16} />
                 View Students
               </button>
               <button
                 onClick={() => navigate(`/teacher/batches/${batch.id}/attendance`)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-white rounded-lg hover:bg-white/10 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 text-black rounded-lg hover:bg-white/10 transition-colors"
               >
                 <TrendingUp size={16} />
                 Attendance
@@ -372,7 +372,7 @@ export const TeacherBatchesPage: React.FC = () => {
       {batches.length === 0 && (
         <div className="text-center py-24 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
           <Users size={48} className="mx-auto text-slate-500/50 mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No Batches Created</h3>
+          <h3 className="text-xl font-semibold text-black mb-2">No Batches Created</h3>
           <p className="text-slate-500 mb-6">Create your first batch to start organizing students by cohorts.</p>
           <PrimaryButton onClick={() => setShowCreateForm(true)}>
             <Plus size={20} className="mr-2" />
@@ -383,3 +383,4 @@ export const TeacherBatchesPage: React.FC = () => {
     </motion.div>
   );
 };
+

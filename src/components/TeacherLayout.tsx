@@ -25,7 +25,7 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
         <header className="flex-shrink-0 bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-[100] pointer-events-auto">
           <div className="flex items-center justify-between pointer-events-auto">
             <div className="flex-1">
-              <h1 className="text-2xl font-bold text-gray-900">Teacher Dashboard</h1>
+              <h1 className="text-2xl font-bold text-black">Teacher Dashboard</h1>
               <p className="text-sm text-gray-500 mt-1">Manage your courses and students efficiently</p>
             </div>
             <div className="flex items-center gap-4 pointer-events-auto">
@@ -44,3 +44,4 @@ export const TeacherLayout: React.FC<TeacherLayoutProps> = ({ children }) => {
     </div>
   );
 };
+

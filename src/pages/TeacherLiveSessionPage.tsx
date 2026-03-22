@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
@@ -128,7 +128,7 @@ export const TeacherLiveSessionPage: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: AttendanceStatus) => {
+  const getStatusIcon = (status: AttendanceStatus | 'not_marked') => {
     switch (status) {
       case 'present': return <CheckCircle className="text-green-500" size={20} />;
       case 'late': return <AlertCircle className="text-yellow-500" size={20} />;
@@ -175,11 +175,11 @@ export const TeacherLiveSessionPage: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
+          <h2 className="text-3xl font-semibold text-black mb-2 tracking-tight">
             {lesson.title} - Live Session
           </h2>
           <p className="text-slate-400 font-medium">
-            {batch.name} • Week {lesson.weekNumber}
+            {batch.name} â€¢ Week {lesson.weekNumber}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -194,12 +194,12 @@ export const TeacherLiveSessionPage: React.FC = () => {
 
       {/* Session Controls */}
       <GlassCard className="p-6 border border-white/5">
-        <h3 className="text-xl font-bold text-white mb-6">Session Controls</h3>
+        <h3 className="text-xl font-semibold text-black mb-6">Session Controls</h3>
         
         {!currentSession ? (
           <div className="text-center py-8">
             <Video size={48} className="mx-auto text-slate-500 mb-4" />
-            <h4 className="text-lg font-bold text-white mb-2">Start Live Session</h4>
+            <h4 className="text-lg font-semibold text-black mb-2">Start Live Session</h4>
             <p className="text-slate-400 mb-6">Begin the live class for this lesson and open attendance tracking.</p>
             <PrimaryButton
               onClick={handleStartSession}
@@ -214,7 +214,7 @@ export const TeacherLiveSessionPage: React.FC = () => {
           <div className="space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="text-lg font-bold text-white mb-2">Session is Live</h4>
+                <h4 className="text-lg font-semibold text-black mb-2">Session is Live</h4>
                 <p className="text-slate-400">
                   Started at {currentSession.startedAt?.toDate().toLocaleTimeString()}
                 </p>
@@ -226,7 +226,7 @@ export const TeacherLiveSessionPage: React.FC = () => {
                       rel="noopener noreferrer"
                       className="text-[#6324eb] hover:text-[#6324eb]/80 text-sm"
                     >
-                      Join Meeting →
+                      Join Meeting â†’
                     </a>
                   </div>
                 )}
@@ -257,7 +257,7 @@ export const TeacherLiveSessionPage: React.FC = () => {
             {summary && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="text-center p-4 bg-white/5 rounded-xl">
-                  <div className="text-2xl font-bold text-white">{summary.totalStudents}</div>
+                  <div className="text-2xl font-semibold text-black">{summary.totalStudents}</div>
                   <div className="text-sm text-slate-400">Total Students</div>
                 </div>
                 <div className="text-center p-4 bg-green-500/10 rounded-xl">
@@ -281,12 +281,12 @@ export const TeacherLiveSessionPage: React.FC = () => {
       {/* Attendance Management */}
       {currentSession && (
         <GlassCard className="p-6 border border-white/5">
-          <h3 className="text-xl font-bold text-white mb-6">Attendance Management</h3>
+          <h3 className="text-xl font-semibold text-black mb-6">Attendance Management</h3>
           
           {!currentSession.attendanceOpen ? (
             <div className="text-center py-8">
               <DoorClosed size={48} className="mx-auto text-slate-500 mb-4" />
-              <h4 className="text-lg font-bold text-white mb-2">Attendance is Closed</h4>
+              <h4 className="text-lg font-semibold text-black mb-2">Attendance is Closed</h4>
               <p className="text-slate-400 mb-6">Open attendance to allow students to join and track their presence.</p>
               <button
                 onClick={handleToggleAttendance}
@@ -325,7 +325,7 @@ export const TeacherLiveSessionPage: React.FC = () => {
                           <Users className="text-[#6324eb]" size={20} />
                         </div>
                         <div>
-                          <h4 className="font-medium text-white">{student.name}</h4>
+                          <h4 className="font-medium text-black">{student.name}</h4>
                           <p className="text-sm text-slate-400">{student.email}</p>
                         </div>
                       </div>
@@ -366,3 +366,4 @@ export const TeacherLiveSessionPage: React.FC = () => {
     </motion.div>
   );
 };
+

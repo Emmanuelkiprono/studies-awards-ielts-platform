@@ -1,298 +1,535 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
-import { 
-  Users, 
-  CheckCircle, 
-  XCircle, 
+import {
   AlertCircle,
   Calendar,
+  CheckCircle2,
   Clock,
-  Search,
-  Filter,
-  UserCheck as AttendanceIcon,
-  DoorOpen,
   DoorClosed,
-  TrendingUp,
-  RefreshCw
+  DoorOpen,
+  RefreshCw,
+  Save,
+  Search,
+  Users,
+  XCircle,
 } from 'lucide-react';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  serverTimestamp,
+  setDoc,
+  Timestamp,
+  updateDoc,
+  where,
+} from 'firebase/firestore';
+import { PrimaryButton } from '../components/UI';
+import { AttendanceTable, AttendanceTableRow } from '../components/AttendanceTable';
+import {
+  buildAttendanceSummary,
+  formatAttendanceDateTime,
+  getAttendanceDateValue,
+  isValidDateValue,
+} from '../lib/attendance';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../services/firebase';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, serverTimestamp, doc, orderBy, getDoc, getDocs } from 'firebase/firestore';
-import { GlassCard, PrimaryButton } from '../components/UI';
+import { Attendance, AttendanceStatus, StudentData, UserProfile } from '../types';
 
-interface Attendance {
+interface TeacherLiveSessionRecord {
   id: string;
-  sessionId: string;
-  lessonId: string;
-  studentUid: string;
-  batchId: string;
-  status: 'present' | 'late' | 'absent' | 'excused';
-  markedAt: any;
-  markedBy?: string;
-  autoMarked: boolean;
+  batchId?: string;
+  lessonId?: string;
+  teacherId?: string;
+  title?: string;
+  status?: 'scheduled' | 'live' | 'ended' | 'cancelled';
+  attendanceOpen?: boolean;
+  attendanceClosed?: boolean;
+  startTime?: string;
+  endTime?: string;
+  scheduledAt?: { toDate?: () => Date };
+  createdAt?: { toDate?: () => Date };
 }
 
-interface LiveSession {
+interface TeacherBatchRecord {
   id: string;
-  lessonId: string;
-  batchId: string;
-  teacherId: string;
-  title: string;
-  status: 'scheduled' | 'live' | 'ended' | 'cancelled';
-  attendanceOpen: boolean;
-  attendanceClosed: boolean;
-  startedAt?: any;
-  endedAt?: any;
-  createdAt: any;
+  name?: string;
+  teacherId?: string;
+  currentStudents?: number;
 }
 
-interface Student {
+interface StudentRosterRecord extends Partial<StudentData> {
   uid: string;
   name: string;
   email: string;
-  batchId?: string;
 }
 
-interface Lesson {
-  id: string;
-  title: string;
-  batchId: string;
+interface AttendanceDraft {
+  status?: AttendanceStatus;
+  notes: string;
 }
 
-interface Batch {
-  id: string;
-  name: string;
-}
+const getSessionDateValue = (session?: TeacherLiveSessionRecord | null) => {
+  if (!session) {
+    return null;
+  }
+
+  if (session.startTime) {
+    const parsedDate = new Date(session.startTime);
+    if (isValidDateValue(parsedDate)) {
+      return parsedDate;
+    }
+  }
+
+  const scheduledDate = session.scheduledAt?.toDate?.();
+  if (scheduledDate && isValidDateValue(scheduledDate)) {
+    return scheduledDate;
+  }
+
+  const createdDate = session.createdAt?.toDate?.();
+  return createdDate && isValidDateValue(createdDate) ? createdDate : null;
+};
 
 export const TeacherAttendancePage_Simple: React.FC = () => {
-  const navigate = useNavigate();
   const { profile: teacherProfile } = useAuth();
-  const [sessions, setSessions] = useState<LiveSession[]>([]);
-  const [students, setStudents] = useState<Student[]>([]);
-  const [attendance, setAttendance] = useState<Attendance[]>([]);
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [batches, setBatches] = useState<Batch[]>([]);
+  const [sessions, setSessions] = useState<TeacherLiveSessionRecord[]>([]);
+  const [batches, setBatches] = useState<Record<string, TeacherBatchRecord>>({});
+  const [studentProfiles, setStudentProfiles] = useState<Record<string, UserProfile>>({});
+  const [studentDocs, setStudentDocs] = useState<Record<string, StudentData>>({});
+  const [attendanceRecords, setAttendanceRecords] = useState<Attendance[]>([]);
+  const [attendanceDrafts, setAttendanceDrafts] = useState<Record<string, AttendanceDraft>>({});
   const [loading, setLoading] = useState(true);
-  const [selectedSession, setSelectedSession] = useState('');
+  const [selectedSessionId, setSelectedSessionId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | AttendanceStatus | 'not_marked'>('all');
+  const [saving, setSaving] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Fetch batches
   useEffect(() => {
-    if (!teacherProfile?.uid) return;
-
-    const q = query(
-      collection(db, 'batches'),
-      where('teacherId', '==', teacherProfile.uid)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const batchesData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Batch));
-      setBatches(batchesData);
-    }, (err) => {
-      console.error('Error fetching batches:', err);
-    });
-
-    return () => unsubscribe();
-  }, [teacherProfile]);
-
-  // Fetch students
-  useEffect(() => {
-    if (!teacherProfile?.uid) return;
-
-    const q = query(
-      collection(db, 'users'),
-      where('role', '==', 'student')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const studentsData = snapshot.docs.map(doc => ({
-        uid: doc.id,
-        ...doc.data()
-      } as Student));
-      setStudents(studentsData);
-    }, (err) => {
-      console.error('Error fetching students:', err);
-    });
-
-    return () => unsubscribe();
-  }, [teacherProfile]);
-
-  // Fetch lessons
-  useEffect(() => {
-    if (!teacherProfile?.uid) return;
-
-    const q = query(
-      collection(db, 'lessons'),
-      where('teacherId', '==', teacherProfile.uid)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const lessonsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Lesson));
-      setLessons(lessonsData);
-    }, (err) => {
-      console.error('Error fetching lessons:', err);
-    });
-
-    return () => unsubscribe();
-  }, [teacherProfile]);
-
-  // Fetch live sessions
-  useEffect(() => {
-    if (!teacherProfile?.uid) return;
-
-    const q = query(
-      collection(db, 'liveSessions'),
-      where('teacherId', '==', teacherProfile.uid),
-      orderBy('createdAt', 'desc')
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const sessionsData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as LiveSession));
-      setSessions(sessionsData);
+    if (!teacherProfile?.uid) {
       setLoading(false);
-    }, (err) => {
-      console.error('Error fetching sessions:', err);
-      setLoading(false);
+      return;
+    }
+
+    const unsubscribeBatches = onSnapshot(collection(db, 'batches'), (snapshot) => {
+      const nextBatches = snapshot.docs.reduce((accumulator, batchDoc) => {
+        accumulator[batchDoc.id] = {
+          id: batchDoc.id,
+          ...batchDoc.data(),
+        } as TeacherBatchRecord;
+        return accumulator;
+      }, {} as Record<string, TeacherBatchRecord>);
+
+      setBatches(nextBatches);
     });
 
-    return () => unsubscribe();
-  }, [teacherProfile]);
+    const unsubscribeStudentProfiles = onSnapshot(
+      query(collection(db, 'users'), where('role', '==', 'student')),
+      (snapshot) => {
+        const nextProfiles = snapshot.docs.reduce((accumulator, userDoc) => {
+          accumulator[userDoc.id] = {
+            uid: userDoc.id,
+            ...userDoc.data(),
+          } as UserProfile;
+          return accumulator;
+        }, {} as Record<string, UserProfile>);
 
-  // Fetch attendance for selected session
-  useEffect(() => {
-    if (!selectedSession) return;
-
-    const q = query(
-      collection(db, 'attendance'),
-      where('sessionId', '==', selectedSession)
-    );
-
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const attendanceData = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      } as Attendance));
-      setAttendance(attendanceData);
-    }, (err) => {
-      console.error('Error fetching attendance:', err);
-    });
-
-    return () => unsubscribe();
-  }, [selectedSession]);
-
-  const handleMarkAttendance = async (studentUid: string, status: 'present' | 'late' | 'absent' | 'excused') => {
-    if (!selectedSession) return;
-
-    try {
-      const session = sessions.find(s => s.id === selectedSession);
-      if (!session) return;
-
-      // Check if attendance already exists
-      const existingAttendance = attendance.find(a => a.studentUid === studentUid);
-      
-      if (existingAttendance) {
-        // Update existing attendance
-        const attendanceRef = doc(db, 'attendance', existingAttendance.id);
-        await updateDoc(attendanceRef, {
-          status,
-          markedAt: serverTimestamp(),
-          markedBy: teacherProfile!.uid,
-          autoMarked: false
-        });
-      } else {
-        // Create new attendance record
-        await addDoc(collection(db, 'attendance'), {
-          sessionId: selectedSession,
-          lessonId: session.lessonId,
-          studentUid,
-          batchId: session.batchId,
-          status,
-          markedAt: serverTimestamp(),
-          markedBy: teacherProfile!.uid,
-          autoMarked: false
-        });
+        setStudentProfiles(nextProfiles);
       }
-    } catch (err) {
-      console.error('Error marking attendance:', err);
-      alert('Failed to mark attendance');
+    );
+
+    const unsubscribeStudentDocs = onSnapshot(collection(db, 'students'), (snapshot) => {
+      const nextStudents = snapshot.docs.reduce((accumulator, studentDoc) => {
+        accumulator[studentDoc.id] = {
+          uid: studentDoc.id,
+          ...studentDoc.data(),
+        } as StudentData;
+        return accumulator;
+      }, {} as Record<string, StudentData>);
+
+      setStudentDocs(nextStudents);
+    });
+
+    const unsubscribeSessions = onSnapshot(
+      query(collection(db, 'liveSessions'), where('teacherId', '==', teacherProfile.uid)),
+      (snapshot) => {
+        const nextSessions = snapshot.docs
+          .map((sessionDoc) => ({
+            id: sessionDoc.id,
+            ...sessionDoc.data(),
+          } as TeacherLiveSessionRecord))
+          .sort((left, right) => {
+            const leftTime = getSessionDateValue(left)?.getTime() ?? 0;
+            const rightTime = getSessionDateValue(right)?.getTime() ?? 0;
+            return rightTime - leftTime;
+          });
+
+        setSessions(nextSessions);
+        setLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching teacher live sessions for attendance:', error);
+        setSessions([]);
+        setLoading(false);
+      }
+    );
+
+    return () => {
+      unsubscribeBatches();
+      unsubscribeStudentProfiles();
+      unsubscribeStudentDocs();
+      unsubscribeSessions();
+    };
+  }, [teacherProfile?.uid]);
+
+  useEffect(() => {
+    if (!selectedSessionId) {
+      setAttendanceRecords([]);
+      return;
     }
+
+    const unsubscribeAttendance = onSnapshot(
+      query(collection(db, 'attendance'), where('sessionId', '==', selectedSessionId)),
+      (snapshot) => {
+        const nextAttendance = snapshot.docs.map((attendanceDoc) => ({
+          id: attendanceDoc.id,
+          ...attendanceDoc.data(),
+        } as Attendance));
+
+        setAttendanceRecords(nextAttendance);
+      },
+      (error) => {
+        console.error('Error fetching attendance records:', error);
+        setAttendanceRecords([]);
+      }
+    );
+
+    return () => unsubscribeAttendance();
+  }, [selectedSessionId]);
+
+  const allStudents = useMemo(() => {
+    const allStudentIds = Array.from(
+      new Set([...Object.keys(studentProfiles), ...Object.keys(studentDocs)])
+    );
+
+    return allStudentIds
+      .map((studentId) => {
+        const profileRecord = studentProfiles[studentId];
+        const studentRecord = studentDocs[studentId];
+        const fallbackName =
+          profileRecord?.email?.split('@')[0] ||
+          studentRecord?.email?.split('@')[0] ||
+          'Student';
+
+        return {
+          ...studentRecord,
+          uid: studentId,
+          name: profileRecord?.name || studentRecord?.name || fallbackName,
+          email: profileRecord?.email || studentRecord?.email || 'No email available',
+          batchId: studentRecord?.batchId || studentRecord?.batchInfo?.batchId,
+          batchName:
+            studentRecord?.batchName ||
+            batches[studentRecord?.batchId || studentRecord?.batchInfo?.batchId || '']?.name ||
+            '',
+        } as StudentRosterRecord;
+      })
+      .filter((student) => Boolean(student.batchId))
+      .sort((left, right) => left.name.localeCompare(right.name));
+  }, [batches, studentDocs, studentProfiles]);
+
+  const selectedSession = useMemo(
+    () => sessions.find((session) => session.id === selectedSessionId) || null,
+    [selectedSessionId, sessions]
+  );
+
+  const attendanceByStudentId = useMemo(
+    () =>
+      attendanceRecords.reduce((accumulator, record) => {
+        accumulator[record.studentUid || record.studentId || ''] = record;
+        return accumulator;
+      }, {} as Record<string, Attendance>),
+    [attendanceRecords]
+  );
+
+  const sessionBatchStudents = useMemo(() => {
+    if (!selectedSession?.batchId) {
+      return [];
+    }
+
+    return allStudents.filter((student) => {
+      const studentBatchId = student.batchId || student.batchInfo?.batchId;
+      return studentBatchId === selectedSession.batchId;
+    });
+  }, [allStudents, selectedSession?.batchId]);
+
+  useEffect(() => {
+    if (!selectedSessionId) {
+      setAttendanceDrafts({});
+      setSaveError(null);
+      setSaveSuccess(false);
+      return;
+    }
+
+    const nextDrafts = sessionBatchStudents.reduce((accumulator, student) => {
+      const existingRecord = attendanceByStudentId[student.uid];
+      accumulator[student.uid] = {
+        status: existingRecord?.status,
+        notes: existingRecord?.notes || '',
+      };
+      return accumulator;
+    }, {} as Record<string, AttendanceDraft>);
+
+    setAttendanceDrafts(nextDrafts);
+    setSaveError(null);
+    setSaveSuccess(false);
+  }, [attendanceByStudentId, selectedSessionId, sessionBatchStudents]);
+
+  const filteredStudents = useMemo(() => {
+    return sessionBatchStudents.filter((student) => {
+      const draft = attendanceDrafts[student.uid];
+      const effectiveStatus = draft?.status || attendanceByStudentId[student.uid]?.status;
+      const matchesSearch =
+        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        student.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'not_marked' ? !effectiveStatus : effectiveStatus === statusFilter);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [attendanceByStudentId, attendanceDrafts, searchTerm, sessionBatchStudents, statusFilter]);
+
+  const tableRows = useMemo<AttendanceTableRow[]>(() => {
+    const batchName =
+      batches[selectedSession?.batchId || '']?.name ||
+      selectedSession?.batchId ||
+      'Unassigned batch';
+    const sessionDateLabel = formatAttendanceDateTime(getSessionDateValue(selectedSession));
+
+    return filteredStudents.map((student) => ({
+      studentId: student.uid,
+      studentName: student.name,
+      studentEmail: student.email,
+      batchName,
+      sessionTitle: selectedSession?.title || 'Live Session',
+      dateLabel: sessionDateLabel,
+      status: attendanceDrafts[student.uid]?.status,
+      notes: attendanceDrafts[student.uid]?.notes || '',
+    }));
+  }, [attendanceDrafts, batches, filteredStudents, selectedSession]);
+
+  const sessionSummary = useMemo(() => {
+    return buildAttendanceSummary(
+      sessionBatchStudents
+        .map((student) => attendanceDrafts[student.uid]?.status)
+        .filter((status): status is AttendanceStatus => Boolean(status))
+        .map((status) => ({ status }))
+    );
+  }, [attendanceDrafts, sessionBatchStudents]);
+
+  const markedCount = useMemo(
+    () => sessionBatchStudents.filter((student) => attendanceDrafts[student.uid]?.status).length,
+    [attendanceDrafts, sessionBatchStudents]
+  );
+
+  const hasDraftChanges = useMemo(
+    () =>
+      sessionBatchStudents.some((student) => {
+        const existingRecord = attendanceByStudentId[student.uid];
+        const draft = attendanceDrafts[student.uid];
+
+        return (
+          (draft?.status || null) !== (existingRecord?.status || null) ||
+          (draft?.notes?.trim() || '') !== (existingRecord?.notes?.trim() || '')
+        );
+      }),
+    [attendanceByStudentId, attendanceDrafts, sessionBatchStudents]
+  );
+
+  const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
+    setAttendanceDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [studentId]: {
+        status,
+        notes: currentDrafts[studentId]?.notes || '',
+      },
+    }));
+    setSaveSuccess(false);
   };
 
-  const handleToggleAttendance = async (isOpen: boolean) => {
-    if (!selectedSession) return;
+  const handleNotesChange = (studentId: string, notes: string) => {
+    setAttendanceDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [studentId]: {
+        status: currentDrafts[studentId]?.status,
+        notes,
+      },
+    }));
+    setSaveSuccess(false);
+  };
+
+  const handleResetRow = (studentId: string) => {
+    const existingRecord = attendanceByStudentId[studentId];
+
+    setAttendanceDrafts((currentDrafts) => ({
+      ...currentDrafts,
+      [studentId]: {
+        status: existingRecord?.status,
+        notes: existingRecord?.notes || '',
+      },
+    }));
+    setSaveSuccess(false);
+  };
+
+  const syncStudentAttendanceSummary = async (
+    student: StudentRosterRecord,
+    fallbackBatchId?: string
+  ) => {
+    const attendanceSnapshot = await getDocs(
+      query(collection(db, 'attendance'), where('studentUid', '==', student.uid))
+    );
+
+    const studentAttendance = attendanceSnapshot.docs.map((attendanceDoc) => ({
+      id: attendanceDoc.id,
+      ...attendanceDoc.data(),
+    } as Attendance));
+
+    const summary = buildAttendanceSummary(studentAttendance);
+    const latestAttendanceDate = studentAttendance
+      .map((record) => getAttendanceDateValue(record))
+      .filter(isValidDateValue)
+      .sort((left, right) => right.getTime() - left.getTime())[0];
+    const studentBatchId = student.batchId || student.batchInfo?.batchId || fallbackBatchId || '';
+    const studentBatchName =
+      student.batchName ||
+      batches[studentBatchId]?.name ||
+      batches[fallbackBatchId || '']?.name ||
+      '';
+
+    await setDoc(
+      doc(db, 'students', student.uid),
+      {
+        batchId: studentBatchId,
+        batchName: studentBatchName,
+        batchInfo: {
+          ...(student.batchInfo || {}),
+          batchId: studentBatchId,
+          joinedAt: student.batchInfo?.joinedAt || serverTimestamp(),
+          currentWeek: student.batchInfo?.currentWeek || 1,
+          progressPercent: student.batchInfo?.progressPercent || 0,
+          attendanceRate: summary.attendanceRate,
+          lastAttendanceDate: latestAttendanceDate
+            ? Timestamp.fromDate(latestAttendanceDate)
+            : student.batchInfo?.lastAttendanceDate || null,
+        },
+      },
+      { merge: true }
+    );
+  };
+
+  const handleSaveAttendance = async () => {
+    if (!teacherProfile?.uid || !selectedSession?.id || !selectedSession.batchId) {
+      return;
+    }
+
+    setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
 
     try {
-      const sessionRef = doc(db, 'liveSessions', selectedSession);
-      await updateDoc(sessionRef, {
-        attendanceOpen: isOpen,
-        attendanceClosed: !isOpen
+      const attendanceDate = getSessionDateValue(selectedSession) || new Date();
+      const batchName = batches[selectedSession.batchId]?.name || selectedSession.batchId;
+
+      await Promise.all(
+        sessionBatchStudents.map(async (student) => {
+          const draft = attendanceDrafts[student.uid];
+          if (!draft?.status) {
+            return;
+          }
+
+          const existingRecord = attendanceByStudentId[student.uid];
+          const basePayload = {
+            sessionId: selectedSession.id,
+            sessionTitle: selectedSession.title || 'Live Session',
+            lessonId: selectedSession.lessonId || '',
+            studentUid: student.uid,
+            studentId: student.uid,
+            studentName: student.name,
+            teacherId: teacherProfile.uid,
+            teacherName: teacherProfile.name || teacherProfile.email || 'Teacher',
+            batchId: selectedSession.batchId || student.batchId || '',
+            batch: batchName,
+            date: attendanceDate.toISOString(),
+            status: draft.status,
+            notes: draft.notes.trim(),
+            markedAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            markedBy: teacherProfile.uid,
+            autoMarked: false,
+          };
+
+          if (existingRecord?.id) {
+            await setDoc(
+              doc(db, 'attendance', existingRecord.id),
+              {
+                ...basePayload,
+                createdAt: existingRecord.createdAt || serverTimestamp(),
+              },
+              { merge: true }
+            );
+            return;
+          }
+
+          await addDoc(collection(db, 'attendance'), {
+            ...basePayload,
+            createdAt: serverTimestamp(),
+          });
+        })
+      );
+
+      await Promise.all(
+        sessionBatchStudents.map((student) =>
+          syncStudentAttendanceSummary(student, selectedSession.batchId)
+        )
+      );
+
+      setSaveSuccess(true);
+    } catch (error) {
+      console.error('Error saving attendance records:', error);
+      setSaveError(error instanceof Error ? error.message : 'Failed to save attendance records');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleToggleAttendance = async () => {
+    if (!selectedSessionId || !selectedSession) {
+      return;
+    }
+
+    setToggleLoading(true);
+
+    try {
+      await updateDoc(doc(db, 'liveSessions', selectedSessionId), {
+        attendanceOpen: !selectedSession.attendanceOpen,
+        attendanceClosed: selectedSession.attendanceOpen,
       });
-    } catch (err) {
-      console.error('Error toggling attendance:', err);
-      alert('Failed to toggle attendance');
+    } catch (error) {
+      console.error('Error toggling attendance state:', error);
+      setSaveError('Failed to update attendance state for this session');
+    } finally {
+      setToggleLoading(false);
     }
   };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'present': return <CheckCircle className="text-green-500" size={20} />;
-      case 'late': return <AlertCircle className="text-yellow-500" size={20} />;
-      case 'absent': return <XCircle className="text-red-500" size={20} />;
-      case 'excused': return <AlertCircle className="text-blue-500" size={20} />;
-      default: return <AlertCircle className="text-gray-500" size={20} />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'present': return 'bg-green-500/20 text-green-400 border-green-500/30';
-      case 'late': return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
-      case 'absent': return 'bg-red-500/20 text-red-400 border-red-500/30';
-      case 'excused': return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
-      default: return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
-    }
-  };
-
-  const getSessionInfo = (sessionId: string) => {
-    const session = sessions.find(s => s.id === sessionId);
-    const lesson = lessons.find(l => l.id === session?.lessonId);
-    const batch = batches.find(b => b.id === session?.batchId);
-    
-    return { session, lesson, batch };
-  };
-
-  const getBatchStudents = (batchId: string) => {
-    return students.filter(student => student.batchId === batchId);
-  };
-
-  const currentSession = sessions.find(s => s.id === selectedSession);
-  const sessionInfo = currentSession ? getSessionInfo(currentSession.id) : null;
-  const batchStudents = sessionInfo?.batch ? getBatchStudents(sessionInfo.batch.id) : [];
-
-  // Calculate attendance summary
-  const attendanceSummary = attendance.reduce((acc, record) => {
-    acc.total++;
-    if (record.status === 'present') acc.present++;
-    else if (record.status === 'late') acc.late++;
-    else if (record.status === 'absent') acc.absent++;
-    else if (record.status === 'excused') acc.excused++;
-    return acc;
-  }, { total: 0, present: 0, late: 0, absent: 0, excused: 0 });
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#6324eb]"></div>
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-t-2 border-[#6324eb]" />
       </div>
     );
   }
@@ -301,200 +538,230 @@ export const TeacherAttendancePage_Simple: React.FC = () => {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="p-4 space-y-8 max-w-7xl mx-auto w-full pb-24"
+      className="mx-auto w-full max-w-7xl space-y-6 p-6"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Attendance Management</h2>
-          <p className="text-slate-400 font-medium">Track and manage student attendance for live sessions.</p>
-        </div>
+      <div className="rounded-xl border border-gray-200 bg-white p-6">
+        <h1 className="mb-2 text-3xl font-semibold tracking-tight text-black">
+          Attendance Management
+        </h1>
+        <p className="text-gray-700">
+          Select a live class, mark students quickly, add notes when needed, and save one clean attendance sheet.
+        </p>
       </div>
 
-      {/* Session Selection */}
-      <div className="flex items-center gap-4">
-        <div className="flex-1 max-w-md">
-          <select
-            value={selectedSession}
-            onChange={(e) => setSelectedSession(e.target.value)}
-            className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
-          >
-            <option value="">Select a session to manage attendance</option>
-            {sessions.map(session => {
-              const lesson = lessons.find(l => l.id === session.lessonId);
-              const batch = batches.find(b => b.id === session.batchId);
-              return (
+      <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-1 flex-col gap-3 md:flex-row">
+            <select
+              value={selectedSessionId}
+              onChange={(event) => setSelectedSessionId(event.target.value)}
+              className="w-full rounded-xl border border-gray-300 px-4 py-3 text-black focus:border-purple-500 focus:outline-none md:max-w-xl"
+            >
+              <option value="">Select a live class/session</option>
+              {sessions.map((session) => (
                 <option key={session.id} value={session.id}>
-                  {lesson?.title || 'Unknown Lesson'} - {batch?.name || 'Unknown Batch'} ({session.status})
+                  {(session.title || 'Live Session')} ·{' '}
+                  {batches[session.batchId || '']?.name || session.batchId || 'Batch'} ·{' '}
+                  {formatAttendanceDateTime(getSessionDateValue(session))}
                 </option>
-              );
-            })}
-          </select>
+              ))}
+            </select>
+
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedSessionId('');
+                setSearchTerm('');
+                setStatusFilter('all');
+                setSaveError(null);
+                setSaveSuccess(false);
+              }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-gray-300 px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50"
+            >
+              <RefreshCw size={18} />
+              Reset
+            </button>
+          </div>
+
+          <PrimaryButton
+            onClick={handleSaveAttendance}
+            disabled={!selectedSession || saving || !hasDraftChanges}
+            className="inline-flex items-center justify-center gap-2 px-5 py-3"
+          >
+            <Save size={18} />
+            {saving ? 'Saving Attendance...' : 'Save Attendance Records'}
+          </PrimaryButton>
         </div>
-        <button
-          onClick={() => setSelectedSession('')}
-          className="px-4 py-4 bg-white/5 border border-white/10 rounded-xl text-white hover:bg-white/10 transition-colors"
-        >
-          <RefreshCw size={18} />
-        </button>
       </div>
 
-      {selectedSession && currentSession && (
+      {selectedSession ? (
         <>
-          {/* Session Info and Controls */}
-          <GlassCard className="p-6 border border-white/5">
-            <div className="flex items-center justify-between mb-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                <Users size={22} />
+              </div>
+              <p className="text-sm text-gray-700">Students in Batch</p>
+              <p className="mt-1 text-2xl font-semibold tracking-tight text-black">
+                {sessionBatchStudents.length}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600">
+                <CheckCircle2 size={22} />
+              </div>
+              <p className="text-sm text-gray-700">Present</p>
+              <p className="mt-1 text-2xl font-semibold tracking-tight text-black">
+                {sessionSummary.present}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-red-100 text-red-600">
+                <XCircle size={22} />
+              </div>
+              <p className="text-sm text-gray-700">Absent</p>
+              <p className="mt-1 text-2xl font-semibold tracking-tight text-black">
+                {sessionSummary.absent}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                <Clock size={22} />
+              </div>
+              <p className="text-sm text-gray-700">Late</p>
+              <p className="mt-1 text-2xl font-semibold tracking-tight text-black">
+                {sessionSummary.late}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                <Calendar size={22} />
+              </div>
+              <p className="text-sm text-gray-700">Attendance Rate</p>
+              <p className="mt-1 text-2xl font-semibold tracking-tight text-black">
+                {sessionSummary.attendanceRate.toFixed(1)}%
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
-                <h3 className="text-xl font-bold text-white mb-2">{currentSession.title}</h3>
-                <p className="text-slate-400">
-                  {sessionInfo?.lesson?.title} • {sessionInfo?.batch?.name}
+                <h2 className="text-xl font-semibold tracking-tight text-black">
+                  {selectedSession.title || 'Live Session'}
+                </h2>
+                <p className="mt-1 text-gray-700">
+                  {batches[selectedSession.batchId || '']?.name || selectedSession.batchId || 'Batch'} ·{' '}
+                  {formatAttendanceDateTime(getSessionDateValue(selectedSession))}
                 </p>
-                <div className="flex items-center gap-4 mt-2 text-sm text-slate-400">
-                  <span className={`px-2 py-1 text-xs font-bold text-white rounded-full ${
-                    currentSession.status === 'live' ? 'bg-red-500' : 'bg-gray-500'
-                  }`}>
-                    {currentSession.status.toUpperCase()}
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-sm text-gray-500">
+                  <span className="rounded-full bg-gray-100 px-3 py-1 font-medium text-gray-700">
+                    {selectedSession.status?.toUpperCase() || 'SCHEDULED'}
                   </span>
-                  {currentSession.startedAt && (
-                    <span>Started: {currentSession.startedAt.toDate().toLocaleTimeString()}</span>
-                  )}
+                  <span>{markedCount} of {sessionBatchStudents.length} students marked</span>
                 </div>
               </div>
-              
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleToggleAttendance(!currentSession.attendanceOpen)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                    currentSession.attendanceOpen
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                  }`}
+
+              <button
+                type="button"
+                onClick={handleToggleAttendance}
+                disabled={toggleLoading}
+                className={`inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm font-medium transition-colors ${
+                  selectedSession.attendanceOpen
+                    ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                    : 'border-gray-200 bg-gray-50 text-gray-700'
+                }`}
+              >
+                {selectedSession.attendanceOpen ? <DoorOpen size={18} /> : <DoorClosed size={18} />}
+                {toggleLoading
+                  ? 'Updating...'
+                  : selectedSession.attendanceOpen
+                    ? 'Attendance Open'
+                    : 'Attendance Closed'}
+              </button>
+            </div>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-6">
+            <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight text-black">Attendance Table</h2>
+                <p className="mt-1 text-gray-700">
+                  Mark students as Present, Absent, Late, or Excused and save the sheet when you are done.
+                </p>
+              </div>
+
+              <div className="flex flex-col gap-3 md:flex-row">
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Search student"
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                    className="rounded-xl border border-gray-300 py-2.5 pl-9 pr-4 text-sm text-black placeholder:text-gray-400 focus:border-purple-500 focus:outline-none"
+                  />
+                </div>
+
+                <select
+                  value={statusFilter}
+                  onChange={(event) =>
+                    setStatusFilter(event.target.value as 'all' | AttendanceStatus | 'not_marked')
+                  }
+                  className="rounded-xl border border-gray-300 px-4 py-2.5 text-sm text-black focus:border-purple-500 focus:outline-none"
                 >
-                  {currentSession.attendanceOpen ? <DoorOpen size={20} /> : <DoorClosed size={20} />}
-                  {currentSession.attendanceOpen ? 'Attendance Open' : 'Attendance Closed'}
-                </button>
+                  <option value="all">All statuses</option>
+                  <option value="present">Present</option>
+                  <option value="absent">Absent</option>
+                  <option value="late">Late</option>
+                  <option value="excused">Excused</option>
+                  <option value="not_marked">Not marked</option>
+                </select>
               </div>
             </div>
 
-            {/* Attendance Summary */}
-            {attendance.length > 0 && (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="text-center p-4 bg-white/5 rounded-xl">
-                  <div className="text-2xl font-bold text-white">{attendanceSummary.total}</div>
-                  <div className="text-sm text-slate-400">Total Students</div>
-                </div>
-                <div className="text-center p-4 bg-green-500/10 rounded-xl">
-                  <div className="text-2xl font-bold text-green-400">{attendanceSummary.present}</div>
-                  <div className="text-sm text-slate-400">Present</div>
-                </div>
-                <div className="text-center p-4 bg-yellow-500/10 rounded-xl">
-                  <div className="text-2xl font-bold text-yellow-400">{attendanceSummary.late}</div>
-                  <div className="text-sm text-slate-400">Late</div>
-                </div>
-                <div className="text-center p-4 bg-red-500/10 rounded-xl">
-                  <div className="text-2xl font-bold text-red-400">{attendanceSummary.absent}</div>
-                  <div className="text-sm text-slate-400">Absent</div>
-                </div>
-              </div>
-            )}
-          </GlassCard>
-
-          {/* Attendance List */}
-          <GlassCard className="p-6 border border-white/5">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-white">Student Attendance</h3>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search students..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-[#6324eb]"
-                />
-              </div>
-            </div>
-
-            {!currentSession.attendanceOpen && (
-              <div className="text-center py-8 mb-6 bg-orange-500/10 rounded-xl border border-orange-500/30">
-                <DoorClosed className="mx-auto text-orange-400 mb-2" size={32} />
-                <h4 className="text-lg font-bold text-white mb-2">Attendance is Closed</h4>
-                <p className="text-slate-400">Open attendance to allow students to join and track their presence.</p>
+            {saveError && (
+              <div className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                {saveError}
               </div>
             )}
 
-            <div className="space-y-3">
-              {batchStudents
-                .filter(student => 
-                  student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  student.email.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-                .map((student) => {
-                  const studentAttendance = attendance.find(a => a.studentUid === student.uid);
-                  const status = studentAttendance?.status || 'not_marked';
-                  
-                  return (
-                    <div
-                      key={student.uid}
-                      className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-[#6324eb]/10 flex items-center justify-center">
-                          <Users className="text-[#6324eb]" size={20} />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-white">{student.name}</h4>
-                          <p className="text-sm text-slate-400">{student.email}</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center gap-3">
-                        <div className={`flex items-center gap-2 px-3 py-1 rounded-lg border ${getStatusColor(status)}`}>
-                          {getStatusIcon(status)}
-                          <span className="text-sm font-medium">
-                            {status === 'not_marked' ? 'Not Marked' : status.charAt(0).toUpperCase() + status.slice(1)}
-                          </span>
-                        </div>
-                        
-                        {currentSession.attendanceOpen && (
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => handleMarkAttendance(student.uid, 'present')}
-                              className="p-2 rounded bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                              title="Mark Present"
-                            >
-                              <CheckCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleMarkAttendance(student.uid, 'late')}
-                              className="p-2 rounded bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
-                              title="Mark Late"
-                            >
-                              <AlertCircle size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleMarkAttendance(student.uid, 'absent')}
-                              className="p-2 rounded bg-red-500/20 text-red-400 hover:bg-red-500/30"
-                              title="Mark Absent"
-                            >
-                              <XCircle size={16} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-            </div>
-          </GlassCard>
+            {saveSuccess && (
+              <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                Attendance saved successfully.
+              </div>
+            )}
+
+            {!selectedSession.attendanceOpen && (
+              <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+                Attendance is currently closed for this session. You can still prepare marks and notes, then save them when ready.
+              </div>
+            )}
+
+            <AttendanceTable
+              rows={tableRows}
+              disabled={saving}
+              onStatusChange={handleStatusChange}
+              onNotesChange={handleNotesChange}
+              onResetRow={handleResetRow}
+              emptyMessage="No students match the current search/filter for this session."
+            />
+          </div>
         </>
-      )}
-
-      {!selectedSession && (
-        <div className="text-center py-24 bg-white/[0.02] rounded-3xl border border-dashed border-white/10">
-          <AttendanceIcon size={48} className="mx-auto text-slate-500/50 mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">Select a Session</h3>
-          <p className="text-slate-500">Choose a live session to manage attendance.</p>
+      ) : (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-16 text-center">
+          <AlertCircle size={42} className="mx-auto mb-4 text-gray-400" />
+          <h2 className="text-xl font-semibold tracking-tight text-black">Select a live class to begin</h2>
+          <p className="mt-2 text-gray-700">
+            Once you choose a session, the platform will load the assigned batch roster and your saved attendance records.
+          </p>
         </div>
       )}
     </motion.div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Mail, Phone, Briefcase, Save, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -90,12 +90,12 @@ export const TeacherProfilePage: React.FC = () => {
       <div className="flex items-center gap-4 mb-8">
         <button
           onClick={() => navigate('/teacher/dashboard')}
-          className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+          className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-black hover:bg-white/10 transition-colors"
         >
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h1 className="text-3xl font-black text-white mb-2 tracking-tight">Profile Settings</h1>
+          <h1 className="text-3xl font-semibold text-black mb-2 tracking-tight">Profile Settings</h1>
           <p className="text-slate-400 font-medium">Manage your teacher profile information</p>
         </div>
       </div>
@@ -112,10 +112,10 @@ export const TeacherProfilePage: React.FC = () => {
           {/* Profile Picture */}
           <div className="flex items-center gap-6">
             <div className="w-24 h-24 bg-purple-600 rounded-full flex items-center justify-center">
-              <User size={40} className="text-white" />
+              <User size={40} className="text-black" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white mb-2">Profile Picture</h3>
+              <h3 className="text-xl font-semibold text-black mb-2">Profile Picture</h3>
               <p className="text-slate-400 mb-4">Upload a professional headshot</p>
               <button className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">
                 Change Photo
@@ -125,7 +125,7 @@ export const TeacherProfilePage: React.FC = () => {
 
           {/* Basic Information */}
           <div>
-            <h3 className="text-xl font-semibold text-white mb-6">Basic Information</h3>
+            <h3 className="text-xl font-semibold text-black mb-6">Basic Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-400 mb-2">
@@ -136,7 +136,7 @@ export const TeacherProfilePage: React.FC = () => {
                   type="text"
                   value={formData.name}
                   onChange={(e) => handleInputChange('name', e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-black placeholder:text-gray-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -165,7 +165,7 @@ export const TeacherProfilePage: React.FC = () => {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange('phone', e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-black placeholder:text-gray-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors"
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
@@ -179,7 +179,7 @@ export const TeacherProfilePage: React.FC = () => {
                   type="text"
                   value={formData.title}
                   onChange={(e) => handleInputChange('title', e.target.value)}
-                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors"
+                  className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-black placeholder:text-gray-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors"
                   placeholder="e.g. Senior English Teacher"
                 />
               </div>
@@ -195,14 +195,14 @@ export const TeacherProfilePage: React.FC = () => {
               value={formData.bio}
               onChange={(e) => handleInputChange('bio', e.target.value)}
               rows={4}
-              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors resize-none"
+              className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg text-black placeholder:text-gray-500 focus:outline-none focus:border-purple-500 focus:bg-white/10 transition-colors resize-none"
               placeholder="Tell us about your teaching experience, expertise, and approach..."
             />
           </div>
 
           {/* Account Information */}
           <div>
-            <h3 className="text-xl font-semibold text-white mb-6">Account Information</h3>
+            <h3 className="text-xl font-semibold text-black mb-6">Account Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-slate-400 mb-2">
@@ -239,7 +239,7 @@ export const TeacherProfilePage: React.FC = () => {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/teacher/dashboard')}
-                className="px-6 py-3 bg-white/5 text-white rounded-lg hover:bg-white/10 transition-colors"
+                className="px-6 py-3 bg-white/5 text-black rounded-lg hover:bg-white/10 transition-colors"
               >
                 Cancel
               </button>
@@ -258,3 +258,4 @@ export const TeacherProfilePage: React.FC = () => {
     </div>
   );
 };
+

@@ -1,233 +1,515 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { TopBar, BottomNav } from './components/Navigation';
-import { RoleBasedLayout } from './components/RoleBasedLayout';
-import { StudentDashboard_Premium as StudentDashboard } from './pages/StudentDashboard_Premium';
-import { TodaysLearning } from './pages/TodaysLearning';
-import { AuthProvider, useAuth } from './hooks/useAuth';
-import { AuthPage } from './pages/AuthPage';
-
-import { LiveClassesPage } from './pages/LiveClassesPage';
-import { AssignmentsPage } from './pages/AssignmentsPage';
-import { ResourcesPage } from './pages/ResourcesPage';
-import { ProgressPage } from './pages/ProgressPage';
-import { NotificationsPage } from './pages/NotificationsPage';
-
-import { EnrollmentPage } from './pages/EnrollmentPage';
-import { BreemicEnrollmentPage } from './pages/BreemicEnrollmentPage';
-import { TestPage } from './pages/TestPage';
-import { StudentOnboardingDashboard } from './pages/StudentOnboardingDashboard';
-import { StudentApprovalPanel } from './pages/StudentApprovalPanel';
-import { PaymentPage } from './pages/PaymentPage';
+import React, { Suspense, lazy } from 'react';
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { ApprovalGuard } from './components/ApprovalGuard';
-import { PaymentPendingPage } from './pages/PaymentPendingPage';
-import { ExamBookingPage } from './pages/ExamBookingPage';
-
-import { CreateAssignmentPage } from './pages/CreateAssignmentPage';
-import { AdminDashboard } from './pages/AdminDashboard';
-import { ProfilePage } from './pages/ProfilePage';
-import { TeacherStudentsPage } from './pages/TeacherStudentsPage_Minimal';
-import { TeacherProfilePage } from './pages/TeacherProfilePage';
-import { TeacherLessonsPage } from './pages/TeacherLessonsPage';
-import { TeacherAttendancePage } from './pages/TeacherAttendancePage';
-import { TeacherAssignmentsPage } from './pages/TeacherAssignmentsPage';
-import { TeacherDashboard } from './pages/TeacherDashboard_New';
-import { TeacherCoursesPage } from './pages/TeacherCoursesPage';
-import { TeacherModulesPage } from './pages/TeacherModulesPage';
-import { TeacherApprovalsPage_Batch } from './pages/TeacherApprovalsPage_Batch';
-import { TeacherTasksPage } from './pages/TeacherTasksPage';
-import { TeacherExamsPage } from './pages/TeacherExamsPage';
-import { StudentProfilePage } from './pages/StudentProfilePage';
-import { TeacherBatchesPage } from './pages/TeacherBatchesPage';
-import { TeacherBatchLessonsPage } from './pages/TeacherBatchLessonsPage';
-import { TeacherLiveSessionPage } from './pages/TeacherLiveSessionPage';
-import { StudentBatchView } from './pages/StudentBatchView';
-import { TeacherBatchesPage_Simple } from './pages/TeacherBatchesPage_Simple';
-import { TeacherBatchesPage_Quick } from './pages/TeacherBatchesPage_Quick';
-import { TeacherBatchDetailsPage } from './pages/TeacherBatchDetailsPage';
-import { TeacherLessonDetailsPage } from './pages/TeacherLessonDetailsPage';
-import { TeacherLessonsPage_Simple } from './pages/TeacherLessonsPage_Simple';
-import { TeacherLiveClassesPage_Simple } from './pages/TeacherLiveClassesPage_Simple';
-import { TeacherAttendancePage_Simple } from './pages/TeacherAttendancePage_Simple';
-
-import { ForcePasswordChangePage } from './pages/ForcePasswordChangePage';
-import { seedInitialData } from './services/seedData';
+import { RoleBasedLayout } from './components/RoleBasedLayout';
 import { ToastProvider } from './components/Toast';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({ children, allowedRoles }) => {
+const lazyNamed = <T extends Record<string, unknown>>(
+  factory: () => Promise<T>,
+  key: keyof T
+) =>
+  lazy(() =>
+    factory().then((module) => ({
+      default: module[key] as React.ComponentType<any>,
+    }))
+  );
+
+const AuthPage = lazyNamed(() => import('./pages/AuthPage'), 'AuthPage');
+const StudentDashboard = lazyNamed(
+  () => import('./pages/StudentDashboard_Premium'),
+  'StudentDashboard_Premium'
+);
+const TodaysLearning = lazyNamed(() => import('./pages/TodaysLearning'), 'TodaysLearning');
+const LiveClassesPage = lazyNamed(() => import('./pages/LiveClassesPage'), 'LiveClassesPage');
+const AssignmentsPage = lazyNamed(() => import('./pages/AssignmentsPage'), 'AssignmentsPage');
+const ResourcesPage = lazyNamed(() => import('./pages/ResourcesPage'), 'ResourcesPage');
+const ProgressPage = lazyNamed(() => import('./pages/ProgressPage'), 'ProgressPage');
+const NotificationsPage = lazyNamed(() => import('./pages/NotificationsPage'), 'NotificationsPage');
+const BreemicEnrollmentPage = lazyNamed(
+  () => import('./pages/BreemicEnrollmentPage'),
+  'BreemicEnrollmentPage'
+);
+const StudentOnboardingDashboard = lazyNamed(
+  () => import('./pages/StudentOnboardingDashboard'),
+  'StudentOnboardingDashboard'
+);
+const PaymentPage = lazyNamed(() => import('./pages/PaymentPage'), 'PaymentPage');
+const ExamBookingPage = lazyNamed(() => import('./pages/ExamBookingPage'), 'ExamBookingPage');
+const AdminDashboard = lazyNamed(() => import('./pages/AdminDashboard'), 'AdminDashboard');
+const ProfilePage = lazyNamed(() => import('./pages/ProfilePage'), 'ProfilePage');
+const TeacherStudentsPage = lazyNamed(
+  () => import('./pages/TeacherStudentsPage_Minimal'),
+  'TeacherStudentsPage'
+);
+const TeacherProfilePage = lazyNamed(
+  () => import('./pages/TeacherProfilePage'),
+  'TeacherProfilePage'
+);
+const TeacherDashboard = lazyNamed(
+  () => import('./pages/TeacherDashboard_New'),
+  'TeacherDashboard'
+);
+const TeacherCoursesPage = lazyNamed(
+  () => import('./pages/TeacherCoursesPage'),
+  'TeacherCoursesPage'
+);
+const TeacherModulesPage = lazyNamed(
+  () => import('./pages/TeacherModulesPage'),
+  'TeacherModulesPage'
+);
+const TeacherApprovalsPageBatch = lazyNamed(
+  () => import('./pages/TeacherApprovalsPage_Batch'),
+  'TeacherApprovalsPage_Batch'
+);
+const TeacherTasksPage = lazyNamed(() => import('./pages/TeacherTasksPage'), 'TeacherTasksPage');
+const TeacherExamsPage = lazyNamed(() => import('./pages/TeacherExamsPage'), 'TeacherExamsPage');
+const StudentProfilePage = lazyNamed(
+  () => import('./pages/StudentProfilePage'),
+  'StudentProfilePage'
+);
+const TeacherBatchLessonsPage = lazyNamed(
+  () => import('./pages/TeacherBatchLessonsPage'),
+  'TeacherBatchLessonsPage'
+);
+const TeacherLiveSessionPage = lazyNamed(
+  () => import('./pages/TeacherLiveSessionPage'),
+  'TeacherLiveSessionPage'
+);
+const StudentBatchView = lazyNamed(() => import('./pages/StudentBatchView'), 'StudentBatchView');
+const TeacherBatchesPageQuick = lazyNamed(
+  () => import('./pages/TeacherBatchesPage_Quick'),
+  'TeacherBatchesPage_Quick'
+);
+const TeacherBatchDetailsPage = lazyNamed(
+  () => import('./pages/TeacherBatchDetailsPage'),
+  'TeacherBatchDetailsPage'
+);
+const TeacherLessonDetailsPage = lazyNamed(
+  () => import('./pages/TeacherLessonDetailsPage'),
+  'TeacherLessonDetailsPage'
+);
+const TeacherLessonsPageSimple = lazyNamed(
+  () => import('./pages/TeacherLessonsPage_Simple'),
+  'TeacherLessonsPage_Simple'
+);
+const TeacherLiveClassesPageSimple = lazyNamed(
+  () => import('./pages/TeacherLiveClassesPage_Simple'),
+  'TeacherLiveClassesPage_Simple'
+);
+const TeacherAttendancePageSimple = lazyNamed(
+  () => import('./pages/TeacherAttendancePage_Simple'),
+  'TeacherAttendancePage_Simple'
+);
+const StudentLiveClassesPage = lazyNamed(
+  () => import('./pages/StudentLiveClassesPage'),
+  'StudentLiveClassesPage'
+);
+const TeacherLiveClassAttendancePage = lazyNamed(
+  () => import('./pages/TeacherLiveClassAttendancePage'),
+  'TeacherLiveClassAttendancePage'
+);
+const ForcePasswordChangePage = lazyNamed(
+  () => import('./pages/ForcePasswordChangePage'),
+  'ForcePasswordChangePage'
+);
+
+const FullScreenLoader: React.FC = () => (
+  <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+  </div>
+);
+
+const getHomePathForRole = (role?: string) => {
+  if (role === 'admin') {
+    return '/admin';
+  }
+
+  if (role === 'teacher') {
+    return '/teacher';
+  }
+
+  return '/dashboard';
+};
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({
+  children,
+  allowedRoles,
+}) => {
   const { user, profile, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="w-8 h-8 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
-  if (!user || !profile) return <Navigate to="/auth" state={{ from: location }} replace />;
-  if (!allowedRoles.includes(profile.role)) return <Navigate to="/" replace />;
+
+  if (!user || !profile) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (!allowedRoles.includes(profile.role)) {
+    return <Navigate to={getHomePathForRole(profile.role)} replace />;
+  }
 
   return <>{children}</>;
 };
 
 const AppContent: React.FC = () => {
-  const { user, profile, studentData, loading, forcePasswordChange } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isCreatingAssignment, setIsCreatingAssignment] = useState(false);
-
-  useEffect(() => {
-    seedInitialData();
-  }, []);
+  const { user, profile, loading, forcePasswordChange } = useAuth();
 
   if (loading) {
+    return <FullScreenLoader />;
+  }
+
+  if (forcePasswordChange) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[var(--ui-bg)]">
-        <div className="size-12 border-4 border-[rgba(var(--ui-accent-rgb)/0.30)] border-t-[var(--ui-accent)] rounded-full animate-spin" />
-      </div>
+      <Suspense fallback={<FullScreenLoader />}>
+        <ForcePasswordChangePage />
+      </Suspense>
     );
   }
 
   if (!user || !profile) {
     return (
-      <Routes>
-        <Route path="/auth" element={<AuthPage />} />
-        <Route path="*" element={<Navigate to="/auth" replace />} />
-      </Routes>
+      <Suspense fallback={<FullScreenLoader />}>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="*" element={<Navigate to="/auth" replace />} />
+        </Routes>
+      </Suspense>
     );
   }
 
-  if (forcePasswordChange) {
-    return <ForcePasswordChangePage />;
-  }
-
-  const userRole = profile.role;
-
   return (
     <RoleBasedLayout>
-      <Routes>
-          {/* Base Redirects */}
-          <Route path="/" element={
-            userRole === 'admin' ? <Navigate to="/admin" replace /> :
-              userRole === 'teacher' ? <Navigate to="/teacher" replace /> :
-                <Navigate to="/dashboard" replace />
-          } />
+      <Suspense fallback={<FullScreenLoader />}>
+        <Routes>
+          <Route path="/" element={<Navigate to={getHomePathForRole(profile.role)} replace />} />
 
-          {/* Teacher Routes */}
-          <Route path="/teacher" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherDashboard /></ProtectedRoute>} />
-          <Route path="/teacher/courses" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherCoursesPage /></ProtectedRoute>} />
-          <Route path="/teacher/modules" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherModulesPage /></ProtectedRoute>} />
-          <Route path="/teacher/batches" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherBatchesPage_Quick /></ProtectedRoute>} />
-          <Route path="/teacher/batches/:batchId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherBatchDetailsPage /></ProtectedRoute>} />
-          <Route path="/teacher/batches/:batchId/lessons" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherBatchLessonsPage /></ProtectedRoute>} />
-          <Route path="/teacher/lessons/:lessonId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLessonDetailsPage /></ProtectedRoute>} />
-          <Route path="/teacher/batches/:batchId/lessons/:lessonId/live" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLiveSessionPage /></ProtectedRoute>} />
-          <Route path="/teacher/lessons" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLessonsPage_Simple /></ProtectedRoute>} />
-          <Route path="/teacher/live-classes" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLiveClassesPage_Simple /></ProtectedRoute>} />
-          <Route path="/teacher/live-session/:sessionId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherLiveSessionPage /></ProtectedRoute>} />
-          <Route path="/teacher/attendance" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherAttendancePage_Simple /></ProtectedRoute>} />
-          <Route path="/teacher/approvals" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherApprovalsPage_Batch /></ProtectedRoute>} />
-          <Route path="/teacher/students" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherStudentsPage /></ProtectedRoute>} />
-          <Route path="/teacher/tasks" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherTasksPage onCreateAssignment={() => setIsCreatingAssignment(true)} /></ProtectedRoute>} />
-          <Route path="/teacher/exams" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherExamsPage /></ProtectedRoute>} />
-          <Route path="/teacher/students/:studentId" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentProfilePage /></ProtectedRoute>} />
-          <Route path="/teacher/profile" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><TeacherProfilePage /></ProtectedRoute>} />
+          <Route
+            path="/teacher"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/teacher/dashboard" element={<Navigate to="/teacher" replace />} />
+          <Route
+            path="/teacher/courses"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherCoursesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/modules"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherModulesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/batches"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherBatchesPageQuick />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/batches/:batchId"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherBatchDetailsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/batches/:batchId/lessons"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherBatchLessonsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/lessons/:lessonId"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLessonDetailsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/batches/:batchId/lessons/:lessonId/live"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLiveSessionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/lessons"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLessonsPageSimple />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/live-classes"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLiveClassesPageSimple />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/live-session/:sessionId"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLiveSessionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/attendance"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherAttendancePageSimple />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/live-attendance"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherLiveClassAttendancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/approvals"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherApprovalsPageBatch />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/students"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherStudentsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/tasks"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherTasksPage onCreateAssignment={() => undefined} />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/teacher/assignments" element={<Navigate to="/teacher/tasks" replace />} />
+          <Route
+            path="/teacher/exams"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherExamsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/students/:studentId"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <StudentProfilePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teacher/profile"
+            element={
+              <ProtectedRoute allowedRoles={['teacher', 'admin']}>
+                <TeacherProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Shared Routes - Live Classes for both teachers and students */}
-          <Route path="/live" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><LiveClassesPage /></ProtectedRoute>} />
+          <Route
+            path="/live"
+            element={
+              <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
+                <LiveClassesPage />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Admin Routes */}
-          <Route path="/admin" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          } />
-          <Route path="/admin/exams" element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <TeacherExamsPage />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/exams"
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <TeacherExamsPage />
+              </ProtectedRoute>
+            }
+          />
 
-          {/* Student Routes */}
-          <Route path="/dashboard" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <StudentOnboardingDashboard />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/courses" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <StudentDashboard />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/student/todays-learning" element={<TodaysLearning />} />
-          
-          <Route path="/batch" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <StudentBatchView />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/batch/:batchId/lessons/:lessonId/live" element={
-            <ProtectedRoute allowedRoles={['student', 'teacher']}>
-              <TeacherLiveSessionPage />
-            </ProtectedRoute>
-          } />
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentOnboardingDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/courses"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <StudentDashboard />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/todays-learning"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <TodaysLearning />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/student/live-classes"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <StudentLiveClassesPage />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/batch"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <StudentBatchView />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/batch/:batchId/lessons/:lessonId/live"
+            element={
+              <ProtectedRoute allowedRoles={['student', 'teacher']}>
+                <TeacherLiveSessionPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exam_booking"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <ExamBookingPage />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tasks"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <AssignmentsPage />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/resources"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <ResourcesPage />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/progress"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <ProgressPage />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <NotificationsPage />
+                </ApprovalGuard>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <PaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <StudentOnboardingDashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/breemic-enrollment"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <BreemicEnrollmentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
 
-          <Route path="/exam_booking" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <ExamBookingPage />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          <Route path="/tasks" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <AssignmentsPage />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          <Route path="/resources" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <ResourcesPage />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          <Route path="/progress" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <ProgressPage />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          <Route path="/notifications" element={
-            <ProtectedRoute allowedRoles={['student']}>
-              <ApprovalGuard>
-                <NotificationsPage />
-              </ApprovalGuard>
-            </ProtectedRoute>
-          } />
-          <Route path="/profile" element={<ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}><ProfilePage /></ProtectedRoute>} />
-
-          {/* Public Routes - MUST be before fallback */}
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/breemic-enrollment" element={<BreemicEnrollmentPage />} />
-          <Route path="/payment" element={<ProtectedRoute allowedRoles={['student']}><PaymentPage /></ProtectedRoute>} />
-          <Route path="/onboarding" element={<ProtectedRoute allowedRoles={['student']}><StudentOnboardingDashboard /></ProtectedRoute>} />
-          <Route path="/onboarding-test" element={<StudentOnboardingDashboard />} />
-                    <Route path="/approvals" element={<ProtectedRoute allowedRoles={['teacher', 'admin']}><StudentApprovalPanel /></ProtectedRoute>} />
-
-          {/* Fallback */}
+          <Route path="/approvals" element={<Navigate to="/teacher/approvals" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+      </Suspense>
     </RoleBasedLayout>
   );
 };

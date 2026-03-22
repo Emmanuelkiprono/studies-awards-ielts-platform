@@ -2,7 +2,7 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { storage } from '../services/firebase';
-import { Upload, FileText, Image, X, CheckCircle2, Loader2 } from 'lucide-react';
+import { Upload, FileText, Image as ImageIcon, X, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface FileUploadProps {
@@ -194,7 +194,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         )}
         <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
           {isImage(fileName) ? (
-            <Image size={18} className="text-emerald-400 shrink-0" />
+            <ImageIcon size={18} className="text-emerald-400 shrink-0" />
           ) : (
             <FileText size={18} className="text-emerald-400 shrink-0" />
           )}
