@@ -1,5 +1,5 @@
 {
-  "routes": [
-    { "src": "/(.*)", "dest": "/" }
+  "rewrites": [
+    { "source": "/((?!assets/|favicon.ico|robots.txt|manifest.webmanifest).*)", "destination": "/" }
   ]
 }
