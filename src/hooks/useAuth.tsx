@@ -5,13 +5,11 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut as firebaseSignOut,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
 } from 'firebase/auth';
-import { doc, getDoc, onSnapshot, setDoc, serverTimestamp, query, where, getDocs, collection } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../services/firebase';
-import { ensureStudentAutoAssignment } from '../lib/studentAssignment';
-import { UserProfile, StudentData, UserRole } from '../types';
-import { NotificationService } from '../services/notificationService';
+import { StudentData, UserProfile } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -35,10 +33,10 @@ const AuthContext = createContext<AuthContextType>({
   forcePasswordChange: false,
   isAdmin: false,
   isTeacher: false,
-  signIn: async () => { },
-  signUp: async () => { },
-  signOut: async () => { },
-  resetPassword: async () => { },
+  signIn: async () => {},
+  signUp: async () => {},
+  signOut: async () => {},
+  resetPassword: async () => {},
 });
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -52,83 +50,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let unsubscribeProfile: (() => void) | undefined;
     let unsubscribeStudent: (() => void) | undefined;
 
-    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('🔐 AUTH: onAuthStateChanged fired, user:', firebaseUser?.uid || 'null');
+    const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
 
-      if (firebaseUser) {
-        // Fetch profile
-        const profileRef = doc(db, 'users', firebaseUser.uid);
-
-        // Use onSnapshot for real-time profile updates
-        unsubscribeProfile = onSnapshot(profileRef, (docSnap) => {
-          if (docSnap.exists()) {
-            const profileData = docSnap.data() as UserProfile & { forcePasswordChange?: boolean };
-            setProfile(profileData);
-            setForcePasswordChange(!!profileData.forcePasswordChange);
-
-            // If student, fetch student data
-            if (profileData.role === 'student') {
-              const studentRef = doc(db, 'students', firebaseUser.uid);
-              if (unsubscribeStudent) unsubscribeStudent(); // Clean up previous if it exists
-              unsubscribeStudent = onSnapshot(studentRef, (sDoc) => {
-                console.log('🔍 USEAUTH: Students collection snapshot triggered for UID:', firebaseUser.uid);
-                if (sDoc.exists()) {
-                  const data = sDoc.data() as StudentData;
-                  console.log('🔍 USEAUTH: Student data received from students collection:', {
-                    uid: data.uid,
-                    onboardingStatus: data.onboardingStatus,
-                    hasPaymentInfo: !!data.paymentInfo,
-                    paymentAmount: data.paymentInfo?.amountPaid,
-                    breemicEnrollmentId: data.breemicEnrollmentId,
-                    lastStatusUpdate: data.lastStatusUpdate?.toDate()?.toISOString(),
-                    timestamp: new Date().toISOString()
-                  });
-                  
-                  // CRITICAL: Check if this is the expected status after enrollment
-                  if (data.onboardingStatus === 'payment_pending') {
-                    console.log('✅ USEAUTH: Student has payment_pending status - dashboard should show payment step');
-                  } else if (data.onboardingStatus === 'account_created') {
-                    console.log('🔍 USEAUTH: Student still has account_created status - enrollment update may have failed');
-                  }
-                  
-                  setStudentData(data);
-                } else {
-                  console.log('❌ USEAUTH: No student document found for UID:', firebaseUser.uid);
-                  console.log('❌ USEAUTH: This means the student document was never created or was deleted');
-                }
-              });
-            }
-          } else {
-            setProfile(null);
-            setForcePasswordChange(false);
-          }
-          // Fix: Ensure setLoading(false) gets called!
-          setLoading(false);
-        });
-      } else {
-        console.log('🔐 AUTH: User logged out, clearing state');
+      if (!firebaseUser) {
         setProfile(null);
         setStudentData(null);
         setForcePasswordChange(false);
         setLoading(false);
+
         if (unsubscribeProfile) {
-          console.log('🔐 AUTH: Unsubscribing from profile listener');
           unsubscribeProfile();
           unsubscribeProfile = undefined;
         }
+
         if (unsubscribeStudent) {
-          console.log('🔐 AUTH: Unsubscribing from student listener');
           unsubscribeStudent();
           unsubscribeStudent = undefined;
         }
+
+        return;
       }
+
+      const profileRef = doc(db, 'users', firebaseUser.uid);
+      unsubscribeProfile = onSnapshot(profileRef, (profileSnapshot) => {
+        if (!profileSnapshot.exists()) {
+          setProfile(null);
+          setStudentData(null);
+          setForcePasswordChange(false);
+          setLoading(false);
+          return;
+        }
+
+        const profileData = profileSnapshot.data() as UserProfile & {
+          forcePasswordChange?: boolean;
+        };
+        setProfile(profileData);
+        setForcePasswordChange(Boolean(profileData.forcePasswordChange));
+
+        if (profileData.role !== 'student') {
+          setStudentData(null);
+          setLoading(false);
+          return;
+        }
+
+        const studentRef = doc(db, 'students', firebaseUser.uid);
+        if (unsubscribeStudent) {
+          unsubscribeStudent();
+        }
+
+        unsubscribeStudent = onSnapshot(studentRef, (studentSnapshot) => {
+          if (studentSnapshot.exists()) {
+            setStudentData(studentSnapshot.data() as StudentData);
+          } else {
+            setStudentData(null);
+          }
+
+          setLoading(false);
+        });
+      });
     });
 
     return () => {
       unsubscribeAuth();
-      if (unsubscribeProfile) unsubscribeProfile();
-      if (unsubscribeStudent) unsubscribeStudent();
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+      if (unsubscribeStudent) {
+        unsubscribeStudent();
+      }
     };
   }, []);
 
@@ -140,10 +130,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
     const newUser = userCredential.user;
 
-    const now = new Date();
-    const eligibleAtIso = new Date(now.getTime() + 28 * 24 * 60 * 60 * 1000).toISOString();
-
-    // Create user profile
     const profileData: UserProfile = {
       uid: newUser.uid,
       name,
@@ -156,93 +142,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     await setDoc(doc(db, 'users', newUser.uid), profileData);
 
-    // Create student data
-    const sData: StudentData = {
+    const studentRecord: StudentData = {
       uid: newUser.uid,
       trainingPaymentStatus: 'pending',
-      trainingStatus: 'locked',
+      trainingStatus: 'inactive',
       examPaymentStatus: 'unpaid',
       examStatus: 'not_eligible',
       preferredLocation: null,
       idUploadUrl: null,
-      courseId: courseId,
+      courseId,
       registrationDate: serverTimestamp(),
-      eligibleExamDate: eligibleAtIso,
-      // Breemic International approval workflow fields
-      onboardingStatus: 'account_created',
+      onboardingStatus: 'signup_complete',
+      enrollmentCompleted: false,
+      accessUnlocked: false,
       lastStatusUpdate: serverTimestamp(),
     };
 
-    await setDoc(doc(db, 'students', newUser.uid), {
-      ...sData,
-      createdAt: serverTimestamp()
-    });
-
-    await ensureStudentAutoAssignment({
-      studentUid: newUser.uid,
-      courseId,
-      studentData: {
-        ...sData,
-        createdAt: now,
+    await setDoc(
+      doc(db, 'students', newUser.uid),
+      {
+        ...studentRecord,
+        createdAt: serverTimestamp(),
       },
-    });
-
-    // Create enrollment record
-    await setDoc(doc(db, 'enrollments', `${newUser.uid}_${courseId}`), {
-      userId: newUser.uid,
-      courseId: courseId,
-      trainingStatus: "locked",
-      paymentStatus: "pending",
-      examStatus: "not_eligible",
-      registeredAt: serverTimestamp(),
-      registrationDate: serverTimestamp(),
-      eligibleAt: eligibleAtIso,
-      eligibleExamDate: eligibleAtIso,
-      programWeeks: 4,
-      createdAt: serverTimestamp()
-    });
-
-    // Notify teacher
-    const teachersQ = query(collection(db, 'users'), where('role', '==', 'teacher'), where('assignedCourseId', '==', courseId));
-    const teachersSnap = await getDocs(teachersQ);
-    for (const teacherDoc of teachersSnap.docs) {
-      await NotificationService.create(
-        teacherDoc.id,
-        'New Student Enrollment',
-        `${name} has enrolled in your course.`,
-        'info',
-        '/students'
-      );
-    }
+      { merge: true }
+    );
   };
 
   const signOut = async () => {
-    console.log('🔐 AUTH: Hard logout initiated');
     try {
-      // Save current user email before clearing
       const currentEmail = auth.currentUser?.email || user?.email;
       if (currentEmail) {
         localStorage.setItem('lastEmail', currentEmail);
-        console.log('🔐 AUTH: Email saved to localStorage:', currentEmail);
       }
 
-      // IMMEDIATELY clear all auth state (hard logout)
       setUser(null);
       setProfile(null);
       setStudentData(null);
       setForcePasswordChange(false);
-      console.log('🔐 AUTH: Auth state cleared immediately');
-
-      // Clear session storage
       sessionStorage.clear();
-      console.log('🔐 AUTH: Session storage cleared');
 
-      // Then sign out from Firebase
       await firebaseSignOut(auth);
-      console.log('🔐 AUTH: Firebase signOut completed');
     } catch (error) {
-      console.error('🔐 AUTH: signOut error:', error);
-      // Even if Firebase signOut fails, state is already cleared
       throw error;
     }
   };

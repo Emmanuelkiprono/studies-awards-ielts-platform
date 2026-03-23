@@ -4,6 +4,13 @@ import { ApprovalGuard } from './components/ApprovalGuard';
 import { RoleBasedLayout } from './components/RoleBasedLayout';
 import { ToastProvider } from './components/Toast';
 import { AuthProvider, useAuth } from './hooks/useAuth';
+import {
+  getSimplifiedStudentStatus,
+  getStudentFlowRoute,
+  hasApprovedStudentAccess,
+  type SimplifiedStudentStatus,
+} from './lib/studentAccess';
+import type { StudentData } from './types';
 
 const lazyNamed = <T extends Record<string, unknown>>(
   factory: () => Promise<T>,
@@ -30,11 +37,10 @@ const BreemicEnrollmentPage = lazyNamed(
   () => import('./pages/BreemicEnrollmentPage'),
   'BreemicEnrollmentPage'
 );
-const StudentOnboardingDashboard = lazyNamed(
-  () => import('./pages/StudentOnboardingDashboard'),
-  'StudentOnboardingDashboard'
+const StudentPendingApprovalPage = lazyNamed(
+  () => import('./pages/StudentPendingApprovalPage'),
+  'StudentPendingApprovalPage'
 );
-const PaymentPage = lazyNamed(() => import('./pages/PaymentPage'), 'PaymentPage');
 const ExamBookingPage = lazyNamed(() => import('./pages/ExamBookingPage'), 'ExamBookingPage');
 const AdminDashboard = lazyNamed(() => import('./pages/AdminDashboard'), 'AdminDashboard');
 const ProfilePage = lazyNamed(() => import('./pages/ProfilePage'), 'ProfilePage');
@@ -120,7 +126,7 @@ const FullScreenLoader: React.FC = () => (
   </div>
 );
 
-const getHomePathForRole = (role?: string) => {
+const getHomePathForRole = (role?: string, studentData?: StudentData | null) => {
   if (role === 'admin') {
     return '/admin';
   }
@@ -129,14 +135,14 @@ const getHomePathForRole = (role?: string) => {
     return '/teacher';
   }
 
-  return '/dashboard';
+  return getStudentFlowRoute(studentData);
 };
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string[] }> = ({
   children,
   allowedRoles,
 }) => {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, studentData, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -148,14 +154,66 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode; allowedRoles: string
   }
 
   if (!allowedRoles.includes(profile.role)) {
-    return <Navigate to={getHomePathForRole(profile.role)} replace />;
+    return <Navigate to={getHomePathForRole(profile.role, studentData)} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const StudentFlowGuard: React.FC<{
+  children: React.ReactNode;
+  allowedStatuses: SimplifiedStudentStatus[];
+}> = ({ children, allowedStatuses }) => {
+  const { user, profile, studentData, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <FullScreenLoader />;
+  }
+
+  if (!user || !profile) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (profile.role !== 'student') {
+    return <Navigate to={getHomePathForRole(profile.role, studentData)} replace />;
+  }
+
+  const currentStatus = getSimplifiedStudentStatus(studentData);
+
+  if (!allowedStatuses.includes(currentStatus)) {
+    return <Navigate to={getStudentFlowRoute(studentData)} replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const StudentStatusRedirect: React.FC = () => {
+  const { studentData } = useAuth();
+  return <Navigate to={getStudentFlowRoute(studentData)} replace />;
+};
+
+const ApprovedStudentOrStaffRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user, profile, studentData, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return <FullScreenLoader />;
+  }
+
+  if (!user || !profile) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  if (profile.role === 'student' && !hasApprovedStudentAccess(studentData)) {
+    return <Navigate to={getStudentFlowRoute(studentData)} replace />;
   }
 
   return <>{children}</>;
 };
 
 const AppContent: React.FC = () => {
-  const { user, profile, loading, forcePasswordChange } = useAuth();
+  const { user, profile, studentData, loading, forcePasswordChange } = useAuth();
 
   if (loading) {
     return <FullScreenLoader />;
@@ -184,7 +242,7 @@ const AppContent: React.FC = () => {
     <RoleBasedLayout>
       <Suspense fallback={<FullScreenLoader />}>
         <Routes>
-          <Route path="/" element={<Navigate to={getHomePathForRole(profile.role)} replace />} />
+          <Route path="/" element={<Navigate to={getHomePathForRole(profile.role, studentData)} replace />} />
 
           <Route
             path="/teacher"
@@ -317,13 +375,14 @@ const AppContent: React.FC = () => {
           />
           <Route path="/teacher/assignments" element={<Navigate to="/teacher/tasks" replace />} />
           <Route
-            path="/teacher/exams"
+            path="/teacher/exam-bookings"
             element={
               <ProtectedRoute allowedRoles={['teacher', 'admin']}>
                 <TeacherExamsPage />
               </ProtectedRoute>
             }
           />
+          <Route path="/teacher/exams" element={<Navigate to="/teacher/exam-bookings" replace />} />
           <Route
             path="/teacher/students/:studentId"
             element={
@@ -345,7 +404,9 @@ const AppContent: React.FC = () => {
             path="/live"
             element={
               <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
-                <LiveClassesPage />
+                <ApprovedStudentOrStaffRoute>
+                  <LiveClassesPage />
+                </ApprovedStudentOrStaffRoute>
               </ProtectedRoute>
             }
           />
@@ -362,7 +423,7 @@ const AppContent: React.FC = () => {
             path="/admin/exams"
             element={
               <ProtectedRoute allowedRoles={['admin']}>
-                <TeacherExamsPage />
+                <Navigate to="/teacher/exam-bookings" replace />
               </ProtectedRoute>
             }
           />
@@ -371,7 +432,9 @@ const AppContent: React.FC = () => {
             path="/dashboard"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <StudentOnboardingDashboard />
+                <ApprovalGuard>
+                  <StudentDashboard />
+                </ApprovalGuard>
               </ProtectedRoute>
             }
           />
@@ -379,10 +442,24 @@ const AppContent: React.FC = () => {
             path="/courses"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <ApprovalGuard>
-                  <StudentDashboard />
-                </ApprovalGuard>
+                <Navigate to="/dashboard" replace />
               </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/enrollment"
+            element={
+              <StudentFlowGuard allowedStatuses={['signup_complete', 'rejected']}>
+                <BreemicEnrollmentPage />
+              </StudentFlowGuard>
+            }
+          />
+          <Route
+            path="/pending-approval"
+            element={
+              <StudentFlowGuard allowedStatuses={['enrollment_submitted', 'rejected']}>
+                <StudentPendingApprovalPage />
+              </StudentFlowGuard>
             }
           />
           <Route
@@ -419,7 +496,19 @@ const AppContent: React.FC = () => {
             path="/batch/:batchId/lessons/:lessonId/live"
             element={
               <ProtectedRoute allowedRoles={['student', 'teacher']}>
-                <TeacherLiveSessionPage />
+                <ApprovedStudentOrStaffRoute>
+                  <TeacherLiveSessionPage />
+                </ApprovedStudentOrStaffRoute>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/exam-booking"
+            element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ApprovalGuard>
+                  <ExamBookingPage />
+                </ApprovalGuard>
               </ProtectedRoute>
             }
           />
@@ -427,9 +516,7 @@ const AppContent: React.FC = () => {
             path="/exam_booking"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <ApprovalGuard>
-                  <ExamBookingPage />
-                </ApprovalGuard>
+                <Navigate to="/exam-booking" replace />
               </ProtectedRoute>
             }
           />
@@ -477,7 +564,7 @@ const AppContent: React.FC = () => {
             path="/payment"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <PaymentPage />
+                <StudentStatusRedirect />
               </ProtectedRoute>
             }
           />
@@ -485,7 +572,7 @@ const AppContent: React.FC = () => {
             path="/onboarding"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <StudentOnboardingDashboard />
+                <StudentStatusRedirect />
               </ProtectedRoute>
             }
           />
@@ -493,7 +580,7 @@ const AppContent: React.FC = () => {
             path="/breemic-enrollment"
             element={
               <ProtectedRoute allowedRoles={['student']}>
-                <BreemicEnrollmentPage />
+                <Navigate to="/enrollment" replace />
               </ProtectedRoute>
             }
           />
@@ -501,7 +588,9 @@ const AppContent: React.FC = () => {
             path="/profile"
             element={
               <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
-                <ProfilePage />
+                <ApprovedStudentOrStaffRoute>
+                  <ProfilePage />
+                </ApprovedStudentOrStaffRoute>
               </ProtectedRoute>
             }
           />

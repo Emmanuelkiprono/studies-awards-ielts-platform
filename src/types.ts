@@ -30,15 +30,24 @@ export type ExamStatus =
   | 'booked'
   | 'completed';
 export type PaymentStatus = 'unpaid' | 'paid' | 'pending';
+export type ExamBookingStatus = 'pending' | 'processing' | 'booked' | 'rejected';
+export type ExamBookingProvider = 'British Council' | 'IDP';
+export type ExamBookingMode = 'paper_based' | 'computer_based';
+export type ExamBookingType = 'IELTS Academic' | 'IELTS UKVI';
 
-// Breemic International Approval Workflow Stages
-export type OnboardingStatus = 
+// Student onboarding states.
+// The simplified production flow uses:
+// signup_complete -> enrollment_submitted -> approved / rejected
+// Legacy values remain in the type temporarily for backwards-compatible reads.
+export type OnboardingStatus =
+  | 'signup_complete'
+  | 'enrollment_submitted'
+  | 'approved'
+  | 'rejected'
   | 'account_created'
   | 'enrollment_pending'
   | 'payment_pending'
   | 'approval_pending'
-  | 'approved'
-  | 'rejected'
   | 'suspended';
 
 export type PaymentMethod = 'cash' | 'bank_transfer' | 'mobile_money' | 'credit_card' | 'other';
@@ -236,6 +245,8 @@ export interface StudentData {
   examDate?: string;            // ISO date
   examCenter?: string;
   bookingReference?: string;
+  examBookingId?: string;
+  examBookingStatus?: ExamBookingStatus;
   bandScore?: {
     overall: number;
     listening: number;
@@ -342,6 +353,38 @@ export interface Enrollment {
   createdAt: any;
 }
 
+export interface ExamBooking {
+  id: string;
+  studentUid: string;
+  courseId?: string;
+  batchId?: string;
+  batchName?: string;
+  fullName: string;
+  dateOfBirth: string;
+  email: string;
+  physicalChallenge?: string;
+  mobileNumber: string;
+  address: string;
+  town: string;
+  postalCode: string;
+  passportOrIdNumber: string;
+  idExpiryDate: string;
+  gender: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  levelOfEducation: string;
+  provider: ExamBookingProvider;
+  examDate: string;
+  examMode: ExamBookingMode;
+  examType: ExamBookingType;
+  idPhotoUrl: string;
+  idPhotoName?: string;
+  status: ExamBookingStatus;
+  notes?: string;
+  rejectionReason?: string;
+  bookingReference?: string;
+  createdAt: any;
+  updatedAt: any;
+}
+
 export interface Notification {
   id: string;
   userId: string;
@@ -355,20 +398,25 @@ export interface Notification {
 
 export interface BreemicEnrollment {
   id: string;
+  userId?: string;
+  courseId?: string;
   fullName: string;
   email: string;
   contact: string;
-  dateOfEnrollment: string;
-  courseDuration: string;
-  expectedDateOfCompletion: string;
-  modeOfTraining: 'in-person' | 'online';
-  physicalAddress: string;
-  idPassport: string;
-  highestLevelOfEducation: string;
-  courseType: 'IELTS' | 'TOEFL' | 'PTE' | 'SAT' | 'TOEIC' | 'German' | 'French' | 'Chinese';
-  feePaid: number;
-  balance: number;
-  officerInCharge: string;
+  dateOfEnrollment?: string;
+  courseName?: string;
+  courseDuration?: string;
+  expectedDateOfCompletion?: string;
+  modeOfTraining?: 'in-person' | 'online';
+  physicalAddress?: string;
+  idPassport?: string;
+  highestLevelOfEducation?: string;
+  supportingDocumentUrl?: string;
+  supportingDocumentName?: string;
+  courseType?: 'IELTS' | 'TOEFL' | 'PTE' | 'SAT' | 'TOEIC' | 'German' | 'French' | 'Chinese';
+  feePaid?: number;
+  balance?: number;
+  officerInCharge?: string;
   createdAt: any;
   updatedAt: any;
   status: 'pending' | 'approved' | 'rejected' | 'completed';

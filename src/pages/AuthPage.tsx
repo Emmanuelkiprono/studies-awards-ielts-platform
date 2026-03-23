@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GlassCard, PrimaryButton } from '../components/UI';
 import { GraduationCap, LogIn, UserPlus, Mail, Lock, User, ArrowLeft, AlertCircle, BookOpen, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -10,6 +11,7 @@ import { Course } from '../types';
 type AuthMode = 'signin' | 'signup' | 'forgot';
 
 export const AuthPage: React.FC = () => {
+  const navigate = useNavigate();
   const { signIn, signUp, resetPassword } = useAuth();
   const [mode, setMode] = useState<AuthMode>('signin');
   const [email, setEmail] = useState('');
@@ -73,6 +75,8 @@ export const AuthPage: React.FC = () => {
         await signIn(email, password);
       } else if (mode === 'signup') {
         await signUp(email, password, name, selectedCourseId);
+        console.log('SIGNUP SUCCESS - redirecting to enrollment');
+        navigate('/enrollment', { replace: true });
       } else if (mode === 'forgot') {
         await resetPassword(email);
         setMessage('Password reset email sent! Check your inbox.');

@@ -46,6 +46,7 @@ import {
   resolveStudentJoinDate,
   syncBatchStudentCount,
 } from '../lib/studentAssignment';
+import { getSimplifiedStudentStatus } from '../lib/studentAccess';
 import { hasTeacherOperationsAccess } from '../lib/teacherPermissions';
 import { cn } from '../lib/utils';
 import { db } from '../services/firebase';
@@ -182,27 +183,10 @@ const resolveApprovalStatus = (
   studentRecord?: Partial<StudentData>,
   userData?: Partial<UserProfile> & { onboardingStatus?: OnboardingStatus }
 ): OnboardingStatus => {
-  if (studentRecord?.onboardingStatus) {
-    return studentRecord.onboardingStatus;
-  }
-
-  if (userData?.onboardingStatus) {
-    return userData.onboardingStatus;
-  }
-
-  if (studentRecord?.trainingPaymentStatus === 'pending') {
-    return 'payment_pending';
-  }
-
-  if (
-    studentRecord?.accessUnlocked ||
-    studentRecord?.trainingStatus === 'active' ||
-    studentRecord?.trainingStatus === 'completed'
-  ) {
-    return 'approved';
-  }
-
-  return 'approval_pending';
+  return getSimplifiedStudentStatus({
+    ...userData,
+    ...studentRecord,
+  });
 };
 
 const getLessonDefinition = (moduleId: string, lessonId: string) =>
@@ -262,17 +246,13 @@ const getApprovalBadgeClassName = (approvalStatus: OnboardingStatus) => {
   switch (approvalStatus) {
     case 'approved':
       return 'bg-emerald-100 text-emerald-700';
+    case 'enrollment_submitted':
+      return 'bg-blue-100 text-blue-700';
     case 'rejected':
       return 'bg-red-100 text-red-700';
-    case 'payment_pending':
-      return 'bg-amber-100 text-amber-700';
-    case 'suspended':
-      return 'bg-slate-100 text-slate-700';
-    case 'approval_pending':
-    case 'account_created':
-    case 'enrollment_pending':
+    case 'signup_complete':
     default:
-      return 'bg-blue-100 text-blue-700';
+      return 'bg-amber-100 text-amber-700';
   }
 };
 
@@ -291,10 +271,7 @@ const getStatusBadgeClassName = (status: TrainerAssignmentStatus) => {
 };
 
 const isApprovalPending = (approvalStatus: OnboardingStatus) =>
-  approvalStatus === 'approval_pending' ||
-  approvalStatus === 'payment_pending' ||
-  approvalStatus === 'account_created' ||
-  approvalStatus === 'enrollment_pending';
+  approvalStatus === 'enrollment_submitted';
 
 export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTableProps> = ({
   mode = 'students',
@@ -571,6 +548,27 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
     await setDoc(doc(db, 'users', studentUid), updates, { merge: true });
   }, []);
 
+  const saveEnrollmentRecord = useCallback(
+    async (
+      enrollmentId: string | undefined,
+      status: 'approved' | 'rejected'
+    ) => {
+      if (!enrollmentId) {
+        return;
+      }
+
+      await setDoc(
+        doc(db, 'breemicEnrollments', enrollmentId),
+        {
+          status,
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+    },
+    []
+  );
+
   const approveStudentRecord = useCallback(
     async (student: TeacherManagedStudentRow) => {
       const resolvedCourseId =
@@ -627,8 +625,10 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
       await saveUserMirror(student.uid, {
         onboardingStatus: 'approved',
       });
+
+      await saveEnrollmentRecord(student.studentRecord?.breemicEnrollmentId, 'approved');
     },
-    [batches, profile?.assignedCourseId, profile?.name, profile?.uid, saveUserMirror]
+    [batches, profile?.assignedCourseId, profile?.name, profile?.uid, saveEnrollmentRecord, saveUserMirror]
   );
 
   const rejectStudentRecord = useCallback(
@@ -636,7 +636,7 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
       await saveStudentRecord(student.uid, {
         onboardingStatus: 'rejected',
         accessUnlocked: false,
-        trainingStatus: 'locked',
+        trainingStatus: 'inactive',
         rejectionReason: 'Rejected by teacher',
         rejectedAt: serverTimestamp(),
       });
@@ -644,8 +644,10 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
       await saveUserMirror(student.uid, {
         onboardingStatus: 'rejected',
       });
+
+      await saveEnrollmentRecord(student.studentRecord?.breemicEnrollmentId, 'rejected');
     },
-    [saveStudentRecord, saveUserMirror]
+    [saveEnrollmentRecord, saveStudentRecord, saveUserMirror]
   );
 
   const assignBatchRecord = useCallback(
@@ -920,14 +922,14 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
           tone: 'bg-blue-50 text-blue-700',
         },
         {
+          title: 'Signup Complete',
+          value: rows.filter((student) => student.approvalStatus === 'signup_complete').length,
+          tone: 'bg-amber-50 text-amber-700',
+        },
+        {
           title: 'Approved',
           value: rows.filter((student) => student.approvalStatus === 'approved').length,
           tone: 'bg-emerald-50 text-emerald-700',
-        },
-        {
-          title: 'Payment Pending',
-          value: rows.filter((student) => student.approvalStatus === 'payment_pending').length,
-          tone: 'bg-amber-50 text-amber-700',
         },
         {
           title: 'Rejected',
@@ -1191,9 +1193,9 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
             >
               <option value="all">All approval states</option>
               <option value="needs_attention">Needs attention</option>
+              <option value="signup_complete">Signup complete</option>
+              <option value="enrollment_submitted">Enrollment submitted</option>
               <option value="approved">Approved</option>
-              <option value="payment_pending">Payment pending</option>
-              <option value="approval_pending">Approval pending</option>
               <option value="rejected">Rejected</option>
             </select>
 

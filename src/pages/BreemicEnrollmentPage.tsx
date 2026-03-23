@@ -1,702 +1,405 @@
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import { GlassCard, PrimaryButton, StatusBadge } from '../components/UI';
+import React, { useEffect, useMemo, useState } from 'react';
+import { AlertCircle, BookOpen, GraduationCap, Phone, Save, User } from 'lucide-react';
 import {
-  User,
-  Mail,
-  Phone,
-  Calendar,
-  Clock,
-  MapPin,
-  CreditCard,
-  BookOpen,
-  GraduationCap,
-  DollarSign,
-  UserCheck,
-  CheckCircle2,
-  AlertCircle,
-  Save
-} from 'lucide-react';
-import { doc, addDoc, collection, updateDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { BreemicEnrollment, OnboardingStatus } from '../types';
-import { cn } from '../lib/utils';
-import { useAuth } from '../hooks/useAuth';
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  query,
+  serverTimestamp,
+  setDoc,
+  where,
+} from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { FileUpload } from '../components/FileUpload';
+import { useAuth } from '../hooks/useAuth';
+import { db } from '../services/firebase';
+import { NotificationService } from '../services/notificationService';
+import { BreemicEnrollment, Course } from '../types';
+
+interface EnrollmentFormState {
+  name: string;
+  phone: string;
+  courseId: string;
+  mode: NonNullable<BreemicEnrollment['modeOfTraining']>;
+  education: string;
+  supportingDocumentUrl: string;
+  supportingDocumentName: string;
+}
 
 interface FormErrors {
   [key: string]: string;
 }
 
-const courseTypes = [
-  'IELTS',
-  'TOEFL', 
-  'PTE',
-  'SAT',
-  'TOEIC',
-  'German',
-  'French',
-  'Chinese'
-] as const;
-
-const trainingModes = [
-  { value: 'in-person', label: 'In-Person Training' },
-  { value: 'online', label: 'Online Training' }
-] as const;
+interface CourseOption {
+  id: string;
+  name: string;
+}
 
 export const BreemicEnrollmentPage: React.FC = () => {
-  const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    fullName: '',
-    email: '',
-    contact: '',
-    dateOfEnrollment: '',
-    courseDuration: '',
-    expectedDateOfCompletion: '',
-    modeOfTraining: 'in-person' as const,
-    physicalAddress: '',
-    idPassport: '',
-    highestLevelOfEducation: '',
-    courseType: 'IELTS' as const,
-    feePaid: 0,
-    balance: 0,
-    officerInCharge: ''
+  const { user, profile, studentData } = useAuth();
+  const [loading, setLoading] = useState(false);
+  const [loadingCourses, setLoadingCourses] = useState(true);
+  const [submitError, setSubmitError] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [formData, setFormData] = useState<EnrollmentFormState>({
+    name: '',
+    phone: '',
+    courseId: '',
+    mode: 'online',
+    education: '',
+    supportingDocumentUrl: '',
+    supportingDocumentName: '',
   });
 
-  const [errors, setErrors] = useState<FormErrors>({});
-  const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  useEffect(() => {
+    setFormData((currentForm) => ({
+      ...currentForm,
+      name: profile?.name || currentForm.name,
+      phone: studentData?.phone || profile?.phone || currentForm.phone,
+      courseId: studentData?.courseId || currentForm.courseId,
+    }));
+  }, [profile?.name, profile?.phone, studentData?.courseId, studentData?.phone]);
 
   useEffect(() => {
-    // Set today's date as default enrollment date
-    const today = new Date().toISOString().split('T')[0];
-    setFormData(prev => ({ ...prev, dateOfEnrollment: today }));
+    const loadCourses = async () => {
+      setLoadingCourses(true);
+
+      try {
+        const coursesQuery = query(collection(db, 'courses'), where('active', '==', true));
+        const snapshot = await getDocs(coursesQuery);
+        const activeCourses = snapshot.docs.map(
+          (courseDoc) => ({ id: courseDoc.id, ...courseDoc.data() }) as Course
+        );
+        setCourses(activeCourses);
+      } catch (error) {
+        console.error('Error loading enrollment courses:', error);
+      } finally {
+        setLoadingCourses(false);
+      }
+    };
+
+    void loadCourses();
   }, []);
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
+  const courseOptions = useMemo<CourseOption[]>(() => {
+    const nextOptions = courses.map((course) => ({
+      id: course.id,
+      name: course.name,
+    }));
 
-    // Required fields validation
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
+    if (
+      studentData?.courseId &&
+      !nextOptions.some((courseOption) => courseOption.id === studentData.courseId)
+    ) {
+      nextOptions.unshift({
+        id: studentData.courseId,
+        name: 'Selected Course',
+      });
     }
 
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+    return nextOptions;
+  }, [courses, studentData?.courseId]);
+
+  useEffect(() => {
+    if (formData.courseId || courseOptions.length === 0) {
+      return;
     }
 
-    if (!formData.contact.trim()) {
-      newErrors.contact = 'Contact number is required';
-    } else if (!/^\+?[\d\s\-\(\)]+$/.test(formData.contact)) {
-      newErrors.contact = 'Please enter a valid contact number';
-    }
+    setFormData((currentForm) => ({
+      ...currentForm,
+      courseId: currentForm.courseId || courseOptions[0].id,
+    }));
+  }, [courseOptions, formData.courseId]);
 
-    if (!formData.dateOfEnrollment) {
-      newErrors.dateOfEnrollment = 'Date of enrollment is required';
-    }
+  const handleFieldChange = (field: keyof EnrollmentFormState, value: string) => {
+    setFormData((currentForm) => ({
+      ...currentForm,
+      [field]: value,
+    }));
 
-    if (!formData.courseDuration.trim()) {
-      newErrors.courseDuration = 'Course duration is required';
-    }
-
-    if (!formData.expectedDateOfCompletion) {
-      newErrors.expectedDateOfCompletion = 'Expected completion date is required';
-    }
-
-    if (!formData.physicalAddress.trim()) {
-      newErrors.physicalAddress = 'Physical address is required';
-    }
-
-    if (!formData.idPassport.trim()) {
-      newErrors.idPassport = 'ID/Passport number is required';
-    }
-
-    if (!formData.highestLevelOfEducation.trim()) {
-      newErrors.highestLevelOfEducation = 'Highest level of education is required';
-    }
-
-    if (!formData.officerInCharge.trim()) {
-      newErrors.officerInCharge = 'Officer in charge is required';
-    }
-
-    // Fee validation
-    if (formData.feePaid < 0) {
-      newErrors.feePaid = 'Fee paid cannot be negative';
-    }
-
-    if (formData.balance < 0) {
-      newErrors.balance = 'Balance cannot be negative';
-    }
-
-    // Date validation
-    if (formData.expectedDateOfCompletion && formData.dateOfEnrollment) {
-      const completionDate = new Date(formData.expectedDateOfCompletion);
-      const enrollmentDate = new Date(formData.dateOfEnrollment);
-      
-      if (completionDate <= enrollmentDate) {
-        newErrors.expectedDateOfCompletion = 'Expected completion date must be after enrollment date';
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleInputChange = (field: string, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Clear error for this field when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors((currentErrors) => ({
+        ...currentErrors,
+        [field]: '',
+      }));
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
+  const validateForm = () => {
+    const nextErrors: FormErrors = {};
+
+    if (!formData.name.trim()) {
+      nextErrors.name = 'Name is required';
+    }
+
+    if (!formData.phone.trim()) {
+      nextErrors.phone = 'Phone is required';
+    }
+
+    if (!formData.courseId.trim()) {
+      nextErrors.courseId = 'Course is required';
+    }
+
+    if (!formData.mode.trim()) {
+      nextErrors.mode = 'Mode is required';
+    }
+
+    if (!formData.education.trim()) {
+      nextErrors.education = 'Education is required';
+    }
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
+
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    setSubmitError('');
+
     if (!validateForm()) {
       return;
     }
 
-    // Check if user is logged in
     if (!user) {
-      setSubmitError('Please log in to submit your enrollment.');
+      setSubmitError('Please sign in before submitting your enrollment.');
       return;
     }
-    
+
     setLoading(true);
-    setSubmitError('');
 
     try {
-      
-      // Create Breemic enrollment record
-      const enrollmentData: Omit<BreemicEnrollment, 'id'> = {
-        ...formData,
-        feePaid: Number(formData.feePaid),
-        balance: Number(formData.balance),
+      const selectedCourse = courseOptions.find((courseOption) => courseOption.id === formData.courseId);
+
+      const enrollmentPayload: Omit<BreemicEnrollment, 'id'> = {
+        userId: user.uid,
+        courseId: formData.courseId,
+        courseName: selectedCourse?.name,
+        fullName: formData.name.trim(),
+        email: (profile?.email || user.email || '').toLowerCase(),
+        contact: formData.phone.trim(),
+        dateOfEnrollment: new Date().toISOString().slice(0, 10),
+        modeOfTraining: formData.mode,
+        highestLevelOfEducation: formData.education.trim(),
+        supportingDocumentUrl: formData.supportingDocumentUrl || undefined,
+        supportingDocumentName: formData.supportingDocumentName || undefined,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        status: 'pending'
+        status: 'pending',
       };
 
-      const docRef = await addDoc(collection(db, 'breemicEnrollments'), enrollmentData);
+      const enrollmentRef = await addDoc(collection(db, 'breemicEnrollments'), enrollmentPayload);
 
-      // Update student's onboarding status in both collections
-      // Preserve approval if already approved
-      const existingSnap = await getDoc(doc(db, 'students', user.uid));
-      const existingStatus = existingSnap.data()?.onboardingStatus;
-      
-      const computedNextStatus: OnboardingStatus = Number(formData.feePaid) > 0 ? 'approval_pending' : 'payment_pending';
-      const safeStatus = existingStatus === 'approved' ? 'approved' : computedNextStatus;
-      
-      // Update users collection
-      try {
-        const usersPayload = {
-          onboardingStatus: safeStatus,
-          breemicEnrollmentId: docRef.id,
-          lastStatusUpdate: serverTimestamp(),
-          paymentInfo: {
-            amountPaid: Number(formData.feePaid),
-            balance: Number(formData.balance),
-            paymentMethod: 'other', // Will be updated by admin
-            paymentDate: Number(formData.feePaid) > 0 ? new Date().toISOString() : undefined
-          }
-        };
-        
-        await updateDoc(doc(db, 'users', user.uid), usersPayload);
-      } catch (error) {
-        console.error('❌ Error updating users collection:', error);
-        throw new Error(`Failed to update users collection: ${error.message}`);
-      }
-
-      // Update students collection (primary data source)
-      try {
-        // 1. Define studentsPayload once before the if/else
-        const studentsPayload = {
-          onboardingStatus: safeStatus,
-          breemicEnrollmentId: docRef.id,
+      await setDoc(
+        doc(db, 'students', user.uid),
+        {
+          phone: formData.phone.trim(),
+          courseId: formData.courseId,
+          idUploadUrl: formData.supportingDocumentUrl || null,
+          onboardingStatus: 'enrollment_submitted',
           enrollmentCompleted: true,
-          paymentInfo: {
-            feePaid: Number(formData.feePaid),
-            balance: Number(formData.balance),
-          },
+          breemicEnrollmentId: enrollmentRef.id,
+          accessUnlocked: false,
+          trainingStatus: 'inactive',
           lastStatusUpdate: serverTimestamp(),
-        };
-        
-        // Write to students collection with merge
-        await setDoc(doc(db, 'students', user.uid), studentsPayload, { merge: true });
-        
-        // Verify the update was successful
-        const verifySnap = await getDoc(doc(db, 'students', user.uid));
-        if (verifySnap.data().onboardingStatus !== safeStatus) {
-          throw new Error(`Verification failed: Expected onboardingStatus=${safeStatus} but got ${verifySnap.data().onboardingStatus}`);
-        }
-        
-        // Redirect to onboarding after successful submission
-        window.location.href = '/onboarding';
-        
-      } catch (error) {
-        throw error;
-      }
+        },
+        { merge: true }
+      );
 
-      
+      await setDoc(
+        doc(db, 'users', user.uid),
+        {
+          name: formData.name.trim(),
+          phone: formData.phone.trim(),
+          onboardingStatus: 'enrollment_submitted',
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true }
+      );
+
+      const teacherQuery = query(
+        collection(db, 'users'),
+        where('role', '==', 'teacher'),
+        where('assignedCourseId', '==', formData.courseId)
+      );
+      const teacherSnapshot = await getDocs(teacherQuery);
+
+      await Promise.all(
+        teacherSnapshot.docs.map((teacherDoc) =>
+          NotificationService.create(
+            teacherDoc.id,
+            'Enrollment Submitted',
+            `${formData.name.trim()} is waiting for approval.`,
+            'info',
+            '/teacher/approvals'
+          )
+        )
+      );
+
+      navigate('/pending-approval', { replace: true });
     } catch (error) {
+      console.error('Error submitting enrollment:', error);
       setSubmitError('Failed to submit enrollment. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (submitted) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="p-4 max-w-2xl mx-auto w-full"
-      >
-        <GlassCard className="p-8 text-center">
-          <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-            <CheckCircle2 className="w-8 h-8 text-green-400" />
-          </div>
-          <h2 className="text-2xl font-bold text-white mb-4">Enrollment Submitted Successfully!</h2>
-          <p className="text-slate-400 mb-6">
-            Thank you for enrolling at Breemic International. Your enrollment has been received and is currently pending review.
-          </p>
-          <StatusBadge status={`Application ID: ${Date.now()}`} variant="success" className="inline-flex" />
-        </GlassCard>
-      </motion.div>
-    );
-  }
+  const inputClassName =
+    'w-full rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm text-black outline-none transition-colors focus:border-purple-500';
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-purple-900 dark:to-slate-900"
-    >
-            {/* Header */}
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">🎓 Breemic International Enrollment</h1>
-        <p className="text-slate-600 dark:text-slate-400">Complete your enrollment form to start your learning journey</p>
-      </div>
+    <div className="min-h-screen bg-gray-50 px-4 py-10">
+      <div className="mx-auto max-w-3xl space-y-6">
+        <div className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <h1 className="text-3xl font-semibold tracking-tight text-black">Enrollment</h1>
+          <p className="mt-2 text-sm text-gray-700">
+            Complete this form to submit your enrollment for teacher approval.
+          </p>
+          {profile?.email && (
+            <p className="mt-3 text-xs font-medium uppercase tracking-[0.16em] text-gray-500">
+              Signed in as {profile.email}
+            </p>
+          )}
+        </div>
 
-      {/* Error Message */}
-      <AnimatePresence>
-        {submitError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 flex items-center gap-3"
-          >
-            <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0" />
-            <span className="text-red-400 text-sm">{submitError}</span>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Form */}
-      <div className="px-4 pb-24 max-w-2xl mx-auto">
-        <form onSubmit={handleSubmit} className="space-y-6">
-        <GlassCard className="p-6">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <User className="w-5 h-5 text-blue-400" />
-            Personal Information
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Full Name */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <User className="w-3 h-3" />
-                Full Name *
+        <form onSubmit={handleSubmit} className="rounded-3xl border border-gray-200 bg-white p-6 shadow-sm">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <User size={16} />
+                Name
               </label>
               <input
                 type="text"
-                className={cn(
-                  "input-field w-full",
-                  errors.fullName && "error"
-                )}
+                value={formData.name}
+                onChange={(event) => handleFieldChange('name', event.target.value)}
+                className={inputClassName}
                 placeholder="Enter your full name"
-                value={formData.fullName}
-                onChange={(e) => handleInputChange('fullName', e.target.value)}
               />
-              {errors.fullName && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.fullName}
-                </p>
-              )}
+              {errors.name && <p className="mt-2 text-xs text-red-600">{errors.name}</p>}
             </div>
 
-            {/* Email */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <Mail className="w-3 h-3" />
-                Email Address *
-              </label>
-              <input
-                type="email"
-                className={cn(
-                  "input-field w-full",
-                  errors.email && "error"
-                )}
-                placeholder="your.email@example.com"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-              />
-              {errors.email && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.email}
-                </p>
-              )}
-            </div>
-
-            {/* Contact */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <Phone className="w-3 h-3" />
-                Contact Number *
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Phone size={16} />
+                Phone
               </label>
               <input
                 type="tel"
-                className={cn(
-                  "input-field w-full",
-                  errors.contact && "error"
-                )}
-                placeholder="+1234567890"
-                value={formData.contact}
-                onChange={(e) => handleInputChange('contact', e.target.value)}
+                value={formData.phone}
+                onChange={(event) => handleFieldChange('phone', event.target.value)}
+                className={inputClassName}
+                placeholder="Enter your phone number"
               />
-              {errors.contact && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.contact}
-                </p>
-              )}
+              {errors.phone && <p className="mt-2 text-xs text-red-600">{errors.phone}</p>}
             </div>
 
-            {/* ID/Passport */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <CreditCard className="w-3 h-3" />
-                ID / Passport Number *
-              </label>
-              <input
-                type="text"
-                className={cn(
-                  "input-field w-full",
-                  errors.idPassport && "error"
-                )}
-                placeholder="Enter your ID or passport number"
-                value={formData.idPassport}
-                onChange={(e) => handleInputChange('idPassport', e.target.value)}
-              />
-              {errors.idPassport && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.idPassport}
-                </p>
-              )}
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Course Information */}
-        <GlassCard className="p-6">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-purple-400" />
-            Course Information
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Course Type */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <BookOpen className="w-3 h-3" />
-                Course Type *
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <BookOpen size={16} />
+                Course
               </label>
               <select
-                className="input-field w-full"
-                value={formData.courseType}
-                onChange={(e) => handleInputChange('courseType', e.target.value)}
+                value={formData.courseId}
+                onChange={(event) => handleFieldChange('courseId', event.target.value)}
+                className={inputClassName}
+                disabled={loadingCourses}
               >
-                {courseTypes.map(course => (
-                  <option key={course} value={course}>
-                    {course}
+                <option value="">
+                  {loadingCourses ? 'Loading courses...' : 'Select course'}
+                </option>
+                {courseOptions.map((courseOption) => (
+                  <option key={courseOption.id} value={courseOption.id}>
+                    {courseOption.name}
                   </option>
                 ))}
               </select>
+              {errors.courseId && <p className="mt-2 text-xs text-red-600">{errors.courseId}</p>}
             </div>
 
-            {/* Mode of Training */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <GraduationCap className="w-3 h-3" />
-                Mode of Training *
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <BookOpen size={16} />
+                Mode
               </label>
-              <div className="space-y-2">
-                {trainingModes.map(mode => (
-                  <label key={mode.value} className="flex items-center gap-3 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="modeOfTraining"
-                      value={mode.value}
-                      checked={formData.modeOfTraining === mode.value}
-                      onChange={(e) => handleInputChange('modeOfTraining', e.target.value)}
-                      className="w-4 h-4 text-blue-500"
-                    />
-                    <span className="text-slate-200 dark:text-white font-medium">{mode.label}</span>
-                  </label>
-                ))}
-              </div>
+              <select
+                value={formData.mode}
+                onChange={(event) =>
+                  handleFieldChange('mode', event.target.value as EnrollmentFormState['mode'])
+                }
+                className={inputClassName}
+              >
+                <option value="online">Online</option>
+                <option value="in-person">In Person</option>
+              </select>
+              {errors.mode && <p className="mt-2 text-xs text-red-600">{errors.mode}</p>}
             </div>
 
-            {/* Course Duration */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <Clock className="w-3 h-3" />
-                Course Duration *
+            <div className="md:col-span-2">
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <GraduationCap size={16} />
+                Education
               </label>
               <input
                 type="text"
-                className={cn(
-                  "input-field w-full",
-                  errors.courseDuration && "error"
-                )}
-                placeholder="e.g., 12 weeks, 3 months"
-                value={formData.courseDuration}
-                onChange={(e) => handleInputChange('courseDuration', e.target.value)}
+                value={formData.education}
+                onChange={(event) => handleFieldChange('education', event.target.value)}
+                className={inputClassName}
+                placeholder="Example: Bachelor's Degree"
               />
-              {errors.courseDuration && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.courseDuration}
-                </p>
-              )}
+              {errors.education && <p className="mt-2 text-xs text-red-600">{errors.education}</p>}
             </div>
 
-            {/* Highest Level of Education */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <GraduationCap className="w-3 h-3" />
-                Highest Level of Education *
-              </label>
-              <input
-                type="text"
-                className={cn(
-                  "input-field w-full",
-                  errors.highestLevelOfEducation && "error"
-                )}
-                placeholder="e.g., Bachelor's Degree, High School"
-                value={formData.highestLevelOfEducation}
-                onChange={(e) => handleInputChange('highestLevelOfEducation', e.target.value)}
+            <div className="md:col-span-2">
+              <FileUpload
+                folder={user ? `enrollments/${user.uid}` : 'enrollments'}
+                label="Optional Upload"
+                appearance="light"
+                value={formData.supportingDocumentUrl}
+                fileName={formData.supportingDocumentName}
+                onUploaded={(url, fileName) => {
+                  setFormData((currentForm) => ({
+                    ...currentForm,
+                    supportingDocumentUrl: url,
+                    supportingDocumentName: fileName,
+                  }));
+                }}
+                onClear={() => {
+                  setFormData((currentForm) => ({
+                    ...currentForm,
+                    supportingDocumentUrl: '',
+                    supportingDocumentName: '',
+                  }));
+                }}
               />
-              {errors.highestLevelOfEducation && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.highestLevelOfEducation}
-                </p>
-              )}
+              <p className="mt-2 text-xs text-gray-500">
+                Upload an optional ID, transcript, or supporting document.
+              </p>
             </div>
           </div>
-        </GlassCard>
 
-        {/* Dates & Address */}
-        <GlassCard className="p-6">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-green-400" />
-            Dates & Address
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Date of Enrollment */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <Calendar className="w-3 h-3" />
-                Date of Enrollment *
-              </label>
-              <input
-                type="date"
-                className={cn(
-                  "input-field w-full",
-                  errors.dateOfEnrollment && "error"
-                )}
-                value={formData.dateOfEnrollment}
-                onChange={(e) => handleInputChange('dateOfEnrollment', e.target.value)}
-              />
-              {errors.dateOfEnrollment && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.dateOfEnrollment}
-                </p>
-              )}
+          {submitError && (
+            <div className="mt-5 flex items-start gap-2 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              <AlertCircle size={18} className="mt-0.5 shrink-0" />
+              <span>{submitError}</span>
             </div>
+          )}
 
-            {/* Expected Date of Completion */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <Calendar className="w-3 h-3" />
-                Expected Date of Completion *
-              </label>
-              <input
-                type="date"
-                className={cn(
-                  "input-field w-full",
-                  errors.expectedDateOfCompletion && "error"
-                )}
-                value={formData.expectedDateOfCompletion}
-                onChange={(e) => handleInputChange('expectedDateOfCompletion', e.target.value)}
-                min={formData.dateOfEnrollment}
-              />
-              {errors.expectedDateOfCompletion && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.expectedDateOfCompletion}
-                </p>
-              )}
-            </div>
-
-            {/* Physical Address */}
-            <div className="space-y-2 md:col-span-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <MapPin className="w-3 h-3" />
-                Physical Address *
-              </label>
-              <textarea
-                className={cn(
-                  "input-field w-full min-h-[80px]",
-                  errors.physicalAddress && "error"
-                )}
-                placeholder="Enter your complete physical address"
-                value={formData.physicalAddress}
-                onChange={(e) => handleInputChange('physicalAddress', e.target.value)}
-              />
-              {errors.physicalAddress && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.physicalAddress}
-                </p>
-              )}
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Financial Information */}
-        <GlassCard className="p-6">
-          <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-yellow-400" />
-            Financial Information
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Fee Paid */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <DollarSign className="w-3 h-3" />
-                Fee Paid *
-              </label>
-              <input
-                type="number"
-                className={cn(
-                  "input-field w-full",
-                  errors.feePaid && "error"
-                )}
-                placeholder="0.00"
-                value={formData.feePaid}
-                onChange={(e) => handleInputChange('feePaid', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-              {errors.feePaid && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.feePaid}
-                </p>
-              )}
-            </div>
-
-            {/* Balance */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <DollarSign className="w-3 h-3" />
-                Balance *
-              </label>
-              <input
-                type="number"
-                className={cn(
-                  "input-field w-full",
-                  errors.balance && "error"
-                )}
-                placeholder="0.00"
-                value={formData.balance}
-                onChange={(e) => handleInputChange('balance', e.target.value)}
-                min="0"
-                step="0.01"
-              />
-              {errors.balance && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.balance}
-                </p>
-              )}
-            </div>
-
-            {/* Officer in Charge */}
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-slate-400 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1 mb-3">
-                <UserCheck className="w-3 h-3" />
-                Officer in Charge *
-              </label>
-              <input
-                type="text"
-                className={cn(
-                  "input-field w-full",
-                  errors.officerInCharge && "error"
-                )}
-                placeholder="Officer name"
-                value={formData.officerInCharge}
-                onChange={(e) => handleInputChange('officerInCharge', e.target.value)}
-              />
-              {errors.officerInCharge && (
-                <p className="text-red-400 dark:text-red-300 text-xs flex items-center gap-1 mt-2 font-medium">
-                  <AlertCircle className="w-3 h-3" />
-                  {errors.officerInCharge}
-                </p>
-              )}
-            </div>
-          </div>
-        </GlassCard>
-
-        {/* Submit Button */}
-        <div className="sticky bottom-20 bg-gradient-to-t from-slate-50 via-slate-50/95 to-transparent dark:from-slate-900 dark:via-slate-900/95 pt-6 pb-4 -mx-4 px-4 md:static md:bg-transparent md:pt-6 md:pb-0 md:mx-0">
-          <div className="flex justify-center">
-            <PrimaryButton
+          <div className="mt-6 flex justify-end">
+            <button
               type="submit"
               disabled={loading}
-              className="px-8 py-4 text-lg font-bold min-w-[200px] shadow-lg"
+              className="inline-flex items-center gap-2 rounded-2xl bg-purple-600 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-            {loading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Submitting...
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Save className="w-5 h-5" />
-                Submit Enrollment
-              </div>
-            )}
-            </PrimaryButton>
+              <Save size={16} />
+              {loading ? 'Submitting...' : 'Submit Enrollment'}
+            </button>
           </div>
-        </div>
-      </form>
+        </form>
       </div>
-    </motion.div>
+    </div>
   );
 };

@@ -1,39 +1,44 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { getDownloadURL, ref, uploadBytesResumable } from 'firebase/storage';
+import {
+  CheckCircle2,
+  FileText,
+  Image as ImageIcon,
+  Loader2,
+  Upload,
+  X,
+} from 'lucide-react';
 import { storage } from '../services/firebase';
-import { Upload, FileText, Image as ImageIcon, X, CheckCircle2, Loader2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface FileUploadProps {
-  /** Firebase Storage folder path, e.g. "lessons" or "submissions" */
   folder: string;
-  /** Called with the download URL and original file name once upload completes */
   onUploaded: (url: string, fileName: string) => void;
-  /** Called when the file is cleared */
   onClear?: () => void;
-  /** Already-uploaded file URL (controlled) */
   value?: string;
-  /** Already-uploaded file name (controlled) */
   fileName?: string;
-  /** accepted mime types – defaults to PDF + images */
   accept?: Record<string, string[]>;
-  /** Max file size in bytes – defaults to 10 MB */
   maxSize?: number;
-  /** Label displayed above the dropzone */
   label?: string;
-  /** Compact mode for inline usage */
   compact?: boolean;
+  appearance?: 'dark' | 'light';
 }
 
-const MAX_IMAGE_DIMENSION = 1600; // px
+const MAX_IMAGE_DIMENSION = 1600;
 
 const isImageMimeType = (type: string) => /^image\//.test(type);
 
-const resizeImageFile = (file: File, maxWidth: number, maxHeight: number, quality = 0.8): Promise<File> => {
-  return new Promise((resolve, reject) => {
+const resizeImageFile = (
+  file: File,
+  maxWidth: number,
+  maxHeight: number,
+  quality = 0.8
+): Promise<File> =>
+  new Promise((resolve) => {
     try {
       const img = new Image();
+
       img.onload = () => {
         try {
           let { width, height } = img;
@@ -52,6 +57,7 @@ const resizeImageFile = (file: File, maxWidth: number, maxHeight: number, qualit
           canvas.width = targetWidth;
           canvas.height = targetHeight;
           const ctx = canvas.getContext('2d');
+
           if (!ctx) {
             URL.revokeObjectURL(img.src);
             resolve(file);
@@ -65,31 +71,38 @@ const resizeImageFile = (file: File, maxWidth: number, maxHeight: number, qualit
           canvas.toBlob(
             (blob) => {
               URL.revokeObjectURL(img.src);
+
               if (!blob) {
                 resolve(file);
                 return;
               }
-              const resizedFile = new File([blob], file.name, { type: outputType, lastModified: Date.now() });
-              resolve(resizedFile);
+
+              resolve(
+                new File([blob], file.name, {
+                  type: outputType,
+                  lastModified: Date.now(),
+                })
+              );
             },
             outputType,
             quality
           );
-        } catch (err) {
+        } catch {
           URL.revokeObjectURL(img.src);
           resolve(file);
         }
       };
+
       img.onerror = () => {
         URL.revokeObjectURL(img.src);
         resolve(file);
       };
+
       img.src = URL.createObjectURL(file);
-    } catch (err) {
+    } catch {
       resolve(file);
     }
   });
-};
 
 export const FileUpload: React.FC<FileUploadProps> = ({
   folder,
@@ -106,14 +119,20 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   maxSize = 10 * 1024 * 1024,
   label = 'Upload File',
   compact = false,
+  appearance = 'dark',
 }) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
+  const isLightAppearance = appearance === 'light';
+
   const onDrop = useCallback(
     async (acceptedFiles: File[]) => {
-      if (acceptedFiles.length === 0) return;
+      if (acceptedFiles.length === 0) {
+        return;
+      }
+
       const originalFile = acceptedFiles[0];
       setError(null);
       setUploading(true);
@@ -123,7 +142,12 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         let fileToUpload = originalFile;
 
         if (isImageMimeType(originalFile.type)) {
-          fileToUpload = await resizeImageFile(originalFile, MAX_IMAGE_DIMENSION, MAX_IMAGE_DIMENSION, 0.82);
+          fileToUpload = await resizeImageFile(
+            originalFile,
+            MAX_IMAGE_DIMENSION,
+            MAX_IMAGE_DIMENSION,
+            0.82
+          );
 
           if (fileToUpload.size > maxSize) {
             setUploading(false);
@@ -144,8 +168,8 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           (snapshot) => {
             setProgress(Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
           },
-          (err) => {
-            console.error('Upload error:', err);
+          (uploadError) => {
+            console.error('Upload error:', uploadError);
             setError('Upload failed. Please try again.');
             setUploading(false);
           },
@@ -156,13 +180,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
             setProgress(0);
           }
         );
-      } catch (err) {
-        console.error('Upload error:', err);
+      } catch (uploadError) {
+        console.error('Upload error:', uploadError);
         setError('Upload failed. Please try again.');
         setUploading(false);
       }
     },
-    [folder, onUploaded]
+    [folder, maxSize, onUploaded]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -172,8 +196,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({
     multiple: false,
     disabled: uploading,
     onDropRejected: (rejections) => {
-      const r = rejections[0];
-      if (r?.errors[0]?.code === 'file-too-large') {
+      const rejection = rejections[0];
+
+      if (rejection?.errors[0]?.code === 'file-too-large') {
         setError(`File too large. Max ${Math.round(maxSize / 1024 / 1024)}MB.`);
       } else {
         setError('Invalid file type. Please upload PDF or image files.');
@@ -183,34 +208,72 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   const isImage = (name?: string) => name && /\.(jpg|jpeg|png|webp|gif)$/i.test(name);
 
-  // Already uploaded state
+  const labelClassName = isLightAppearance
+    ? 'block text-sm font-medium text-gray-700'
+    : 'block text-xs font-bold uppercase tracking-wider text-[var(--ui-muted)]';
+
   if (value && fileName) {
     return (
       <div className="space-y-1.5">
-        {label && (
-          <label className="text-xs font-bold text-[var(--ui-muted)] uppercase tracking-wider block">
-            {label}
-          </label>
-        )}
-        <div className="flex items-center gap-3 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-          {isImage(fileName) ? (
-            <ImageIcon size={18} className="text-emerald-400 shrink-0" />
-          ) : (
-            <FileText size={18} className="text-emerald-400 shrink-0" />
+        {label && <label className={labelClassName}>{label}</label>}
+
+        <div
+          className={cn(
+            'flex items-center gap-3 rounded-xl border p-3',
+            isLightAppearance
+              ? 'border-emerald-200 bg-emerald-50'
+              : 'border-emerald-500/20 bg-emerald-500/10'
           )}
-          <div className="flex-1 min-w-0">
-            <p className="text-sm text-emerald-300 font-semibold truncate">{fileName}</p>
-            <p className="text-[10px] text-emerald-500 uppercase font-bold tracking-wider">Uploaded</p>
+        >
+          {isImage(fileName) ? (
+            <ImageIcon
+              size={18}
+              className={cn('shrink-0', isLightAppearance ? 'text-emerald-600' : 'text-emerald-400')}
+            />
+          ) : (
+            <FileText
+              size={18}
+              className={cn('shrink-0', isLightAppearance ? 'text-emerald-600' : 'text-emerald-400')}
+            />
+          )}
+
+          <div className="min-w-0 flex-1">
+            <p
+              className={cn(
+                'truncate text-sm font-semibold',
+                isLightAppearance ? 'text-emerald-700' : 'text-emerald-300'
+              )}
+            >
+              {fileName}
+            </p>
+            <p
+              className={cn(
+                'text-[10px] font-bold uppercase tracking-wider',
+                isLightAppearance ? 'text-emerald-600' : 'text-emerald-500'
+              )}
+            >
+              Uploaded
+            </p>
           </div>
-          <CheckCircle2 size={16} className="text-emerald-400 shrink-0" />
+
+          <CheckCircle2
+            size={16}
+            className={cn('shrink-0', isLightAppearance ? 'text-emerald-600' : 'text-emerald-400')}
+          />
+
           {onClear && (
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation();
+              onClick={(event) => {
+                event.stopPropagation();
                 onClear();
               }}
-              className="p-1.5 rounded-lg hover:bg-white/10 text-slate-400 hover:text-red-400 transition-colors"
+              className={cn(
+                'rounded-lg p-1.5 transition-colors',
+                isLightAppearance
+                  ? 'text-gray-500 hover:bg-gray-100 hover:text-red-600'
+                  : 'text-slate-400 hover:bg-white/10 hover:text-red-400'
+              )}
             >
               <X size={14} />
             </button>
@@ -222,31 +285,50 @@ export const FileUpload: React.FC<FileUploadProps> = ({
 
   return (
     <div className="space-y-1.5">
-      {label && (
-        <label className="text-xs font-bold text-[var(--ui-muted)] uppercase tracking-wider block">
-          {label}
-        </label>
-      )}
+      {label && <label className={labelClassName}>{label}</label>}
+
       <div
         {...getRootProps()}
         className={cn(
-          'border-2 border-dashed rounded-xl transition-all cursor-pointer',
+          'cursor-pointer rounded-xl border-2 border-dashed transition-all',
           compact ? 'p-4' : 'p-6',
           isDragActive
-            ? 'border-[#6324eb] bg-[#6324eb]/10'
-            : 'border-white/10 bg-white/[0.02] hover:border-[#6324eb]/40 hover:bg-[#6324eb]/5',
+            ? isLightAppearance
+              ? 'border-purple-500 bg-purple-50'
+              : 'border-[#6324eb] bg-[#6324eb]/10'
+            : isLightAppearance
+              ? 'border-gray-300 bg-gray-50 hover:border-purple-400 hover:bg-purple-50/60'
+              : 'border-white/10 bg-white/[0.02] hover:border-[#6324eb]/40 hover:bg-[#6324eb]/5',
           uploading && 'pointer-events-none opacity-70'
         )}
       >
         <input {...getInputProps()} />
-        <div className={cn('flex flex-col items-center justify-center text-center', compact ? 'gap-1.5' : 'gap-2')}>
+
+        <div
+          className={cn(
+            'flex flex-col items-center justify-center text-center',
+            compact ? 'gap-1.5' : 'gap-2'
+          )}
+        >
           {uploading ? (
             <>
-              <Loader2 size={compact ? 20 : 28} className="text-[#6324eb] animate-spin" />
-              <p className="text-sm text-slate-300 font-medium">Uploading… {progress}%</p>
-              <div className="w-full max-w-[200px] h-1.5 bg-white/10 rounded-full overflow-hidden">
+              <Loader2 size={compact ? 20 : 28} className="animate-spin text-[#6324eb]" />
+              <p
+                className={cn(
+                  'text-sm font-medium',
+                  isLightAppearance ? 'text-gray-700' : 'text-slate-300'
+                )}
+              >
+                Uploading... {progress}%
+              </p>
+              <div
+                className={cn(
+                  'h-1.5 w-full max-w-[200px] overflow-hidden rounded-full',
+                  isLightAppearance ? 'bg-gray-200' : 'bg-white/10'
+                )}
+              >
                 <div
-                  className="h-full bg-[#6324eb] rounded-full transition-all duration-300"
+                  className="h-full rounded-full bg-[#6324eb] transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -254,18 +336,32 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           ) : (
             <>
               <Upload size={compact ? 18 : 28} className="text-[#6324eb]" />
-              <p className={cn('text-slate-300 font-medium', compact ? 'text-xs' : 'text-sm')}>
+              <p
+                className={cn(
+                  'font-medium',
+                  compact ? 'text-xs' : 'text-sm',
+                  isLightAppearance ? 'text-gray-700' : 'text-slate-300'
+                )}
+              >
                 {isDragActive ? 'Drop file here' : 'Click or drag to upload'}
               </p>
-              <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">
+              <p
+                className={cn(
+                  'text-[10px] font-bold uppercase tracking-wider',
+                  isLightAppearance ? 'text-gray-500' : 'text-slate-500'
+                )}
+              >
                 PDF or Image · Max {Math.round(maxSize / 1024 / 1024)}MB
               </p>
             </>
           )}
         </div>
       </div>
+
       {error && (
-        <p className="text-xs text-red-400 font-medium mt-1">{error}</p>
+        <p className={cn('mt-1 text-xs font-medium', isLightAppearance ? 'text-red-600' : 'text-red-400')}>
+          {error}
+        </p>
       )}
     </div>
   );
