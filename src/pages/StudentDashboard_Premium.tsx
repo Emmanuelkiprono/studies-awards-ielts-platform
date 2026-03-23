@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../hooks/useAuth';
 import '../styles/premium.css';
+import { hasApprovedStudentAccess } from '../lib/studentAccess';
 import {
   Calendar,
   ClipboardCheck,
@@ -205,15 +206,14 @@ export const StudentDashboard_Premium: React.FC = () => {
   const studentBatchId = studentData?.batchId || studentData?.batchInfo?.batchId;
 
   // Single source of truth for learning access
-  const hasLearningAccess = useMemo(() => 
-    studentData?.onboardingStatus === 'approved' ||
-    studentData?.accessUnlocked === true ||
-    studentData?.trainingStatus === 'active',
+  const hasLearningAccess = useMemo(
+    () => hasApprovedStudentAccess(studentData),
     [studentData]
   );
 
   const trainingStatus = studentData?.trainingStatus || 'inactive';
   const examStatus = studentData?.examStatus || 'not_started';
+  const examBookingStatus = studentData?.examBookingStatus;
 
   // Safe Header functions
   const handleSignOut = async () => {
@@ -282,9 +282,31 @@ export const StudentDashboard_Premium: React.FC = () => {
   const steps = useMemo(() => [
     { id: 'training', label: 'Training', status: trainingStatus === 'completed' ? 'completed' : (hasLearningAccess ? 'active' : 'pending'), icon: Zap },
     { id: 'eligibility', label: 'Eligibility', status: trainingStatus === 'completed' ? 'completed' : (trainingStatus === 'active' ? 'active' : 'pending'), icon: ShieldCheck },
-    { id: 'booking', label: 'Exam Booking', status: examStatus !== 'not_started' ? 'completed' : (trainingStatus === 'completed' ? 'active' : 'pending'), icon: Calendar },
-    { id: 'results', label: 'Results', status: examStatus === 'done' ? 'completed' : (examStatus === 'scheduled' ? 'active' : 'pending'), icon: Trophy },
-  ], [trainingStatus, examStatus, hasLearningAccess]);
+    {
+      id: 'booking',
+      label: 'Exam Booking',
+      status:
+        examBookingStatus === 'booked'
+          ? 'completed'
+          : examBookingStatus === 'pending' || examBookingStatus === 'processing'
+            ? 'active'
+            : trainingStatus === 'completed'
+              ? 'active'
+              : 'pending',
+      icon: Calendar
+    },
+    {
+      id: 'results',
+      label: 'Results',
+      status:
+        examStatus === 'done'
+          ? 'completed'
+          : examBookingStatus === 'booked' || examStatus === 'scheduled'
+            ? 'active'
+            : 'pending',
+      icon: Trophy
+    },
+  ], [trainingStatus, examStatus, examBookingStatus, hasLearningAccess]);
 
   const fetchCourseData = useCallback(async () => {
     if (!user) {
@@ -377,25 +399,11 @@ export const StudentDashboard_Premium: React.FC = () => {
     fetchCourseData();
   }, [fetchCourseData]);
 
-  // SAFETY CHECK: Prevent white screen crashes
-  if (loading || dataLoading || !profile) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="relative mb-4">
-            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-400 rounded-full animate-spin animation-delay-150" />
-          </div>
-          <p className="text-gray-700">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    console.log('STUDENT DASHBOARD LOADED');
+  }, []);
 
-  // ADDITIONAL SAFETY: Safe data defaults
-  const safeUserName = profile?.name || "Student";
-  const safeModulesList = Array.isArray(modules) ? modules : [];
-  // Check if student has an active enrollment
+  const safeModulesList = useMemo(() => (Array.isArray(modules) ? modules : []), [modules]);
   const isEnrolled = useMemo(() => {
     return Boolean(studentData?.courseId || studentBatchId || course?.id);
   }, [course?.id, studentBatchId, studentData?.courseId]);
@@ -501,6 +509,24 @@ export const StudentDashboard_Premium: React.FC = () => {
 
     navigate('/live');
   }, [navigate]);
+
+  // SAFETY CHECK: Prevent white screen crashes
+  if (loading || dataLoading || !profile) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative mb-4">
+            <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+            <div className="absolute inset-0 w-16 h-16 border-4 border-transparent border-t-purple-400 rounded-full animate-spin animation-delay-150" />
+          </div>
+          <p className="text-gray-700">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ADDITIONAL SAFETY: Safe data defaults
+  const safeUserName = profile?.name || "Student";
 
   if (!isEnrolled && profile?.role === 'student') {
     return (
@@ -822,11 +848,11 @@ export const StudentDashboard_Premium: React.FC = () => {
               className="mb-6"
             >
               <div className="grid grid-cols-4 gap-3">
-                {[
+                {[ 
                   { icon: PlayCircle, label: 'Learn', color: 'from-blue-100 to-blue-200', iconColor: 'text-blue-600', action: () => navigate('/student/todays-learning') },
-                  { icon: FileText, label: 'Test', color: 'from-green-100 to-green-200', iconColor: 'text-green-600', action: () => navigate('/student/tests') },
+                  { icon: Calendar, label: 'Exam', color: 'from-green-100 to-green-200', iconColor: 'text-green-600', action: () => navigate('/exam-booking') },
                   { icon: Video, label: 'Live', color: 'from-purple-100 to-purple-200', iconColor: 'text-purple-600', action: () => navigate('/live') },
-                  { icon: BookOpen, label: 'More', color: 'from-orange-100 to-orange-200', iconColor: 'text-orange-600', action: () => navigate('/student/resources') }
+                  { icon: BookOpen, label: 'Practice', color: 'from-orange-100 to-orange-200', iconColor: 'text-orange-600', action: () => navigate('/resources') }
                 ].map((item, index) => (
                   <motion.button
                     key={item.label}

@@ -12,6 +12,49 @@ import {
 } from './lib/studentAccess';
 import type { StudentData } from './types';
 
+class RouteErrorBoundary extends React.Component<
+  { children: React.ReactNode; routeName: string },
+  { error: Error | null }
+> {
+  state = { error: null as Error | null };
+
+  static getDerivedStateFromError(error: Error) {
+    return { error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error(`[RouteErrorBoundary] ${this.props.routeName}`, error, errorInfo);
+  }
+
+  render() {
+    if (this.state.error) {
+      return (
+        <div className="min-h-screen bg-white flex items-center justify-center p-6">
+          <div className="max-w-md w-full rounded-3xl border border-red-100 bg-red-50 p-6 text-center shadow-sm">
+            <h2 className="text-xl font-semibold tracking-tight text-black mb-2">
+              Student dashboard failed to load
+            </h2>
+            <p className="text-sm text-gray-700 mb-3">
+              A runtime error was caught before the page could finish rendering.
+            </p>
+            <p className="text-xs text-red-700 break-words mb-5">
+              {this.state.error.message}
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+            >
+              Refresh Page
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 const lazyNamed = <T extends Record<string, unknown>>(
   factory: () => Promise<T>,
   key: keyof T
@@ -433,7 +476,9 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute allowedRoles={['student']}>
                 <ApprovalGuard>
-                  <StudentDashboard />
+                  <RouteErrorBoundary routeName="StudentDashboard">
+                    <StudentDashboard />
+                  </RouteErrorBoundary>
                 </ApprovalGuard>
               </ProtectedRoute>
             }

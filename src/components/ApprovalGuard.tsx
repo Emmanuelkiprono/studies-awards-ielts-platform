@@ -10,6 +10,7 @@ interface ApprovalGuardProps {
 export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({ children }) => {
   const { studentData, loading } = useAuth();
   const location = useLocation();
+  const status = getSimplifiedStudentStatus(studentData);
 
   if (loading) {
     return (
@@ -19,6 +20,12 @@ export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({ children }) => {
     );
   }
 
+  console.log('APPROVED ROUTE CHECK:', {
+    status,
+    accessUnlocked: studentData?.accessUnlocked ?? false,
+    onboardingStatus: studentData?.onboardingStatus ?? null,
+  });
+
   if (!hasApprovedStudentAccess(studentData)) {
     return (
       <Navigate
@@ -26,7 +33,7 @@ export const ApprovalGuard: React.FC<ApprovalGuardProps> = ({ children }) => {
         state={{
           from: location.pathname,
           reason: 'approval_required',
-          currentStatus: getSimplifiedStudentStatus(studentData),
+          currentStatus: status,
         }}
         replace
       />

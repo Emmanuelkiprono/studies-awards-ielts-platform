@@ -17,6 +17,7 @@ import {
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -580,6 +581,21 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
         throw new Error(`Unable to approve ${student.name} because no course is assigned.`);
       }
 
+      const approvalPayload = {
+        onboardingStatus: 'approved' as const,
+        accessUnlocked: true,
+        trainingStatus: 'active' as const,
+        currentModule: DEFAULT_MODULE_TITLE,
+        currentModuleId: DEFAULT_MODULE_ID,
+        currentLesson: DEFAULT_LESSON_TITLE,
+        currentLessonId: DEFAULT_LESSON_ID,
+        status: 'New' as const,
+        learningStage: 'New' as const,
+        nextAction: DEFAULT_NEXT_ACTION,
+        approvedBy: profile?.uid || null,
+        approvedAt: serverTimestamp(),
+      };
+
       await ensureStudentAutoAssignment({
         studentUid: student.uid,
         courseId: resolvedCourseId,
@@ -606,27 +622,23 @@ export const TeacherStudentManagementTable: React.FC<TeacherStudentManagementTab
             currentLessonOrder: 1,
           },
         },
-        additionalStudentUpdates: {
-          onboardingStatus: 'approved',
-          accessUnlocked: true,
-          trainingStatus: 'active',
-          currentModule: DEFAULT_MODULE_TITLE,
-          currentModuleId: DEFAULT_MODULE_ID,
-          currentLesson: DEFAULT_LESSON_TITLE,
-          currentLessonId: DEFAULT_LESSON_ID,
-          status: 'New',
-          learningStage: 'New',
-          nextAction: DEFAULT_NEXT_ACTION,
-          approvedBy: profile?.uid || null,
-          approvedAt: serverTimestamp(),
-        },
+        additionalStudentUpdates: approvalPayload,
       });
 
       await saveUserMirror(student.uid, {
         onboardingStatus: 'approved',
+        role: 'student',
       });
 
       await saveEnrollmentRecord(student.studentRecord?.breemicEnrollmentId, 'approved');
+
+      const updatedStudentSnapshot = await getDoc(doc(db, 'students', student.uid));
+      const updatedStudentData = updatedStudentSnapshot.exists()
+        ? updatedStudentSnapshot.data()
+        : null;
+
+      console.log('APPROVAL SUCCESS - student uid:', student.uid);
+      console.log('STUDENT STATUS AFTER APPROVAL:', updatedStudentData);
     },
     [batches, profile?.assignedCourseId, profile?.name, profile?.uid, saveEnrollmentRecord, saveUserMirror]
   );

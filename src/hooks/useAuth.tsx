@@ -52,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const unsubscribeAuth = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
+      console.log('AUTH STATE CHANGED:', firebaseUser?.uid ?? null);
 
       if (!firebaseUser) {
         setProfile(null);
@@ -86,6 +87,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           forcePasswordChange?: boolean;
         };
         setProfile(profileData);
+        console.log('AUTH PROFILE LOADED:', {
+          uid: firebaseUser.uid,
+          role: profileData.role,
+          onboardingStatus: profileData.onboardingStatus ?? null,
+        });
         setForcePasswordChange(Boolean(profileData.forcePasswordChange));
 
         if (profileData.role !== 'student') {
@@ -101,8 +107,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         unsubscribeStudent = onSnapshot(studentRef, (studentSnapshot) => {
           if (studentSnapshot.exists()) {
-            setStudentData(studentSnapshot.data() as StudentData);
+            const nextStudentData = studentSnapshot.data() as StudentData;
+            console.log('AUTH STUDENT DATA LOADED:', {
+              uid: firebaseUser.uid,
+              studentData: nextStudentData,
+            });
+            setStudentData(nextStudentData);
           } else {
+            console.log('AUTH STUDENT DATA LOADED:', {
+              uid: firebaseUser.uid,
+              studentData: null,
+            });
             setStudentData(null);
           }
 
