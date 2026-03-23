@@ -57,6 +57,55 @@ interface CourseOption {
   name: string;
 }
 
+const COURSE_DURATION_OPTIONS = ['1 week', '2 weeks', '3 weeks', '1 month'] as const;
+
+const formatDateInputValue = (date: Date) => {
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, '0');
+  const day = `${date.getDate()}`.padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const parseDateInputValue = (value: string) => {
+  const [year, month, day] = value.split('-').map(Number);
+
+  if (!year || !month || !day) {
+    return null;
+  }
+
+  const parsedDate = new Date(year, month - 1, day);
+  return Number.isNaN(parsedDate.getTime()) ? null : parsedDate;
+};
+
+const calculateExpectedCompletionDate = (startDateValue: string, duration: string) => {
+  const startDate = parseDateInputValue(startDateValue);
+
+  if (!startDate || !duration) {
+    return '';
+  }
+
+  const completionDate = new Date(startDate);
+
+  switch (duration) {
+    case '1 week':
+      completionDate.setDate(completionDate.getDate() + 7);
+      break;
+    case '2 weeks':
+      completionDate.setDate(completionDate.getDate() + 14);
+      break;
+    case '3 weeks':
+      completionDate.setDate(completionDate.getDate() + 21);
+      break;
+    case '1 month':
+      completionDate.setMonth(completionDate.getMonth() + 1);
+      break;
+    default:
+      return '';
+  }
+
+  return formatDateInputValue(completionDate);
+};
+
 export const BreemicEnrollmentPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, studentData } = useAuth();
@@ -69,7 +118,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
     name: '',
     email: '',
     contact: '',
-    dateOfEnrollment: new Date().toISOString().slice(0, 10),
+    dateOfEnrollment: formatDateInputValue(new Date()),
     courseDuration: '',
     expectedDateOfCompletion: '',
     mode: 'online',
@@ -145,6 +194,24 @@ export const BreemicEnrollmentPage: React.FC = () => {
       courseId: currentForm.courseId || courseOptions[0].id,
     }));
   }, [courseOptions, formData.courseId]);
+
+  useEffect(() => {
+    setFormData((currentForm) => {
+      const nextExpectedDate = calculateExpectedCompletionDate(
+        currentForm.dateOfEnrollment,
+        currentForm.courseDuration
+      );
+
+      if (currentForm.expectedDateOfCompletion === nextExpectedDate) {
+        return currentForm;
+      }
+
+      return {
+        ...currentForm,
+        expectedDateOfCompletion: nextExpectedDate,
+      };
+    });
+  }, [formData.courseDuration, formData.dateOfEnrollment]);
 
   const handleFieldChange = (field: keyof EnrollmentFormState, value: string) => {
     setFormData((currentForm) => ({
@@ -266,7 +333,7 @@ export const BreemicEnrollmentPage: React.FC = () => {
       const selectedCourse = courseOptions.find((courseOption) => courseOption.id === formData.courseId);
       const enrollmentRef = doc(db, 'breemicEnrollments', user.uid);
 
-      const enrollmentPayload: Omit<BreemicEnrollment, 'id'> = {
+      const rawEnrollmentPayload: Record<string, unknown> = {
         studentUid: user.uid,
         userId: user.uid,
         courseId: formData.courseId,
@@ -285,12 +352,16 @@ export const BreemicEnrollmentPage: React.FC = () => {
         feePaid: Number(formData.feePaid),
         balance: Number(formData.balance),
         officerInCharge: formData.officerInCharge.trim(),
-        supportingDocumentUrl: formData.supportingDocumentUrl || undefined,
-        supportingDocumentName: formData.supportingDocumentName || undefined,
+        supportingDocumentUrl: formData.supportingDocumentUrl || null,
+        supportingDocumentName: formData.supportingDocumentName || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         status: 'enrollment_submitted',
       };
+
+      const enrollmentPayload = Object.fromEntries(
+        Object.entries(rawEnrollmentPayload).filter(([, value]) => value !== undefined)
+      );
 
       console.log('ENROLLMENT PAYLOAD:', enrollmentPayload);
 
@@ -429,8 +500,8 @@ export const BreemicEnrollmentPage: React.FC = () => {
               <input
                 type="date"
                 value={formData.dateOfEnrollment}
-                onChange={(event) => handleFieldChange('dateOfEnrollment', event.target.value)}
                 className={inputClassName}
+                readOnly
               />
               {errors.dateOfEnrollment && (
                 <p className="mt-2 text-xs text-red-600">{errors.dateOfEnrollment}</p>
@@ -442,13 +513,18 @@ export const BreemicEnrollmentPage: React.FC = () => {
                 <BookOpen size={16} />
                 Course Duration
               </label>
-              <input
-                type="text"
+              <select
                 value={formData.courseDuration}
                 onChange={(event) => handleFieldChange('courseDuration', event.target.value)}
                 className={inputClassName}
-                placeholder="Example: 12 weeks"
-              />
+              >
+                <option value="">Select duration</option>
+                {COURSE_DURATION_OPTIONS.map((durationOption) => (
+                  <option key={durationOption} value={durationOption}>
+                    {durationOption}
+                  </option>
+                ))}
+              </select>
               {errors.courseDuration && (
                 <p className="mt-2 text-xs text-red-600">{errors.courseDuration}</p>
               )}
@@ -462,10 +538,8 @@ export const BreemicEnrollmentPage: React.FC = () => {
               <input
                 type="date"
                 value={formData.expectedDateOfCompletion}
-                onChange={(event) =>
-                  handleFieldChange('expectedDateOfCompletion', event.target.value)
-                }
                 className={inputClassName}
+                readOnly
               />
               {errors.expectedDateOfCompletion && (
                 <p className="mt-2 text-xs text-red-600">{errors.expectedDateOfCompletion}</p>
