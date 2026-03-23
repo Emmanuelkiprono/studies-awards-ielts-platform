@@ -1,7 +1,18 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { AlertCircle, BookOpen, GraduationCap, Phone, Save, User } from 'lucide-react';
 import {
-  addDoc,
+  AlertCircle,
+  BookOpen,
+  Calendar,
+  CreditCard,
+  DollarSign,
+  GraduationCap,
+  Mail,
+  MapPin,
+  Phone,
+  Save,
+  User,
+} from 'lucide-react';
+import {
   collection,
   doc,
   getDocs,
@@ -19,10 +30,20 @@ import { BreemicEnrollment, Course } from '../types';
 
 interface EnrollmentFormState {
   name: string;
-  phone: string;
-  courseId: string;
+  email: string;
+  contact: string;
+  dateOfEnrollment: string;
+  courseDuration: string;
+  expectedDateOfCompletion: string;
   mode: NonNullable<BreemicEnrollment['modeOfTraining']>;
+  physicalAddress: string;
+  idPassport: string;
   education: string;
+  courseType: NonNullable<BreemicEnrollment['courseType']>;
+  feePaid: string;
+  balance: string;
+  officerInCharge: string;
+  courseId: string;
   supportingDocumentUrl: string;
   supportingDocumentName: string;
 }
@@ -46,10 +67,20 @@ export const BreemicEnrollmentPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [formData, setFormData] = useState<EnrollmentFormState>({
     name: '',
-    phone: '',
-    courseId: '',
+    email: '',
+    contact: '',
+    dateOfEnrollment: new Date().toISOString().slice(0, 10),
+    courseDuration: '',
+    expectedDateOfCompletion: '',
     mode: 'online',
+    physicalAddress: '',
+    idPassport: '',
     education: '',
+    courseType: 'IELTS',
+    feePaid: '0',
+    balance: '0',
+    officerInCharge: 'Pending assignment',
+    courseId: '',
     supportingDocumentUrl: '',
     supportingDocumentName: '',
   });
@@ -58,10 +89,11 @@ export const BreemicEnrollmentPage: React.FC = () => {
     setFormData((currentForm) => ({
       ...currentForm,
       name: profile?.name || currentForm.name,
-      phone: studentData?.phone || profile?.phone || currentForm.phone,
+      email: profile?.email || currentForm.email,
+      contact: studentData?.phone || profile?.phone || currentForm.contact,
       courseId: studentData?.courseId || currentForm.courseId,
     }));
-  }, [profile?.name, profile?.phone, studentData?.courseId, studentData?.phone]);
+  }, [profile?.email, profile?.name, profile?.phone, studentData?.courseId, studentData?.phone]);
 
   useEffect(() => {
     const loadCourses = async () => {
@@ -135,8 +167,26 @@ export const BreemicEnrollmentPage: React.FC = () => {
       nextErrors.name = 'Name is required';
     }
 
-    if (!formData.phone.trim()) {
-      nextErrors.phone = 'Phone is required';
+    if (!formData.email.trim()) {
+      nextErrors.email = 'Email is required';
+    } else if (!formData.email.includes('@')) {
+      nextErrors.email = 'Enter a valid email address';
+    }
+
+    if (!formData.contact.trim()) {
+      nextErrors.contact = 'Contact is required';
+    }
+
+    if (!formData.dateOfEnrollment.trim()) {
+      nextErrors.dateOfEnrollment = 'Date of enrollment is required';
+    }
+
+    if (!formData.courseDuration.trim()) {
+      nextErrors.courseDuration = 'Course duration is required';
+    }
+
+    if (!formData.expectedDateOfCompletion.trim()) {
+      nextErrors.expectedDateOfCompletion = 'Expected completion date is required';
     }
 
     if (!formData.courseId.trim()) {
@@ -147,12 +197,51 @@ export const BreemicEnrollmentPage: React.FC = () => {
       nextErrors.mode = 'Mode is required';
     }
 
+    if (!formData.physicalAddress.trim()) {
+      nextErrors.physicalAddress = 'Physical address is required';
+    }
+
+    if (!formData.idPassport.trim()) {
+      nextErrors.idPassport = 'ID/Passport is required';
+    }
+
     if (!formData.education.trim()) {
       nextErrors.education = 'Education is required';
     }
 
+    if (!formData.courseType?.trim()) {
+      nextErrors.courseType = 'Course type is required';
+    }
+
+    if (formData.feePaid.trim() === '' || Number.isNaN(Number(formData.feePaid))) {
+      nextErrors.feePaid = 'Fee paid must be a valid number';
+    }
+
+    if (formData.balance.trim() === '' || Number.isNaN(Number(formData.balance))) {
+      nextErrors.balance = 'Balance must be a valid number';
+    }
+
+    if (!formData.officerInCharge.trim()) {
+      nextErrors.officerInCharge = 'Officer in charge is required';
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  };
+
+  const getEnrollmentErrorMessage = (error: unknown) => {
+    if (typeof error === 'object' && error !== null) {
+      const firebaseError = error as { code?: unknown; message?: unknown };
+      if (firebaseError.code || firebaseError.message) {
+        return `${String(firebaseError.code || 'error')}: ${String(firebaseError.message || 'Unknown error')}`;
+      }
+    }
+
+    if (error instanceof Error) {
+      return error.message;
+    }
+
+    return 'Unknown enrollment error';
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
@@ -171,31 +260,48 @@ export const BreemicEnrollmentPage: React.FC = () => {
     setLoading(true);
 
     try {
+      console.log('ENROLLMENT SUBMIT START');
+      console.log('CURRENT USER:', user?.uid);
+
       const selectedCourse = courseOptions.find((courseOption) => courseOption.id === formData.courseId);
+      const enrollmentRef = doc(db, 'breemicEnrollments', user.uid);
 
       const enrollmentPayload: Omit<BreemicEnrollment, 'id'> = {
+        studentUid: user.uid,
         userId: user.uid,
         courseId: formData.courseId,
         courseName: selectedCourse?.name,
         fullName: formData.name.trim(),
-        email: (profile?.email || user.email || '').toLowerCase(),
-        contact: formData.phone.trim(),
-        dateOfEnrollment: new Date().toISOString().slice(0, 10),
+        email: formData.email.trim().toLowerCase(),
+        contact: formData.contact.trim(),
+        dateOfEnrollment: formData.dateOfEnrollment,
+        courseDuration: formData.courseDuration.trim(),
+        expectedDateOfCompletion: formData.expectedDateOfCompletion,
         modeOfTraining: formData.mode,
+        physicalAddress: formData.physicalAddress.trim(),
+        idPassport: formData.idPassport.trim(),
         highestLevelOfEducation: formData.education.trim(),
+        courseType: formData.courseType,
+        feePaid: Number(formData.feePaid),
+        balance: Number(formData.balance),
+        officerInCharge: formData.officerInCharge.trim(),
         supportingDocumentUrl: formData.supportingDocumentUrl || undefined,
         supportingDocumentName: formData.supportingDocumentName || undefined,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-        status: 'pending',
+        status: 'enrollment_submitted',
       };
 
-      const enrollmentRef = await addDoc(collection(db, 'breemicEnrollments'), enrollmentPayload);
+      console.log('ENROLLMENT PAYLOAD:', enrollmentPayload);
+
+      await setDoc(enrollmentRef, enrollmentPayload, { merge: true });
 
       await setDoc(
         doc(db, 'students', user.uid),
         {
-          phone: formData.phone.trim(),
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.contact.trim(),
           courseId: formData.courseId,
           idUploadUrl: formData.supportingDocumentUrl || null,
           onboardingStatus: 'enrollment_submitted',
@@ -212,36 +318,39 @@ export const BreemicEnrollmentPage: React.FC = () => {
         doc(db, 'users', user.uid),
         {
           name: formData.name.trim(),
-          phone: formData.phone.trim(),
+          phone: formData.contact.trim(),
           onboardingStatus: 'enrollment_submitted',
           updatedAt: serverTimestamp(),
         },
         { merge: true }
       );
 
-      const teacherQuery = query(
-        collection(db, 'users'),
-        where('role', '==', 'teacher'),
-        where('assignedCourseId', '==', formData.courseId)
-      );
-      const teacherSnapshot = await getDocs(teacherQuery);
+      try {
+        const teacherQuery = query(collection(db, 'users'), where('role', '==', 'teacher'));
+        const teacherSnapshot = await getDocs(teacherQuery);
+        const matchingTeachers = teacherSnapshot.docs.filter(
+          (teacherDoc) => teacherDoc.data().assignedCourseId === formData.courseId
+        );
 
-      await Promise.all(
-        teacherSnapshot.docs.map((teacherDoc) =>
-          NotificationService.create(
-            teacherDoc.id,
-            'Enrollment Submitted',
-            `${formData.name.trim()} is waiting for approval.`,
-            'info',
-            '/teacher/approvals'
+        await Promise.all(
+          matchingTeachers.map((teacherDoc) =>
+            NotificationService.create(
+              teacherDoc.id,
+              'Enrollment Submitted',
+              `${formData.name.trim()} is waiting for approval.`,
+              'info',
+              '/teacher/approvals'
+            )
           )
-        )
-      );
+        );
+      } catch (notificationError) {
+        console.error('ENROLLMENT NOTIFICATION ERROR:', notificationError);
+      }
 
       navigate('/pending-approval', { replace: true });
     } catch (error) {
-      console.error('Error submitting enrollment:', error);
-      setSubmitError('Failed to submit enrollment. Please try again.');
+      console.error('ENROLLMENT SUBMIT ERROR:', error);
+      setSubmitError(getEnrollmentErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -284,23 +393,231 @@ export const BreemicEnrollmentPage: React.FC = () => {
 
             <div>
               <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Mail size={16} />
+                Email
+              </label>
+              <input
+                type="email"
+                value={formData.email}
+                onChange={(event) => handleFieldChange('email', event.target.value)}
+                className={inputClassName}
+                placeholder="Enter your email address"
+              />
+              {errors.email && <p className="mt-2 text-xs text-red-600">{errors.email}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
                 <Phone size={16} />
-                Phone
+                Contact
               </label>
               <input
                 type="tel"
-                value={formData.phone}
-                onChange={(event) => handleFieldChange('phone', event.target.value)}
+                value={formData.contact}
+                onChange={(event) => handleFieldChange('contact', event.target.value)}
                 className={inputClassName}
-                placeholder="Enter your phone number"
+                placeholder="Enter your contact number"
               />
-              {errors.phone && <p className="mt-2 text-xs text-red-600">{errors.phone}</p>}
+              {errors.contact && <p className="mt-2 text-xs text-red-600">{errors.contact}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Calendar size={16} />
+                Date of Enrollment
+              </label>
+              <input
+                type="date"
+                value={formData.dateOfEnrollment}
+                onChange={(event) => handleFieldChange('dateOfEnrollment', event.target.value)}
+                className={inputClassName}
+              />
+              {errors.dateOfEnrollment && (
+                <p className="mt-2 text-xs text-red-600">{errors.dateOfEnrollment}</p>
+              )}
             </div>
 
             <div>
               <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
                 <BookOpen size={16} />
-                Course
+                Course Duration
+              </label>
+              <input
+                type="text"
+                value={formData.courseDuration}
+                onChange={(event) => handleFieldChange('courseDuration', event.target.value)}
+                className={inputClassName}
+                placeholder="Example: 12 weeks"
+              />
+              {errors.courseDuration && (
+                <p className="mt-2 text-xs text-red-600">{errors.courseDuration}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <Calendar size={16} />
+                Expected Date of Completion
+              </label>
+              <input
+                type="date"
+                value={formData.expectedDateOfCompletion}
+                onChange={(event) =>
+                  handleFieldChange('expectedDateOfCompletion', event.target.value)
+                }
+                className={inputClassName}
+              />
+              {errors.expectedDateOfCompletion && (
+                <p className="mt-2 text-xs text-red-600">{errors.expectedDateOfCompletion}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <BookOpen size={16} />
+                Mode of Training
+              </label>
+              <select
+                value={formData.mode}
+                onChange={(event) =>
+                  handleFieldChange('mode', event.target.value as EnrollmentFormState['mode'])
+                }
+                className={inputClassName}
+              >
+                <option value="online">Online</option>
+                <option value="in-person">In Person</option>
+              </select>
+              {errors.mode && <p className="mt-2 text-xs text-red-600">{errors.mode}</p>}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <MapPin size={16} />
+                Physical Address
+              </label>
+              <textarea
+                value={formData.physicalAddress}
+                onChange={(event) => handleFieldChange('physicalAddress', event.target.value)}
+                className={`${inputClassName} min-h-[110px]`}
+                placeholder="Enter your physical address"
+              />
+              {errors.physicalAddress && (
+                <p className="mt-2 text-xs text-red-600">{errors.physicalAddress}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <CreditCard size={16} />
+                ID / Passport
+              </label>
+              <input
+                type="text"
+                value={formData.idPassport}
+                onChange={(event) => handleFieldChange('idPassport', event.target.value)}
+                className={inputClassName}
+                placeholder="Enter ID or passport number"
+              />
+              {errors.idPassport && <p className="mt-2 text-xs text-red-600">{errors.idPassport}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <GraduationCap size={16} />
+                Highest Level of Education
+              </label>
+              <input
+                type="text"
+                value={formData.education}
+                onChange={(event) => handleFieldChange('education', event.target.value)}
+                className={inputClassName}
+                placeholder="Example: Bachelor's Degree"
+              />
+              {errors.education && <p className="mt-2 text-xs text-red-600">{errors.education}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <BookOpen size={16} />
+                Course Type
+              </label>
+              <select
+                value={formData.courseType}
+                onChange={(event) =>
+                  handleFieldChange(
+                    'courseType',
+                    event.target.value as EnrollmentFormState['courseType']
+                  )
+                }
+                className={inputClassName}
+              >
+                <option value="IELTS">IELTS</option>
+                <option value="TOEFL">TOEFL</option>
+                <option value="PTE">PTE</option>
+                <option value="SAT">SAT</option>
+                <option value="TOEIC">TOEIC</option>
+                <option value="German">German</option>
+                <option value="French">French</option>
+                <option value="Chinese">Chinese</option>
+              </select>
+              {errors.courseType && <p className="mt-2 text-xs text-red-600">{errors.courseType}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <DollarSign size={16} />
+                Fee Paid
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.feePaid}
+                onChange={(event) => handleFieldChange('feePaid', event.target.value)}
+                className={inputClassName}
+                placeholder="0.00"
+              />
+              {errors.feePaid && <p className="mt-2 text-xs text-red-600">{errors.feePaid}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <DollarSign size={16} />
+                Balance
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.balance}
+                onChange={(event) => handleFieldChange('balance', event.target.value)}
+                className={inputClassName}
+                placeholder="0.00"
+              />
+              {errors.balance && <p className="mt-2 text-xs text-red-600">{errors.balance}</p>}
+            </div>
+
+            <div>
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <User size={16} />
+                Officer in Charge
+              </label>
+              <input
+                type="text"
+                value={formData.officerInCharge}
+                onChange={(event) => handleFieldChange('officerInCharge', event.target.value)}
+                className={inputClassName}
+                placeholder="Enter officer in charge"
+              />
+              {errors.officerInCharge && (
+                <p className="mt-2 text-xs text-red-600">{errors.officerInCharge}</p>
+              )}
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
+                <BookOpen size={16} />
+                Internal Course
               </label>
               <select
                 value={formData.courseId}
@@ -320,44 +637,12 @@ export const BreemicEnrollmentPage: React.FC = () => {
               {errors.courseId && <p className="mt-2 text-xs text-red-600">{errors.courseId}</p>}
             </div>
 
-            <div>
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                <BookOpen size={16} />
-                Mode
-              </label>
-              <select
-                value={formData.mode}
-                onChange={(event) =>
-                  handleFieldChange('mode', event.target.value as EnrollmentFormState['mode'])
-                }
-                className={inputClassName}
-              >
-                <option value="online">Online</option>
-                <option value="in-person">In Person</option>
-              </select>
-              {errors.mode && <p className="mt-2 text-xs text-red-600">{errors.mode}</p>}
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700">
-                <GraduationCap size={16} />
-                Education
-              </label>
-              <input
-                type="text"
-                value={formData.education}
-                onChange={(event) => handleFieldChange('education', event.target.value)}
-                className={inputClassName}
-                placeholder="Example: Bachelor's Degree"
-              />
-              {errors.education && <p className="mt-2 text-xs text-red-600">{errors.education}</p>}
-            </div>
-
             <div className="md:col-span-2">
               <FileUpload
                 folder={user ? `enrollments/${user.uid}` : 'enrollments'}
                 label="Optional Upload"
                 appearance="light"
+                uploadErrorMessage="Document upload failed"
                 value={formData.supportingDocumentUrl}
                 fileName={formData.supportingDocumentName}
                 onUploaded={(url, fileName) => {

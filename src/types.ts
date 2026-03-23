@@ -398,6 +398,7 @@ export interface Notification {
 
 export interface BreemicEnrollment {
   id: string;
+  studentUid?: string;
   userId?: string;
   courseId?: string;
   fullName: string;
@@ -419,7 +420,7 @@ export interface BreemicEnrollment {
   officerInCharge?: string;
   createdAt: any;
   updatedAt: any;
-  status: 'pending' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'enrollment_submitted' | 'approved' | 'rejected' | 'completed';
   notes?: string;
 }
 

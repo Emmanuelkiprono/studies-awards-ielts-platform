@@ -81,6 +81,24 @@ service cloud.firestore {
       allow write: if isAdmin() || isTeacher();
     }
 
+    // Breemic enrollment flow - one document per student UID
+    match /breemicEnrollments/{enrollmentId} {
+      allow read: if isSignedIn() && (
+        request.auth.uid == enrollmentId ||
+        isTeacher() ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() &&
+        request.auth.uid == enrollmentId &&
+        request.resource.data.studentUid == request.auth.uid;
+      allow update: if (isAdmin() || isTeacher()) || (
+        isSignedIn() &&
+        request.auth.uid == enrollmentId &&
+        request.resource.data.studentUid == request.auth.uid
+      );
+      allow delete: if isAdmin() || isTeacher();
+    }
+
     // Batches collection
     match /batches/{batchId} {
       allow read: if isSignedIn();

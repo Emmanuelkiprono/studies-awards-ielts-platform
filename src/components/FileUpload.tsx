@@ -23,6 +23,7 @@ interface FileUploadProps {
   label?: string;
   compact?: boolean;
   appearance?: 'dark' | 'light';
+  uploadErrorMessage?: string;
 }
 
 const MAX_IMAGE_DIMENSION = 1600;
@@ -120,6 +121,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
   label = 'Upload File',
   compact = false,
   appearance = 'dark',
+  uploadErrorMessage = 'Upload failed. Please try again.',
 }) => {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -170,7 +172,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({
           },
           (uploadError) => {
             console.error('Upload error:', uploadError);
-            setError('Upload failed. Please try again.');
+            setError(uploadErrorMessage);
             setUploading(false);
           },
           async () => {
@@ -182,11 +184,11 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         );
       } catch (uploadError) {
         console.error('Upload error:', uploadError);
-        setError('Upload failed. Please try again.');
+        setError(uploadErrorMessage);
         setUploading(false);
       }
     },
-    [folder, maxSize, onUploaded]
+    [folder, maxSize, onUploaded, uploadErrorMessage]
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
